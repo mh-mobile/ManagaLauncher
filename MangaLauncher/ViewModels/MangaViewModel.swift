@@ -40,9 +40,10 @@ final class MangaViewModel {
         save()
     }
 
-    func updateEntry(_ entry: MangaEntry, name: String, url: String, iconColor: String, publisher: String = "", imageData: Data? = nil) {
+    func updateEntry(_ entry: MangaEntry, name: String, url: String, dayOfWeek: DayOfWeek, iconColor: String, publisher: String = "", imageData: Data? = nil) {
         entry.name = name
         entry.url = url
+        entry.dayOfWeek = dayOfWeek
         entry.iconColor = iconColor
         entry.publisher = publisher
         entry.imageData = imageData

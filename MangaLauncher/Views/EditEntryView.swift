@@ -110,8 +110,7 @@ struct EditEntryView: View {
                     }
                 }
 
-                if !isEditing {
-                    Section("曜日") {
+                Section("曜日") {
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
                             ForEach(DayOfWeek.allCases) { day in
                                 Text(day.shortName)
@@ -135,7 +134,6 @@ struct EditEntryView: View {
                         }
                         .padding(.vertical, 4)
                     }
-                }
 
                 Section("アイコンカラー") {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 8), spacing: 12) {
@@ -206,7 +204,7 @@ struct EditEntryView: View {
 
     private func saveEntry() {
         if let entry {
-            viewModel.updateEntry(entry, name: name, url: url, iconColor: selectedColor, publisher: publisher, imageData: imageData)
+            viewModel.updateEntry(entry, name: name, url: url, dayOfWeek: selectedDay, iconColor: selectedColor, publisher: publisher, imageData: imageData)
         } else {
             viewModel.addEntry(name: name, url: url, days: [selectedDay], iconColor: selectedColor, publisher: publisher, imageData: imageData)
         }
