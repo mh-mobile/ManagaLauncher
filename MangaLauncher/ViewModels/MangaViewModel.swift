@@ -1,6 +1,6 @@
 import Foundation
+import Observation
 import SwiftData
-import SwiftUI
 
 @Observable
 final class MangaViewModel {
@@ -76,12 +76,6 @@ final class MangaViewModel {
         }
         save()
     }
-
-    func openURL(_ urlString: String) {
-        guard let url = URL(string: urlString) else { return }
-        UIApplication.shared.open(url)
-    }
-
 
     private func save() {
         try? modelContext.save()

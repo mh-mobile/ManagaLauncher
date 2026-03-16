@@ -7,12 +7,15 @@ enum DisplayMode: String {
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.openURL) private var openURL
     @State private var viewModel: MangaViewModel?
     @State private var showingAddSheet = false
     @State private var editingEntry: MangaEntry?
     @State private var displayMode: DisplayMode = .list
     @State private var draggingEntryID: UUID?
+    #if os(iOS) || os(visionOS)
     @State private var listEditMode: EditMode = .inactive
+    #endif
     @State private var selectedPublisher: String?
     // 0=sat(fake), 1=sun, 2=mon, ..., 7=sat, 8=sun(fake) → 9 pages for looping
     @State private var pageIndex: Int = 0
@@ -39,20 +42,25 @@ struct ContentView: View {
                     dayPager(viewModel: viewModel)
                 }
                 .navigationTitle("マンガランチャー")
+                #if os(iOS) || os(visionOS)
                 .navigationBarTitleDisplayMode(.inline)
+                #endif
                 .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
+                    ToolbarItem(placement: .automatic) {
                         Button {
                             withAnimation {
+                                #if os(iOS) || os(visionOS)
                                 listEditMode = .inactive
+                                #endif
                                 displayMode = displayMode == .list ? .grid : .list
                             }
                         } label: {
                             Image(systemName: displayMode == .list ? "square.grid.2x2" : "list.bullet")
                         }
                     }
+                    #if os(iOS) || os(visionOS)
                     if displayMode == .list && !viewModel.fetchEntries(for: viewModel.selectedDay).isEmpty {
-                        ToolbarItem(placement: .topBarTrailing) {
+                        ToolbarItem(placement: .automatic) {
                             Button(listEditMode == .active ? "完了" : "編集") {
                                 withAnimation {
                                     listEditMode = listEditMode == .active ? .inactive : .active
@@ -60,7 +68,8 @@ struct ContentView: View {
                             }
                         }
                     }
-                    ToolbarItem(placement: .topBarTrailing) {
+                    #endif
+                    ToolbarItem(placement: .automatic) {
                         Button {
                             showingAddSheet = true
                         } label: {
@@ -114,11 +123,12 @@ struct ContentView: View {
         }
         .padding(.horizontal, 8)
         .padding(.top, 4)
-        .background(Color(.systemBackground))
+        .background(Color.platformBackground)
     }
 
     @ViewBuilder
     private func dayPager(viewModel: MangaViewModel) -> some View {
+        #if os(iOS) || os(visionOS)
         // 9 pages: [sat(fake), sun, mon, tue, wed, thu, fri, sat, sun(fake)]
         TabView(selection: $pageIndex) {
             ForEach(0..<9, id: \.self) { index in
@@ -150,6 +160,9 @@ struct ContentView: View {
                 }
             }
         }
+        #else
+        dayPage(day: viewModel.selectedDay, viewModel: viewModel)
+        #endif
     }
 
     @ViewBuilder
@@ -208,14 +221,14 @@ struct ContentView: View {
             .padding(.horizontal)
             .padding(.vertical, 6)
         }
-        .background(Color(.systemBackground))
+        .background(Color.platformBackground)
     }
 
     @ViewBuilder
     private func listView(entries: [MangaEntry], day: DayOfWeek, viewModel: MangaViewModel) -> some View {
         List {
             ForEach(entries, id: \.id) { entry in
-                entryRow(entry: entry, viewModel: viewModel)
+                entryRow(entry: entry)
             }
             .onDelete { indexSet in
                 let entriesToDelete = indexSet.map { entries[$0] }
@@ -228,7 +241,9 @@ struct ContentView: View {
             }
         }
         .listStyle(.plain)
+        #if os(iOS) || os(visionOS)
         .environment(\.editMode, $listEditMode)
+        #endif
     }
 
     @ViewBuilder
@@ -257,8 +272,8 @@ struct ContentView: View {
     @ViewBuilder
     private func gridCell(entry: MangaEntry, viewModel: MangaViewModel) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            if let imageData = entry.imageData, let uiImage = UIImage(data: imageData) {
-                Image(uiImage: uiImage)
+            if let imageData = entry.imageData, let image = imageData.toSwiftUIImage() {
+                image
                     .resizable()
                     .scaledToFit()
                     .frame(maxWidth: .infinity)
@@ -290,7 +305,7 @@ struct ContentView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            viewModel.openURL(entry.url)
+            if let url = URL(string: entry.url) { openURL(url) }
         }
         .contextMenu {
             Button {
@@ -307,7 +322,7 @@ struct ContentView: View {
     }
 
     @ViewBuilder
-    private func entryRow(entry: MangaEntry, viewModel: MangaViewModel) -> some View {
+    private func entryRow(entry: MangaEntry) -> some View {
         HStack(spacing: 12) {
             entryIcon(for: entry, size: 36)
 
@@ -334,9 +349,8 @@ struct ContentView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            viewModel.openURL(entry.url)
+            if let url = URL(string: entry.url) { openURL(url) }
         }
-        .listRowBackground(Color(.systemBackground))
         .contextMenu {
             Button {
                 editingEntry = entry
@@ -344,7 +358,7 @@ struct ContentView: View {
                 Label("編集", systemImage: "pencil")
             }
             Button(role: .destructive) {
-                viewModel.deleteEntry(entry)
+                if let viewModel { viewModel.deleteEntry(entry) }
             } label: {
                 Label("削除", systemImage: "trash")
             }
@@ -353,8 +367,8 @@ struct ContentView: View {
 
     @ViewBuilder
     private func entryIcon(for entry: MangaEntry, size: CGFloat) -> some View {
-        if let imageData = entry.imageData, let uiImage = UIImage(data: imageData) {
-            Image(uiImage: uiImage)
+        if let imageData = entry.imageData, let image = imageData.toSwiftUIImage() {
+            image
                 .resizable()
                 .scaledToFill()
                 .frame(width: size, height: size)
@@ -429,7 +443,7 @@ struct FilterChip: View {
                 .font(.caption)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .background(isSelected ? Color.accentColor : Color(.systemGray5))
+                .background(isSelected ? Color.accentColor : Color.platformGray5)
                 .foregroundStyle(isSelected ? .white : .primary)
                 .clipShape(Capsule())
         }

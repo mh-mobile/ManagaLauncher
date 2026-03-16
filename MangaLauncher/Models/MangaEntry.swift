@@ -47,13 +47,13 @@ enum DayOfWeek: Int, Codable, CaseIterable, Identifiable {
 
 @Model
 final class MangaEntry {
-    var id: UUID
-    var name: String
-    var url: String
-    var dayOfWeekRawValue: Int
-    var sortOrder: Int
-    var iconColor: String
-    var publisher: String
+    var id: UUID = UUID()
+    var name: String = ""
+    var url: String = ""
+    var dayOfWeekRawValue: Int = 1
+    var sortOrder: Int = 0
+    var iconColor: String = "blue"
+    var publisher: String = ""
     @Attribute(.externalStorage) var imageData: Data?
 
     @Transient

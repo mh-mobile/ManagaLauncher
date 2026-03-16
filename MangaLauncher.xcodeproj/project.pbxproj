@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0AD569E2465106D7BC72914B /* PlatformHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDD9A4D8748B9496E85A2A67 /* PlatformHelpers.swift */; };
 		A1000001 /* MangaLauncherApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001 /* MangaLauncherApp.swift */; };
 		A1000002 /* MangaEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000002 /* MangaEntry.swift */; };
 		A1000003 /* MangaViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000003 /* MangaViewModel.swift */; };
@@ -24,6 +25,7 @@
 		A2000005 /* EditEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditEntryView.swift; sourceTree = "<group>"; };
 		A2000006 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A3000001 /* MangaLauncher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MangaLauncher.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CDD9A4D8748B9496E85A2A67 /* PlatformHelpers.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PlatformHelpers.swift; sourceTree = "<group>"; };
 		ECCD2FCD2F65596900BF3309 /* PublisherPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherPickerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -38,6 +40,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		6238B354545AE6BD66DCA01C /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				CDD9A4D8748B9496E85A2A67 /* PlatformHelpers.swift */,
+			);
+			name = Helpers;
+			path = Helpers;
+			sourceTree = "<group>";
+		};
 		A5000001 = {
 			isa = PBXGroup;
 			children = (
@@ -54,6 +65,7 @@
 				A5000004 /* Views */,
 				A5000005 /* ViewModels */,
 				A2000006 /* Assets.xcassets */,
+				6238B354545AE6BD66DCA01C /* Helpers */,
 			);
 			path = MangaLauncher;
 			sourceTree = "<group>";
@@ -168,6 +180,7 @@
 				A1000003 /* MangaViewModel.swift in Sources */,
 				A1000004 /* ContentView.swift in Sources */,
 				A1000005 /* EditEntryView.swift in Sources */,
+				0AD569E2465106D7BC72914B /* PlatformHelpers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

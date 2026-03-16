@@ -20,7 +20,9 @@ struct PublisherPickerView: View {
             Section {
                 HStack {
                     TextField("新しい掲載誌を入力", text: $newPublisher)
+                        #if os(iOS) || os(visionOS)
                         .textInputAutocapitalization(.never)
+                        #endif
                     if !newPublisher.isEmpty {
                         Button("追加") {
                             selectPublisher(newPublisher)
@@ -61,7 +63,9 @@ struct PublisherPickerView: View {
             }
         }
         .navigationTitle("掲載誌")
+        #if os(iOS) || os(visionOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 
     private func selectPublisher(_ value: String) {

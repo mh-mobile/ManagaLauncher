@@ -50,10 +50,14 @@ struct EditEntryView: View {
             Form {
                 Section("基本情報") {
                     TextField("名前", text: $name)
+                        #if os(iOS) || os(visionOS)
                         .textInputAutocapitalization(.never)
+                        #endif
                     TextField("URL", text: $url)
+                        #if os(iOS) || os(visionOS)
                         .textInputAutocapitalization(.never)
                         .keyboardType(.URL)
+                        #endif
                         .autocorrectionDisabled()
                     if !url.isEmpty && !isValidURL {
                         Text("有効なURLを入力してください（例: https://... または shortcuts://...）")
@@ -74,9 +78,9 @@ struct EditEntryView: View {
                 }
 
                 Section("画像") {
-                    if let imageData, let uiImage = UIImage(data: imageData) {
+                    if let imageData, let image = imageData.toSwiftUIImage() {
                         HStack {
-                            Image(uiImage: uiImage)
+                            image
                                 .resizable()
                                 .scaledToFill()
                                 .frame(width: 80, height: 80)
@@ -101,9 +105,7 @@ struct EditEntryView: View {
                 .onChange(of: selectedPhotoItem) { _, newItem in
                     Task {
                         if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                            if let uiImage = UIImage(data: data),
-                               let resized = downsized(uiImage, maxDimension: 600),
-                               let jpeg = resized.jpegData(compressionQuality: 0.7) {
+                            if let jpeg = downsizedJPEGData(data, maxDimension: 600) {
                                 imageData = jpeg
                             }
                         }
@@ -111,29 +113,29 @@ struct EditEntryView: View {
                 }
 
                 Section("曜日") {
-                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
-                            ForEach(DayOfWeek.allCases) { day in
-                                Text(day.shortName)
-                                    .font(.subheadline.bold())
-                                    .frame(width: 36, height: 36)
-                                    .background(
-                                        selectedDay == day
-                                            ? Color.accentColor
-                                            : Color(.systemGray5)
-                                    )
-                                    .foregroundStyle(
-                                        selectedDay == day
-                                            ? .white
-                                            : .primary
-                                    )
-                                    .clipShape(Circle())
-                                    .onTapGesture {
-                                        selectedDay = day
-                                    }
-                            }
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
+                        ForEach(DayOfWeek.allCases) { day in
+                            Text(day.shortName)
+                                .font(.subheadline.bold())
+                                .frame(width: 36, height: 36)
+                                .background(
+                                    selectedDay == day
+                                        ? Color.accentColor
+                                        : Color.platformGray5
+                                )
+                                .foregroundStyle(
+                                    selectedDay == day
+                                        ? .white
+                                        : .primary
+                                )
+                                .clipShape(Circle())
+                                .onTapGesture {
+                                    selectedDay = day
+                                }
                         }
-                        .padding(.vertical, 4)
                     }
+                    .padding(.vertical, 4)
+                }
 
                 Section("アイコンカラー") {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 8), spacing: 12) {
@@ -174,7 +176,9 @@ struct EditEntryView: View {
                 }
             }
             .navigationTitle(isEditing ? "編集" : "新規登録")
+            #if os(iOS) || os(visionOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("キャンセル") {
@@ -207,17 +211,6 @@ struct EditEntryView: View {
             viewModel.updateEntry(entry, name: name, url: url, dayOfWeek: selectedDay, iconColor: selectedColor, publisher: publisher, imageData: imageData)
         } else {
             viewModel.addEntry(name: name, url: url, days: [selectedDay], iconColor: selectedColor, publisher: publisher, imageData: imageData)
-        }
-    }
-
-    private func downsized(_ image: UIImage, maxDimension: CGFloat) -> UIImage? {
-        let size = image.size
-        let scale = min(maxDimension / size.width, maxDimension / size.height)
-        if scale >= 1 { return image }
-        let newSize = CGSize(width: size.width * scale, height: size.height * scale)
-        let renderer = UIGraphicsImageRenderer(size: newSize)
-        return renderer.image { _ in
-            image.draw(in: CGRect(origin: .zero, size: newSize))
         }
     }
 }
