@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		0AD569E2465106D7BC72914B /* PlatformHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDD9A4D8748B9496E85A2A67 /* PlatformHelpers.swift */; };
+		2AA2BDFC2D4CFE5BF3F85D4A /* DataMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CF568E5CBBFA07B55373C73 /* DataMigration.swift */; };
+		4975296B405867976ADBBA9F /* SharedModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C7FA9735199D021E15CEED8 /* SharedModelContainer.swift */; };
 		A1000001 /* MangaLauncherApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001 /* MangaLauncherApp.swift */; };
 		A1000002 /* MangaEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000002 /* MangaEntry.swift */; };
 		A1000003 /* MangaViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000003 /* MangaViewModel.swift */; };
@@ -18,6 +20,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1CF568E5CBBFA07B55373C73 /* DataMigration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DataMigration.swift; sourceTree = "<group>"; };
+		9C7FA9735199D021E15CEED8 /* SharedModelContainer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SharedModelContainer.swift; sourceTree = "<group>"; };
 		A2000001 /* MangaLauncherApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaLauncherApp.swift; sourceTree = "<group>"; };
 		A2000002 /* MangaEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaEntry.swift; sourceTree = "<group>"; };
 		A2000003 /* MangaViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaViewModel.swift; sourceTree = "<group>"; };
@@ -27,6 +31,7 @@
 		A3000001 /* MangaLauncher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MangaLauncher.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CDD9A4D8748B9496E85A2A67 /* PlatformHelpers.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PlatformHelpers.swift; sourceTree = "<group>"; };
 		ECCD2FCD2F65596900BF3309 /* PublisherPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherPickerView.swift; sourceTree = "<group>"; };
+		EEEF347AB79EE547A4014C35 /* MangaLauncher.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaLauncher.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,6 +71,8 @@
 				A5000005 /* ViewModels */,
 				A2000006 /* Assets.xcassets */,
 				6238B354545AE6BD66DCA01C /* Helpers */,
+				F40871AEA45509078C83A570 /* Shared */,
+				EEEF347AB79EE547A4014C35 /* MangaLauncher.entitlements */,
 			);
 			path = MangaLauncher;
 			sourceTree = "<group>";
@@ -102,6 +109,16 @@
 				A3000001 /* MangaLauncher.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		F40871AEA45509078C83A570 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				9C7FA9735199D021E15CEED8 /* SharedModelContainer.swift */,
+				1CF568E5CBBFA07B55373C73 /* DataMigration.swift */,
+			);
+			name = Shared;
+			path = Shared;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -181,6 +198,8 @@
 				A1000004 /* ContentView.swift in Sources */,
 				A1000005 /* EditEntryView.swift in Sources */,
 				0AD569E2465106D7BC72914B /* PlatformHelpers.swift in Sources */,
+				4975296B405867976ADBBA9F /* SharedModelContainer.swift in Sources */,
+				2AA2BDFC2D4CFE5BF3F85D4A /* DataMigration.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -309,6 +328,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MangaLauncher/MangaLauncher.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
@@ -339,6 +359,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MangaLauncher/MangaLauncher.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
