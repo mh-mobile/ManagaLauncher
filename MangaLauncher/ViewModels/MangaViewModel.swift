@@ -1,6 +1,9 @@
 import Foundation
 import Observation
 import SwiftData
+#if canImport(WidgetKit)
+import WidgetKit
+#endif
 
 @Observable
 final class MangaViewModel {
@@ -77,8 +80,18 @@ final class MangaViewModel {
         save()
     }
 
+    func findEntry(by id: UUID) -> MangaEntry? {
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.id == id }
+        )
+        return try? modelContext.fetch(descriptor).first
+    }
+
     private func save() {
         try? modelContext.save()
         refreshCounter += 1
+        #if canImport(WidgetKit)
+        WidgetCenter.shared.reloadAllTimelines()
+        #endif
     }
 }
