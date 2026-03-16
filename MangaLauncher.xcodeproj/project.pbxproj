@@ -66,6 +66,7 @@
 		A2000006 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A3000001 /* MangaLauncher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MangaLauncher.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A576F9BEFBD3B37AA9275FAB /* MangaWidget.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaWidget.entitlements; sourceTree = "<group>"; };
+		BC0276ADB2A6EFEC185148CA /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		CDD9A4D8748B9496E85A2A67 /* PlatformHelpers.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PlatformHelpers.swift; sourceTree = "<group>"; };
 		E7D977DE254FB1F216740BE6 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		ECCD2FCD2F65596900BF3309 /* PublisherPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherPickerView.swift; sourceTree = "<group>"; };
@@ -185,6 +186,7 @@
 			children = (
 				7EFDC883F33BA3C119960C0B /* MangaWidget.swift */,
 				A576F9BEFBD3B37AA9275FAB /* MangaWidget.entitlements */,
+				BC0276ADB2A6EFEC185148CA /* Info.plist */,
 			);
 			name = MangaWidget;
 			path = MangaWidget;
@@ -342,6 +344,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 5XJ8CR95CK;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MangaWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "マンガウィジェット";
 				INFOPLIST_KEY_NSWidgetWantsLocation = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -371,6 +374,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 5XJ8CR95CK;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MangaWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "マンガウィジェット";
 				INFOPLIST_KEY_NSWidgetWantsLocation = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
