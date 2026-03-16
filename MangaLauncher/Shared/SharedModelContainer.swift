@@ -10,7 +10,7 @@ enum SharedModelContainer {
             "MangaLauncher",
             schema: schema,
             url: storeURL,
-            cloudKitDatabase: .none
+            cloudKitDatabase: .automatic
         )
         return try ModelContainer(for: schema, configurations: [config])
     }
