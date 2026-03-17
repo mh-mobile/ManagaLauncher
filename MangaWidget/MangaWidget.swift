@@ -16,6 +16,7 @@ struct MangaWidgetItem: Identifiable {
     let url: String
     let iconColor: String
     let publisher: String
+    let imageData: Data?
 }
 
 // MARK: - Timeline Provider
@@ -48,9 +49,64 @@ struct MangaTimelineProvider: TimelineProvider {
         )
         let results = (try? context.fetch(descriptor)) ?? []
         let items = results.map {
-            MangaWidgetItem(id: $0.id, name: $0.name, url: $0.url, iconColor: $0.iconColor, publisher: $0.publisher)
+            MangaWidgetItem(
+                id: $0.id, name: $0.name, url: $0.url,
+                iconColor: $0.iconColor, publisher: $0.publisher,
+                imageData: $0.imageData
+            )
         }
         return MangaTimelineEntry(date: date, items: items, dayOfWeek: today)
+    }
+}
+
+// MARK: - Grid Cell
+
+struct MangaGridCell: View {
+    let item: MangaWidgetItem
+
+    var body: some View {
+        Link(destination: deepLink(for: item.id)) {
+            VStack(spacing: 2) {
+                if let imageData = item.imageData, let image = imageData.toSwiftUIImage() {
+                    image
+                        .resizable()
+                        .scaledToFill()
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                } else {
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(colorFromName(item.iconColor))
+                        .overlay {
+                            Text(item.name)
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(.white)
+                                .multilineTextAlignment(.center)
+                                .padding(2)
+                        }
+                }
+                Text(item.name)
+                    .font(.system(size: 9))
+                    .lineLimit(1)
+                    .foregroundStyle(.primary)
+            }
+        }
+    }
+
+    private func deepLink(for id: UUID) -> URL {
+        URL(string: "mangalauncher://open?id=\(id.uuidString)")!
+    }
+
+    private func colorFromName(_ name: String) -> Color {
+        switch name {
+        case "red": .red
+        case "orange": .orange
+        case "yellow": .yellow
+        case "green": .green
+        case "blue": .blue
+        case "purple": .purple
+        case "pink": .pink
+        case "teal": .teal
+        default: .blue
+        }
     }
 }
 
@@ -76,14 +132,14 @@ struct MangaWidgetEntryView: View {
     }
 
     private var smallView: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(spacing: 4) {
             HStack {
-                Text(entry.dayOfWeek.shortName)
-                    .font(.headline.bold())
-                Text("のマンガ")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text("\(entry.dayOfWeek.shortName)曜")
+                    .font(.caption.bold())
                 Spacer()
+                Text("\(entry.items.count)件")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
             }
 
             if entry.items.isEmpty {
@@ -91,19 +147,13 @@ struct MangaWidgetEntryView: View {
                 Text("登録なし")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity)
                 Spacer()
             } else {
-                ForEach(entry.items.prefix(3)) { item in
-                    Link(destination: deepLink(for: item.id)) {
-                        HStack(spacing: 4) {
-                            Circle()
-                                .fill(colorFromName(item.iconColor))
-                                .frame(width: 8, height: 8)
-                            Text(item.name)
-                                .font(.caption)
-                                .lineLimit(1)
-                        }
+                // 2x2 grid
+                let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 2)
+                LazyVGrid(columns: columns, spacing: 4) {
+                    ForEach(entry.items.prefix(4)) { item in
+                        MangaGridCell(item: item)
                     }
                 }
                 Spacer(minLength: 0)
@@ -113,13 +163,13 @@ struct MangaWidgetEntryView: View {
     }
 
     private var mediumView: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(spacing: 4) {
             HStack {
                 Text("\(entry.dayOfWeek.displayName)のマンガ")
-                    .font(.headline)
+                    .font(.caption.bold())
                 Spacer()
                 Text("\(entry.items.count)件")
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
             }
 
@@ -131,22 +181,11 @@ struct MangaWidgetEntryView: View {
                     .frame(maxWidth: .infinity)
                 Spacer()
             } else {
-                ForEach(entry.items.prefix(5)) { item in
-                    Link(destination: deepLink(for: item.id)) {
-                        HStack(spacing: 6) {
-                            Circle()
-                                .fill(colorFromName(item.iconColor))
-                                .frame(width: 10, height: 10)
-                            Text(item.name)
-                                .font(.caption)
-                                .lineLimit(1)
-                            if !item.publisher.isEmpty {
-                                Spacer()
-                                Text(item.publisher)
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
+                // 4x2 grid
+                let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 4)
+                LazyVGrid(columns: columns, spacing: 4) {
+                    ForEach(entry.items.prefix(8)) { item in
+                        MangaGridCell(item: item)
                     }
                 }
                 Spacer(minLength: 0)
@@ -174,24 +213,6 @@ struct MangaWidgetEntryView: View {
         }
     }
     #endif
-
-    private func deepLink(for id: UUID) -> URL {
-        URL(string: "mangalauncher://open?id=\(id.uuidString)")!
-    }
-
-    private func colorFromName(_ name: String) -> Color {
-        switch name {
-        case "red": .red
-        case "orange": .orange
-        case "yellow": .yellow
-        case "green": .green
-        case "blue": .blue
-        case "purple": .purple
-        case "pink": .pink
-        case "teal": .teal
-        default: .blue
-        }
-    }
 }
 
 // MARK: - Widget Declaration
