@@ -80,6 +80,20 @@ final class MangaViewModel {
         save()
     }
 
+    func deleteAllEntries() {
+        let descriptor = FetchDescriptor<MangaEntry>()
+        guard let entries = try? modelContext.fetch(descriptor) else { return }
+        for entry in entries {
+            modelContext.delete(entry)
+        }
+        save()
+    }
+
+    func totalEntryCount() -> Int {
+        let descriptor = FetchDescriptor<MangaEntry>()
+        return (try? modelContext.fetchCount(descriptor)) ?? 0
+    }
+
     func findEntry(by id: UUID) -> MangaEntry? {
         let descriptor = FetchDescriptor<MangaEntry>(
             predicate: #Predicate { $0.id == id }

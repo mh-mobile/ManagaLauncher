@@ -10,6 +10,7 @@ struct ContentView: View {
     @Environment(\.openURL) private var openURL
     @State private var viewModel: MangaViewModel?
     @State private var showingAddSheet = false
+    @State private var showingSettings = false
     @State private var editingEntry: MangaEntry?
     @State private var displayMode: DisplayMode = .list
     @State private var draggingEntryID: UUID?
@@ -76,12 +77,22 @@ struct ContentView: View {
                             Image(systemName: "plus")
                         }
                     }
+                    ToolbarItem(placement: .automatic) {
+                        Button {
+                            showingSettings = true
+                        } label: {
+                            Image(systemName: "gearshape")
+                        }
+                    }
                 }
                 .sheet(isPresented: $showingAddSheet) {
                     EditEntryView(viewModel: viewModel, day: viewModel.selectedDay)
                 }
                 .sheet(item: $editingEntry, onDismiss: { editingEntry = nil }) { entry in
                     EditEntryView(viewModel: viewModel, entry: entry)
+                }
+                .sheet(isPresented: $showingSettings) {
+                    SettingsView(viewModel: viewModel)
                 }
                 .onAppear {
                     pageIndex = pageIndexForDay(viewModel.selectedDay)
