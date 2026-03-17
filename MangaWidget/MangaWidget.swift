@@ -211,6 +211,7 @@ struct MangaWidgetEntryView: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .containerBackground(.clear, for: .widget)
     }
     #endif
 }
