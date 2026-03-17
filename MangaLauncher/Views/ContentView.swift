@@ -42,7 +42,7 @@ struct ContentView: View {
                     }
                     dayPager(viewModel: viewModel)
                 }
-                .navigationTitle("マンガランチャー")
+                .navigationTitle("マンガ曜日")
                 #if os(iOS) || os(visionOS)
                 .navigationBarTitleDisplayMode(.inline)
                 #endif
