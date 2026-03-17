@@ -77,6 +77,7 @@
 		E7D977DE254FB1F216740BE6 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		ECCD2FCD2F65596900BF3309 /* PublisherPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherPickerView.swift; sourceTree = "<group>"; };
 		EEEF347AB79EE547A4014C35 /* MangaLauncher.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaLauncher.entitlements; sourceTree = "<group>"; };
+		F75AA6830F31ABE5BD81DE01 /* MangaLauncherDebug.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaLauncherDebug.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -147,6 +148,7 @@
 				6238B354545AE6BD66DCA01C /* Helpers */,
 				F40871AEA45509078C83A570 /* Shared */,
 				EEEF347AB79EE547A4014C35 /* MangaLauncher.entitlements */,
+				F75AA6830F31ABE5BD81DE01 /* MangaLauncherDebug.entitlements */,
 			);
 			path = MangaLauncher;
 			sourceTree = "<group>";
@@ -532,7 +534,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = MangaLauncher/MangaLauncher.entitlements;
+				CODE_SIGN_ENTITLEMENTS = MangaLauncher/MangaLauncherDebug.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
