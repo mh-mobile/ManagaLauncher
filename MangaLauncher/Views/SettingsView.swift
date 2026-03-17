@@ -97,7 +97,6 @@ struct SettingsView: View {
             .alert("データをリセット", isPresented: $showingResetConfirmation) {
                 Button("削除", role: .destructive) {
                     viewModel.deleteAllEntries()
-                    dismiss()
                 }
                 Button("キャンセル", role: .cancel) {}
             } message: {
