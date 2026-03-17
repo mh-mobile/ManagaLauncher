@@ -94,6 +94,42 @@ final class MangaViewModel {
         return (try? modelContext.fetchCount(descriptor)) ?? 0
     }
 
+    func exportBackupData() -> Data? {
+        let descriptor = FetchDescriptor<MangaEntry>(sortBy: [SortDescriptor(\.dayOfWeekRawValue), SortDescriptor(\.sortOrder)])
+        guard let entries = try? modelContext.fetch(descriptor) else { return nil }
+        let backup = BackupData.from(entries)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        return try? encoder.encode(backup)
+    }
+
+    func importBackupData(_ data: Data) -> Int {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        guard let backup = try? decoder.decode(BackupData.self, from: data) else { return 0 }
+
+        let existingIDs = Set((try? modelContext.fetch(FetchDescriptor<MangaEntry>()))?.map(\.id) ?? [])
+
+        var importedCount = 0
+        for backupEntry in backup.entries {
+            guard !existingIDs.contains(backupEntry.id) else { continue }
+            let entry = MangaEntry(
+                id: backupEntry.id,
+                name: backupEntry.name,
+                url: backupEntry.url,
+                dayOfWeek: DayOfWeek(rawValue: backupEntry.dayOfWeekRawValue) ?? .monday,
+                sortOrder: backupEntry.sortOrder,
+                iconColor: backupEntry.iconColor,
+                publisher: backupEntry.publisher,
+                imageData: backupEntry.imageData
+            )
+            modelContext.insert(entry)
+            importedCount += 1
+        }
+        if importedCount > 0 { save() }
+        return importedCount
+    }
+
     func findEntry(by id: UUID) -> MangaEntry? {
         let descriptor = FetchDescriptor<MangaEntry>(
             predicate: #Predicate { $0.id == id }
