@@ -260,21 +260,19 @@ struct ContentView: View {
     @ViewBuilder
     private func gridView(entries: [MangaEntry], day: DayOfWeek, viewModel: MangaViewModel) -> some View {
         ScrollView {
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                ForEach(entries, id: \.id) { entry in
-                    gridCell(entry: entry, viewModel: viewModel)
-                        .onDrag {
-                            draggingEntryID = entry.id
-                            return NSItemProvider(object: entry.id.uuidString as NSString)
-                        }
-                        .onDrop(of: [.text], delegate: GridDropDelegate(
-                            entry: entry,
-                            entries: entries,
-                            day: day,
-                            draggingEntryID: $draggingEntryID,
-                            viewModel: viewModel
-                        ))
-                }
+            MasonryLayout(entries: entries) { entry in
+                gridCell(entry: entry, viewModel: viewModel)
+                    .onDrag {
+                        draggingEntryID = entry.id
+                        return NSItemProvider(object: entry.id.uuidString as NSString)
+                    }
+                    .onDrop(of: [.text], delegate: GridDropDelegate(
+                        entry: entry,
+                        entries: entries,
+                        day: day,
+                        draggingEntryID: $draggingEntryID,
+                        viewModel: viewModel
+                    ))
             }
             .padding()
         }
@@ -287,7 +285,6 @@ struct ContentView: View {
                 image
                     .resizable()
                     .scaledToFit()
-                    .frame(maxWidth: .infinity)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             } else {
                 RoundedRectangle(cornerRadius: 8)
