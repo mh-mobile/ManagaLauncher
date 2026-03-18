@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マンガ曜日 - 曜日ごとのマンガをワンタップで</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif;
+            color: #333;
+            line-height: 1.8;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #4A90D9 0%, #67B8F0 100%);
+            color: white;
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .hero-icon {
+            width: 120px;
+            height: 120px;
+            border-radius: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero h1 {
+            font-size: 2.5em;
+            margin-bottom: 12px;
+        }
+
+        .hero p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .section {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        .section h2 {
+            font-size: 1.8em;
+            margin-bottom: 24px;
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            color: #4A90D9;
+        }
+
+        .feature-card p {
+            font-size: 0.95em;
+            color: #666;
+        }
+
+        .platforms {
+            text-align: center;
+            background: #f8f9fa;
+            padding: 60px 20px;
+        }
+
+        .platforms h2 {
+            font-size: 1.8em;
+            margin-bottom: 16px;
+            color: #2c3e50;
+        }
+
+        .platforms p {
+            font-size: 1.1em;
+            color: #666;
+        }
+
+        .support {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        .support h2 {
+            font-size: 1.8em;
+            margin-bottom: 24px;
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .support p {
+            text-align: center;
+            font-size: 1em;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .support a {
+            color: #4A90D9;
+            text-decoration: none;
+        }
+
+        .support a:hover {
+            text-decoration: underline;
+        }
+
+        .privacy {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        .privacy h2 {
+            font-size: 1.8em;
+            margin-bottom: 24px;
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .privacy p {
+            font-size: 0.95em;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 32px 20px;
+            color: #999;
+            font-size: 0.85em;
+            border-top: 1px solid #eee;
+        }
+
+        @media (max-width: 600px) {
+            .hero h1 {
+                font-size: 1.8em;
+            }
+
+            .hero p {
+                font-size: 1em;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <img src="icon.png" alt="マンガ曜日 アイコン" class="hero-icon">
+        <h1>マンガ曜日</h1>
+        <p>曜日ごとのマンガをワンタップで</p>
+    </section>
+
+    <section class="section">
+        <h2>主な機能</h2>
+        <div class="features">
+            <div class="feature-card">
+                <h3>曜日ごとに管理</h3>
+                <p>週間連載のマンガを曜日ごとに登録。今日読むマンガがひと目でわかります。</p>
+            </div>
+            <div class="feature-card">
+                <h3>ワンタップで起動</h3>
+                <p>タップするだけでマンガサイトやアプリをすぐに開けます。</p>
+            </div>
+            <div class="feature-card">
+                <h3>ウィジェット対応</h3>
+                <p>ホーム画面やロック画面から今日のマンガを確認・起動できます。</p>
+            </div>
+            <div class="feature-card">
+                <h3>iCloud同期</h3>
+                <p>iPhone・iPad・Mac間でデータを自動同期。どのデバイスからでも同じマンガにアクセス。</p>
+            </div>
+            <div class="feature-card">
+                <h3>2つの表示モード</h3>
+                <p>リスト表示とPinterest風グリッド表示を切り替えて、お好みのスタイルで閲覧。</p>
+            </div>
+            <div class="feature-card">
+                <h3>バックアップ</h3>
+                <p>JSON形式でのエクスポート・インポートに対応。データの移行も簡単です。</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="platforms">
+        <h2>対応プラットフォーム</h2>
+        <p>iPhone / iPad / Mac / Apple Vision Pro</p>
+    </section>
+
+    <section id="support" class="support">
+        <h2>サポート</h2>
+        <p>ご質問やフィードバックはこちらからお寄せください。</p>
+        <p><a href="https://github.com/mh-mobile/ManagaLauncher/issues">GitHub Issues</a></p>
+    </section>
+
+    <section id="privacy" class="privacy">
+        <h2>プライバシーポリシー</h2>
+        <p>「マンガ曜日」は、ユーザーのプライバシーを尊重し、以下の方針でデータを取り扱います。</p>
+        <p><strong>収集するデータ:</strong> 本アプリは個人情報を収集しません。ユーザーが登録したマンガデータ（作品名、URL、画像等）はユーザー自身のiCloudアカウントに保存され、開発者がアクセスすることはできません。</p>
+        <p><strong>iCloud同期:</strong> データの同期にはAppleのCloudKitを使用します。データはユーザーのiCloudアカウントのプライベートデータベースに保存され、ユーザー本人のみがアクセスできます。</p>
+        <p><strong>第三者への提供:</strong> ユーザーのデータを第三者に提供・販売することはありません。</p>
+        <p><strong>分析・トラッキング:</strong> 本アプリは分析ツールやトラッキングツールを使用しません。</p>
+        <p><strong>お問い合わせ:</strong> プライバシーに関するお問い合わせは <a href="https://github.com/mh-mobile/ManagaLauncher/issues">GitHub Issues</a> までお願いします。</p>
+    </section>
+
+    <footer>
+        &copy; 2026 mh-mobile. All rights reserved.
+    </footer>
+</body>
+</html>
