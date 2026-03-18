@@ -59,57 +59,6 @@ struct MangaTimelineProvider: TimelineProvider {
     }
 }
 
-// MARK: - Grid Cell
-
-struct MangaGridCell: View {
-    let item: MangaWidgetItem
-
-    var body: some View {
-        Link(destination: deepLink(for: item.id)) {
-            VStack(spacing: 2) {
-                if let imageData = item.imageData, let image = imageData.toSwiftUIImage() {
-                    image
-                        .resizable()
-                        .scaledToFill()
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                } else {
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(colorFromName(item.iconColor))
-                        .overlay {
-                            Text(item.name)
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(.white)
-                                .multilineTextAlignment(.center)
-                                .padding(2)
-                        }
-                }
-                Text(item.name)
-                    .font(.system(size: 9))
-                    .lineLimit(1)
-                    .foregroundStyle(.primary)
-            }
-        }
-    }
-
-    private func deepLink(for id: UUID) -> URL {
-        URL(string: "mangalauncher://open?id=\(id.uuidString)")!
-    }
-
-    private func colorFromName(_ name: String) -> Color {
-        switch name {
-        case "red": .red
-        case "orange": .orange
-        case "yellow": .yellow
-        case "green": .green
-        case "blue": .blue
-        case "purple": .purple
-        case "pink": .pink
-        case "teal": .teal
-        default: .blue
-        }
-    }
-}
-
 // MARK: - Widget Views
 
 struct MangaWidgetEntryView: View {
@@ -131,68 +80,119 @@ struct MangaWidgetEntryView: View {
         }
     }
 
-    private var smallView: some View {
-        VStack(spacing: 4) {
-            HStack {
-                Text("\(entry.dayOfWeek.shortName)曜")
-                    .font(.caption.bold())
-                Spacer()
-                Text("\(entry.items.count)件")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
+    // MARK: - Small Widget (2x2)
 
-            if entry.items.isEmpty {
-                Spacer()
-                Text("登録なし")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
-            } else {
-                // 2x2 grid
-                let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 2)
-                LazyVGrid(columns: columns, spacing: 4) {
-                    ForEach(entry.items.prefix(4)) { item in
-                        MangaGridCell(item: item)
-                    }
+    private var smallView: some View {
+        GeometryReader { geo in
+            let headerHeight: CGFloat = 16
+            let spacing: CGFloat = 4
+            let cols = 2
+            let rows = 2
+            let gridWidth = geo.size.width
+            let gridHeight = geo.size.height - headerHeight - spacing
+            let cellW = (gridWidth - spacing * CGFloat(cols - 1)) / CGFloat(cols)
+            let cellH = (gridHeight - spacing * CGFloat(rows - 1)) / CGFloat(rows)
+            let cellSize = min(cellW, cellH)
+
+            VStack(spacing: spacing) {
+                HStack {
+                    Text("\(entry.dayOfWeek.shortName)曜")
+                        .font(.system(size: 11, weight: .bold))
+                    Spacer()
+                    Text("\(entry.items.count)件")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary)
                 }
-                Spacer(minLength: 0)
+                .frame(height: headerHeight)
+
+                if entry.items.isEmpty {
+                    Spacer()
+                    Text("登録なし")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                    Spacer()
+                } else {
+                    let items = Array(entry.items.prefix(4))
+                    Spacer(minLength: 0)
+                    VStack(spacing: spacing) {
+                        ForEach(0..<rows, id: \.self) { row in
+                            HStack(spacing: spacing) {
+                                ForEach(0..<cols, id: \.self) { col in
+                                    let idx = row * cols + col
+                                    if idx < items.count {
+                                        gridCell(item: items[idx], size: cellSize)
+                                    } else {
+                                        Color.clear.frame(width: cellSize, height: cellSize)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Spacer(minLength: 0)
+                }
             }
         }
         .containerBackground(.fill.tertiary, for: .widget)
     }
+
+    // MARK: - Medium Widget (4x2)
 
     private var mediumView: some View {
-        VStack(spacing: 4) {
-            HStack {
-                Text("\(entry.dayOfWeek.displayName)のマンガ")
-                    .font(.caption.bold())
-                Spacer()
-                Text("\(entry.items.count)件")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
+        GeometryReader { geo in
+            let headerHeight: CGFloat = 16
+            let spacing: CGFloat = 4
+            let cols = 4
+            let rows = 2
+            let gridWidth = geo.size.width
+            let gridHeight = geo.size.height - headerHeight - spacing
+            let cellW = (gridWidth - spacing * CGFloat(cols - 1)) / CGFloat(cols)
+            let cellH = (gridHeight - spacing * CGFloat(rows - 1)) / CGFloat(rows)
+            let cellSize = min(cellW, cellH)
 
-            if entry.items.isEmpty {
-                Spacer()
-                Text("登録なし")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity)
-                Spacer()
-            } else {
-                // 4x2 grid
-                let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 4)
-                LazyVGrid(columns: columns, spacing: 4) {
-                    ForEach(entry.items.prefix(8)) { item in
-                        MangaGridCell(item: item)
-                    }
+            VStack(spacing: spacing) {
+                HStack {
+                    Text("\(entry.dayOfWeek.displayName)のマンガ")
+                        .font(.system(size: 11, weight: .bold))
+                    Spacer()
+                    Text("\(entry.items.count)件")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary)
                 }
-                Spacer(minLength: 0)
+                .frame(height: headerHeight)
+
+                if entry.items.isEmpty {
+                    Spacer()
+                    Text("登録なし")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                    Spacer()
+                } else {
+                    let items = Array(entry.items.prefix(8))
+                    Spacer(minLength: 0)
+                    VStack(spacing: spacing) {
+                        ForEach(0..<rows, id: \.self) { row in
+                            HStack(spacing: spacing) {
+                                ForEach(0..<cols, id: \.self) { col in
+                                    let idx = row * cols + col
+                                    if idx < items.count {
+                                        gridCell(item: items[idx], size: cellSize)
+                                    } else {
+                                        Color.clear.frame(width: cellSize, height: cellSize)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Spacer(minLength: 0)
+                }
             }
         }
         .containerBackground(.fill.tertiary, for: .widget)
     }
+
+    // MARK: - Lock Screen
 
     #if os(iOS)
     private var lockScreenView: some View {
@@ -214,6 +214,46 @@ struct MangaWidgetEntryView: View {
         .containerBackground(.clear, for: .widget)
     }
     #endif
+
+    // MARK: - Grid Cell
+
+    private func gridCell(item: MangaWidgetItem, size: CGFloat) -> some View {
+        Link(destination: URL(string: "mangalauncher://open?id=\(item.id.uuidString)")!) {
+            Group {
+                if let imageData = item.imageData, let image = imageData.toSwiftUIImage() {
+                    image
+                        .resizable()
+                        .scaledToFit()
+                } else {
+                    Rectangle()
+                        .fill(colorFromName(item.iconColor))
+                        .overlay {
+                            Text(item.name)
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(.white)
+                                .multilineTextAlignment(.center)
+                                .padding(2)
+                        }
+                }
+            }
+            .frame(width: size, height: size)
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+        }
+    }
+
+    private func colorFromName(_ name: String) -> Color {
+        switch name {
+        case "red": .red
+        case "orange": .orange
+        case "yellow": .yellow
+        case "green": .green
+        case "blue": .blue
+        case "purple": .purple
+        case "pink": .pink
+        case "teal": .teal
+        default: .blue
+        }
+    }
 }
 
 // MARK: - Widget Declaration
