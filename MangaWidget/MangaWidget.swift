@@ -8,6 +8,7 @@ struct MangaTimelineEntry: TimelineEntry {
     let date: Date
     let items: [MangaWidgetItem]
     let dayOfWeek: DayOfWeek
+    let isToday: Bool
 }
 
 struct MangaWidgetItem: Identifiable {
@@ -25,7 +26,7 @@ struct MangaTimelineProvider: TimelineProvider {
     let container: ModelContainer
 
     func placeholder(in context: Context) -> MangaTimelineEntry {
-        MangaTimelineEntry(date: .now, items: [], dayOfWeek: .today)
+        MangaTimelineEntry(date: .now, items: [], dayOfWeek: .today, isToday: true)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (MangaTimelineEntry) -> Void) {
@@ -40,8 +41,8 @@ struct MangaTimelineProvider: TimelineProvider {
     }
 
     private func fetchEntry(for date: Date) -> MangaTimelineEntry {
-        let today = DayOfWeek.today
-        let dayRaw = today.rawValue
+        let selectedDay = WidgetDayStore.shared.currentDay
+        let dayRaw = selectedDay.rawValue
         let context = ModelContext(container)
         let descriptor = FetchDescriptor<MangaEntry>(
             predicate: #Predicate { $0.dayOfWeekRawValue == dayRaw },
@@ -55,7 +56,10 @@ struct MangaTimelineProvider: TimelineProvider {
                 imageData: $0.imageData
             )
         }
-        return MangaTimelineEntry(date: date, items: items, dayOfWeek: today)
+        return MangaTimelineEntry(
+            date: date, items: items, dayOfWeek: selectedDay,
+            isToday: selectedDay == DayOfWeek.today
+        )
     }
 }
 
@@ -80,6 +84,54 @@ struct MangaWidgetEntryView: View {
         }
     }
 
+    // MARK: - Header with day navigation
+
+    private func header(compact: Bool = false) -> some View {
+        HStack(spacing: 0) {
+            Button(intent: ChangeDayIntent(direction: -1)) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 28, height: 28)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if entry.isToday {
+                Text(compact ? "\(entry.dayOfWeek.shortName)曜" : "\(entry.dayOfWeek.displayName)")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(Color.primary)
+                    .lineLimit(1)
+            } else {
+                Button(intent: ChangeDayIntent(direction: 0)) {
+                    HStack(spacing: 2) {
+                        Text(compact ? "\(entry.dayOfWeek.shortName)曜" : "\(entry.dayOfWeek.displayName)")
+                            .font(.system(size: 12, weight: .bold))
+                        Image(systemName: "arrow.uturn.backward")
+                            .font(.system(size: 8))
+                    }
+                    .foregroundStyle(Color.accentColor)
+                }
+                .buttonStyle(.plain)
+            }
+
+            Button(intent: ChangeDayIntent(direction: 1)) {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 28, height: 28)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            Text("\(entry.items.count)件")
+                .font(.system(size: 9))
+                .foregroundStyle(.secondary)
+        }
+    }
+
     // MARK: - Small Widget (2x2)
 
     private var smallView: some View {
@@ -95,15 +147,8 @@ struct MangaWidgetEntryView: View {
             let cellSize = min(cellW, cellH)
 
             VStack(spacing: spacing) {
-                HStack {
-                    Text("\(entry.dayOfWeek.shortName)曜")
-                        .font(.system(size: 11, weight: .bold))
-                    Spacer()
-                    Text("\(entry.items.count)件")
-                        .font(.system(size: 9))
-                        .foregroundStyle(.secondary)
-                }
-                .frame(height: headerHeight)
+                header(compact: true)
+                    .frame(height: headerHeight)
 
                 if entry.items.isEmpty {
                     Spacer()
@@ -151,15 +196,8 @@ struct MangaWidgetEntryView: View {
             let cellSize = min(cellW, cellH)
 
             VStack(spacing: spacing) {
-                HStack {
-                    Text("\(entry.dayOfWeek.displayName)のマンガ")
-                        .font(.system(size: 11, weight: .bold))
-                    Spacer()
-                    Text("\(entry.items.count)件")
-                        .font(.system(size: 9))
-                        .foregroundStyle(.secondary)
-                }
-                .frame(height: headerHeight)
+                header()
+                    .frame(height: headerHeight)
 
                 if entry.items.isEmpty {
                     Spacer()

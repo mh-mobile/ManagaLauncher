@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0AD569E2465106D7BC72914B /* PlatformHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDD9A4D8748B9496E85A2A67 /* PlatformHelpers.swift */; };
 		2AA2BDFC2D4CFE5BF3F85D4A /* DataMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CF568E5CBBFA07B55373C73 /* DataMigration.swift */; };
+		3650352634B47DCA879C45C1 /* ChangeDayIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4117777580B33705902FA67A /* ChangeDayIntent.swift */; };
 		3E27882FDDEB43FF0F253020 /* BackupData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AFF912AECB7C6B219DD1600 /* BackupData.swift */; };
 		4064491CAC92BFC4CAEA647C /* MangaWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EFDC883F33BA3C119960C0B /* MangaWidget.swift */; };
 		41369B8CB93B8617E31CAA59 /* MangaWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 501DFBA332C24E2F563C81D7 /* MangaWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -59,6 +60,7 @@
 		1CF568E5CBBFA07B55373C73 /* DataMigration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DataMigration.swift; sourceTree = "<group>"; };
 		23E67B082915C8518CC0A973 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		3AFF912AECB7C6B219DD1600 /* BackupData.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackupData.swift; sourceTree = "<group>"; };
+		4117777580B33705902FA67A /* ChangeDayIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChangeDayIntent.swift; sourceTree = "<group>"; };
 		501DFBA332C24E2F563C81D7 /* MangaWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MangaWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7EFDC883F33BA3C119960C0B /* MangaWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MangaWidget.swift; sourceTree = "<group>"; };
 		90F26F2E86530882A39954F6 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -197,6 +199,7 @@
 				7EFDC883F33BA3C119960C0B /* MangaWidget.swift */,
 				A576F9BEFBD3B37AA9275FAB /* MangaWidget.entitlements */,
 				BC0276ADB2A6EFEC185148CA /* Info.plist */,
+				4117777580B33705902FA67A /* ChangeDayIntent.swift */,
 			);
 			path = MangaWidget;
 			sourceTree = "<group>";
@@ -311,6 +314,7 @@
 				431F2DADE5A1315BB2611590 /* MangaEntry.swift in Sources */,
 				E79C1EBA2299356887386C0C /* SharedModelContainer.swift in Sources */,
 				D500BDE07E6FE7D0E0396EA7 /* PlatformHelpers.swift in Sources */,
+				3650352634B47DCA879C45C1 /* ChangeDayIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
