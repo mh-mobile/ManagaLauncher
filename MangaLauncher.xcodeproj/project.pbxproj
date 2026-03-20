@@ -8,14 +8,25 @@
 
 /* Begin PBXBuildFile section */
 		0AD569E2465106D7BC72914B /* PlatformHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDD9A4D8748B9496E85A2A67 /* PlatformHelpers.swift */; };
+		0F66A6093327A5A5BD16B10F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E7D977DE254FB1F216740BE6 /* Foundation.framework */; };
+		125D8CEEBC201DD7B9C5BCE3 /* ShareExtensionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 358605C94F78CC23682FF911 /* ShareExtensionView.swift */; };
 		2AA2BDFC2D4CFE5BF3F85D4A /* DataMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CF568E5CBBFA07B55373C73 /* DataMigration.swift */; };
+		2D2660F136C6B40FAFFA860F /* PendingShareData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7B43AF895948029611F3FB /* PendingShareData.swift */; };
 		3650352634B47DCA879C45C1 /* ChangeDayIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4117777580B33705902FA67A /* ChangeDayIntent.swift */; };
+		39725E0E00E8E4FE9F2A7FF2 /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB770326E8D34706AF8B81EC /* UniformTypeIdentifiers.framework */; };
 		3E27882FDDEB43FF0F253020 /* BackupData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AFF912AECB7C6B219DD1600 /* BackupData.swift */; };
 		4064491CAC92BFC4CAEA647C /* MangaWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EFDC883F33BA3C119960C0B /* MangaWidget.swift */; };
 		41369B8CB93B8617E31CAA59 /* MangaWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 501DFBA332C24E2F563C81D7 /* MangaWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		431F2DADE5A1315BB2611590 /* MangaEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000002 /* MangaEntry.swift */; };
 		44C9D49EEE5421D509FDEC7C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90F26F2E86530882A39954F6 /* SwiftUI.framework */; };
+		45F5A38A61E6E779064A1E6F /* PlatformHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDD9A4D8748B9496E85A2A67 /* PlatformHelpers.swift */; };
+		4913D9B7564F39C42E8E5207 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39DE3D6D992FBD1015ED0769 /* ShareViewController.swift */; };
 		4975296B405867976ADBBA9F /* SharedModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C7FA9735199D021E15CEED8 /* SharedModelContainer.swift */; };
+		63696DAFAE55A61EC72070CA /* MangaEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000002 /* MangaEntry.swift */; };
+		767881E621571EFBE2368560 /* MangaExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E74C877B7B88CCCCAC0E6A6F /* MangaExtractor.swift */; };
+		87DED40024B17065AEFAA3C8 /* MangaExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E74C877B7B88CCCCAC0E6A6F /* MangaExtractor.swift */; };
+		8EB2571B46FB5E9E702EAC1B /* MangaShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 40221490621705DE4B77F085 /* MangaShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9DE770763D908488F176AF20 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 68E247987CED890FF8E2D6A1 /* SwiftUI.framework */; };
 		A1000001 /* MangaLauncherApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001 /* MangaLauncherApp.swift */; };
 		A1000002 /* MangaEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000002 /* MangaEntry.swift */; };
 		A1000003 /* MangaViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000003 /* MangaViewModel.swift */; };
@@ -23,6 +34,10 @@
 		A1000005 /* EditEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000005 /* EditEntryView.swift */; };
 		A1000006 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000006 /* Assets.xcassets */; };
 		A1A8B2ACB18D6E541985F304 /* MasonryLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96C7D9E283FFCADD60181726 /* MasonryLayout.swift */; };
+		B26E164ECFAC0FC6A4B39CC6 /* SharedModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C7FA9735199D021E15CEED8 /* SharedModelContainer.swift */; };
+		B9F1B2C39C6A3DA4B2DDB420 /* PendingShareData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7B43AF895948029611F3FB /* PendingShareData.swift */; };
+		BA7DD3DF9519EF632F306D36 /* OGPImageFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9992960F4542D9303A849505 /* OGPImageFetcher.swift */; };
+		C6C5CFFF9326B9E91FED309D /* OGPImageFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9992960F4542D9303A849505 /* OGPImageFetcher.swift */; };
 		D43D0695E7E3840F3142A594 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CDE508C489E5FAA3881A522 /* SettingsView.swift */; };
 		D500BDE07E6FE7D0E0396EA7 /* PlatformHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDD9A4D8748B9496E85A2A67 /* PlatformHelpers.swift */; };
 		E79C1EBA2299356887386C0C /* SharedModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C7FA9735199D021E15CEED8 /* SharedModelContainer.swift */; };
@@ -39,6 +54,13 @@
 			remoteGlobalIDString = 5FBC8C7A2666619916A9F0CE;
 			remoteInfo = MangaWidgetExtension;
 		};
+		D87F2237BBD28B29C42758FB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A9000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7FDCBA7706DE62E5394731BA;
+			remoteInfo = MangaShareExtension;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -49,6 +71,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				41369B8CB93B8617E31CAA59 /* MangaWidgetExtension.appex in Embed Foundation Extensions */,
+				8EB2571B46FB5E9E702EAC1B /* MangaShareExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -56,15 +79,22 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0557E9481117CB9F8B903947 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0CDE508C489E5FAA3881A522 /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		0D7B43AF895948029611F3FB /* PendingShareData.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PendingShareData.swift; sourceTree = "<group>"; };
 		1CF568E5CBBFA07B55373C73 /* DataMigration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DataMigration.swift; sourceTree = "<group>"; };
 		23E67B082915C8518CC0A973 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		358605C94F78CC23682FF911 /* ShareExtensionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShareExtensionView.swift; sourceTree = "<group>"; };
+		39DE3D6D992FBD1015ED0769 /* ShareViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		3AFF912AECB7C6B219DD1600 /* BackupData.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackupData.swift; sourceTree = "<group>"; };
+		40221490621705DE4B77F085 /* MangaShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; name = MangaShareExtension.appex; path = MangaShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		4117777580B33705902FA67A /* ChangeDayIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChangeDayIntent.swift; sourceTree = "<group>"; };
 		501DFBA332C24E2F563C81D7 /* MangaWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MangaWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		68E247987CED890FF8E2D6A1 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		7EFDC883F33BA3C119960C0B /* MangaWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MangaWidget.swift; sourceTree = "<group>"; };
 		90F26F2E86530882A39954F6 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		96C7D9E283FFCADD60181726 /* MasonryLayout.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MasonryLayout.swift; sourceTree = "<group>"; };
+		9992960F4542D9303A849505 /* OGPImageFetcher.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OGPImageFetcher.swift; sourceTree = "<group>"; };
 		9C7FA9735199D021E15CEED8 /* SharedModelContainer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SharedModelContainer.swift; sourceTree = "<group>"; };
 		A2000001 /* MangaLauncherApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaLauncherApp.swift; sourceTree = "<group>"; };
 		A2000002 /* MangaEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaEntry.swift; sourceTree = "<group>"; };
@@ -74,8 +104,11 @@
 		A2000006 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A3000001 /* MangaLauncher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MangaLauncher.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A576F9BEFBD3B37AA9275FAB /* MangaWidget.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaWidget.entitlements; sourceTree = "<group>"; };
+		BB770326E8D34706AF8B81EC /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = SDKROOT; };
 		BC0276ADB2A6EFEC185148CA /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		CDD9A4D8748B9496E85A2A67 /* PlatformHelpers.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PlatformHelpers.swift; sourceTree = "<group>"; };
+		D899D5F8F3BA6AC39B41C8B4 /* MangaShareExtension.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaShareExtension.entitlements; sourceTree = "<group>"; };
+		E74C877B7B88CCCCAC0E6A6F /* MangaExtractor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MangaExtractor.swift; sourceTree = "<group>"; };
 		E7D977DE254FB1F216740BE6 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		ECCD2FCD2F65596900BF3309 /* PublisherPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherPickerView.swift; sourceTree = "<group>"; };
 		EEEF347AB79EE547A4014C35 /* MangaLauncher.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaLauncher.entitlements; sourceTree = "<group>"; };
@@ -83,6 +116,16 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		3AF42F008FE9B752BFF76FD4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0F66A6093327A5A5BD16B10F /* Foundation.framework in Frameworks */,
+				9DE770763D908488F176AF20 /* SwiftUI.framework in Frameworks */,
+				39725E0E00E8E4FE9F2A7FF2 /* UniformTypeIdentifiers.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4212DA020FAB28D526A71DF8 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -109,8 +152,20 @@
 				652221CD7BC2565EAF1244CD /* iOS */,
 				23E67B082915C8518CC0A973 /* WidgetKit.framework */,
 				90F26F2E86530882A39954F6 /* SwiftUI.framework */,
+				68E247987CED890FF8E2D6A1 /* SwiftUI.framework */,
+				BB770326E8D34706AF8B81EC /* UniformTypeIdentifiers.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		1C15BF6E9DE64673E7194826 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				E74C877B7B88CCCCAC0E6A6F /* MangaExtractor.swift */,
+				9992960F4542D9303A849505 /* OGPImageFetcher.swift */,
+			);
+			name = Services;
+			path = Services;
 			sourceTree = "<group>";
 		};
 		6238B354545AE6BD66DCA01C /* Helpers */ = {
@@ -129,6 +184,18 @@
 			name = iOS;
 			sourceTree = "<group>";
 		};
+		7FA21533E6120DC94ACA4402 /* MangaShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				39DE3D6D992FBD1015ED0769 /* ShareViewController.swift */,
+				358605C94F78CC23682FF911 /* ShareExtensionView.swift */,
+				0557E9481117CB9F8B903947 /* Info.plist */,
+				D899D5F8F3BA6AC39B41C8B4 /* MangaShareExtension.entitlements */,
+			);
+			name = MangaShareExtension;
+			path = MangaShareExtension;
+			sourceTree = "<group>";
+		};
 		A5000001 = {
 			isa = PBXGroup;
 			children = (
@@ -136,6 +203,7 @@
 				A5000006 /* Products */,
 				1464396C7EC8424773F56425 /* Frameworks */,
 				DF3BB51D5AD6175056B7293C /* MangaWidget */,
+				7FA21533E6120DC94ACA4402 /* MangaShareExtension */,
 			);
 			sourceTree = "<group>";
 		};
@@ -151,6 +219,7 @@
 				F40871AEA45509078C83A570 /* Shared */,
 				EEEF347AB79EE547A4014C35 /* MangaLauncher.entitlements */,
 				F75AA6830F31ABE5BD81DE01 /* MangaLauncherDebug.entitlements */,
+				1C15BF6E9DE64673E7194826 /* Services */,
 			);
 			path = MangaLauncher;
 			sourceTree = "<group>";
@@ -189,6 +258,7 @@
 			children = (
 				A3000001 /* MangaLauncher.app */,
 				501DFBA332C24E2F563C81D7 /* MangaWidgetExtension.appex */,
+				40221490621705DE4B77F085 /* MangaShareExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -209,6 +279,7 @@
 			children = (
 				9C7FA9735199D021E15CEED8 /* SharedModelContainer.swift */,
 				1CF568E5CBBFA07B55373C73 /* DataMigration.swift */,
+				0D7B43AF895948029611F3FB /* PendingShareData.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -233,6 +304,23 @@
 			productReference = 501DFBA332C24E2F563C81D7 /* MangaWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		7FDCBA7706DE62E5394731BA /* MangaShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FE8463329D1070F2E155C21B /* Build configuration list for PBXNativeTarget "MangaShareExtension" */;
+			buildPhases = (
+				54EDA4936B126B9BE703E963 /* Sources */,
+				3AF42F008FE9B752BFF76FD4 /* Frameworks */,
+				96ACCA677C341A215F8B7576 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MangaShareExtension;
+			productName = MangaShareExtension;
+			productReference = 40221490621705DE4B77F085 /* MangaShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		A6000001 /* MangaLauncher */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A8000003 /* Build configuration list for PBXNativeTarget "MangaLauncher" */;
@@ -246,6 +334,7 @@
 			);
 			dependencies = (
 				B34D44C0D231F297C83AE537 /* PBXTargetDependency */,
+				4A92E4F4FD60BA945CC91EA6 /* PBXTargetDependency */,
 			);
 			name = MangaLauncher;
 			productName = MangaLauncher;
@@ -283,11 +372,19 @@
 			targets = (
 				A6000001 /* MangaLauncher */,
 				5FBC8C7A2666619916A9F0CE /* MangaWidgetExtension */,
+				7FDCBA7706DE62E5394731BA /* MangaShareExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		96ACCA677C341A215F8B7576 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A7000002 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -318,6 +415,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		54EDA4936B126B9BE703E963 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4913D9B7564F39C42E8E5207 /* ShareViewController.swift in Sources */,
+				125D8CEEBC201DD7B9C5BCE3 /* ShareExtensionView.swift in Sources */,
+				767881E621571EFBE2368560 /* MangaExtractor.swift in Sources */,
+				C6C5CFFF9326B9E91FED309D /* OGPImageFetcher.swift in Sources */,
+				2D2660F136C6B40FAFFA860F /* PendingShareData.swift in Sources */,
+				63696DAFAE55A61EC72070CA /* MangaEntry.swift in Sources */,
+				45F5A38A61E6E779064A1E6F /* PlatformHelpers.swift in Sources */,
+				B26E164ECFAC0FC6A4B39CC6 /* SharedModelContainer.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A7000001 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -334,12 +446,21 @@
 				D43D0695E7E3840F3142A594 /* SettingsView.swift in Sources */,
 				3E27882FDDEB43FF0F253020 /* BackupData.swift in Sources */,
 				A1A8B2ACB18D6E541985F304 /* MasonryLayout.swift in Sources */,
+				87DED40024B17065AEFAA3C8 /* MangaExtractor.swift in Sources */,
+				BA7DD3DF9519EF632F306D36 /* OGPImageFetcher.swift in Sources */,
+				B9F1B2C39C6A3DA4B2DDB420 /* PendingShareData.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4A92E4F4FD60BA945CC91EA6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = MangaShareExtension;
+			target = 7FDCBA7706DE62E5394731BA /* MangaShareExtension */;
+			targetProxy = D87F2237BBD28B29C42758FB /* PBXContainerItemProxy */;
+		};
 		B34D44C0D231F297C83AE537 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = MangaWidgetExtension;
@@ -362,7 +483,7 @@
 				INFOPLIST_FILE = MangaWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "マンガ曜日ウィジェット";
 				INFOPLIST_KEY_NSWidgetWantsLocation = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -383,6 +504,31 @@
 			};
 			name = Release;
 		};
+		7B7F266E08FAC90BAC1C1817 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = MangaShareExtension/MangaShareExtension.entitlements;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = 5XJ8CR95CK;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MangaShareExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "マンガ曜日に追加";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mh-mobile.MangaYoubi.ShareExtension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
 		8B2A5BDF846A85B09DC9BF42 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -396,7 +542,7 @@
 				INFOPLIST_FILE = MangaWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "マンガ曜日ウィジェット";
 				INFOPLIST_KEY_NSWidgetWantsLocation = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -468,7 +614,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -524,7 +670,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -551,6 +697,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -585,6 +732,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -598,6 +746,32 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				XROS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
+		E6A5577DC48883C5B9556E0F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = MangaShareExtension/MangaShareExtension.entitlements;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = 5XJ8CR95CK;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MangaShareExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "マンガ曜日に追加";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mh-mobile.MangaYoubi.ShareExtension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
@@ -627,6 +801,15 @@
 			buildConfigurations = (
 				4C3CE3D01E543D77F45B0028 /* Release */,
 				8B2A5BDF846A85B09DC9BF42 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FE8463329D1070F2E155C21B /* Build configuration list for PBXNativeTarget "MangaShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E6A5577DC48883C5B9556E0F /* Release */,
+				7B7F266E08FAC90BAC1C1817 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
