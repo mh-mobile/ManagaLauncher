@@ -1,73 +1,158 @@
 import SwiftUI
+import SwiftData
 import UniformTypeIdentifiers
 
 struct ShareExtensionView: View {
     let extensionContext: NSExtensionContext?
 
-    @State private var status: ShareStatus = .loading
-    @State private var pendingData: PendingShareData?
+    @State private var isLoading = true
+    @State private var name = ""
+    @State private var url = ""
+    @State private var publisher = ""
+    @State private var selectedDay: DayOfWeek = .today
+    @State private var selectedColor = "blue"
+    @State private var imageData: Data?
+    @State private var saveError: String?
 
-    enum ShareStatus {
-        case loading
-        case result
-        case error(String)
+    private let colorOptions: [(name: String, color: Color)] = [
+        ("red", .red),
+        ("orange", .orange),
+        ("yellow", .yellow),
+        ("green", .green),
+        ("blue", .blue),
+        ("purple", .purple),
+        ("pink", .pink),
+        ("teal", .teal),
+    ]
+
+    private var isValidURL: Bool {
+        guard let url = URL(string: url) else { return false }
+        return url.scheme != nil && !url.scheme!.isEmpty
     }
 
     var body: some View {
         NavigationStack {
-            Group {
-                switch status {
-                case .loading:
-                    VStack(spacing: 16) {
-                        ProgressView()
-                            .scaleEffect(1.5)
-                        Text("解析中...")
-                            .font(.headline)
+            if isLoading {
+                VStack(spacing: 16) {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                    Text("読み込み中...")
+                        .font(.headline)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .navigationTitle("マンガ曜日に追加")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("キャンセル") {
+                            extensionContext?.completeRequest(returningItems: nil)
+                        }
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                case .result:
-                    if let data = pendingData {
-                        VStack(alignment: .leading, spacing: 12) {
-                            if let imageData = data.imageData, let image = imageData.toSwiftUIImage() {
+                }
+            } else {
+                Form {
+                    Section("基本情報") {
+                        TextField("名前", text: $name)
+                            .textInputAutocapitalization(.never)
+                        TextField("URL", text: $url)
+                            .textInputAutocapitalization(.never)
+                            .keyboardType(.URL)
+                            .autocorrectionDisabled()
+                        if !url.isEmpty && !isValidURL {
+                            Text("有効なURLを入力してください")
+                                .font(.caption)
+                                .foregroundStyle(.red)
+                        }
+                        TextField("掲載誌", text: $publisher)
+                            .textInputAutocapitalization(.never)
+                    }
+
+                    Section("画像") {
+                        if let imageData, let image = imageData.toSwiftUIImage() {
+                            HStack {
                                 image
                                     .resizable()
-                                    .scaledToFit()
-                                    .frame(maxHeight: 200)
+                                    .scaledToFill()
+                                    .frame(width: 80, height: 80)
                                     .clipShape(RoundedRectangle(cornerRadius: 8))
-                                    .frame(maxWidth: .infinity)
+                                Spacer()
+                                Button(role: .destructive) {
+                                    self.imageData = nil
+                                } label: {
+                                    Label("画像を削除", systemImage: "trash")
+                                }
                             }
-                            LabeledContent("タイトル") { Text(data.name) }
-                            LabeledContent("URL") { Text(data.url).lineLimit(1) }
-                            LabeledContent("掲載誌") { Text(data.publisher.isEmpty ? "未設定" : data.publisher) }
-                            Spacer()
+                        } else {
+                            Text("OGP画像が取得できませんでした")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
-                        .padding()
                     }
-                case .error(let message):
-                    VStack(spacing: 16) {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.largeTitle)
-                            .foregroundStyle(.secondary)
-                        Text(message)
-                            .font(.body)
-                            .foregroundStyle(.secondary)
+
+                    Section("曜日") {
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
+                            ForEach(DayOfWeek.allCases) { day in
+                                Text(day.shortName)
+                                    .font(.subheadline.bold())
+                                    .frame(width: 36, height: 36)
+                                    .background(
+                                        selectedDay == day
+                                            ? Color.accentColor
+                                            : Color.platformGray5
+                                    )
+                                    .foregroundStyle(
+                                        selectedDay == day ? .white : .primary
+                                    )
+                                    .clipShape(Circle())
+                                    .onTapGesture {
+                                        selectedDay = day
+                                    }
+                            }
+                        }
+                        .padding(.vertical, 4)
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                    Section("アイコンカラー") {
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 8), spacing: 12) {
+                            ForEach(colorOptions, id: \.name) { option in
+                                Circle()
+                                    .fill(option.color)
+                                    .frame(width: 32, height: 32)
+                                    .overlay {
+                                        if selectedColor == option.name {
+                                            Image(systemName: "checkmark")
+                                                .font(.caption.bold())
+                                                .foregroundStyle(.white)
+                                        }
+                                    }
+                                    .onTapGesture {
+                                        selectedColor = option.name
+                                    }
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+
+                    if let saveError {
+                        Section {
+                            Text(saveError)
+                                .foregroundStyle(.red)
+                        }
+                    }
                 }
-            }
-            .navigationTitle("マンガ曜日に追加")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("キャンセル") {
-                        extensionContext?.completeRequest(returningItems: nil)
+                .navigationTitle("マンガ曜日に追加")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("キャンセル") {
+                            extensionContext?.completeRequest(returningItems: nil)
+                        }
                     }
-                }
-                if case .result = status {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("追加") {
-                            openMainApp()
+                        Button("保存") {
+                            saveEntry()
                         }
+                        .disabled(name.isEmpty || url.isEmpty || !isValidURL)
                     }
                 }
             }
@@ -79,7 +164,7 @@ struct ShareExtensionView: View {
 
     private func processSharedContent() async {
         guard let items = extensionContext?.inputItems as? [NSExtensionItem] else {
-            status = .error("共有データを取得できませんでした")
+            isLoading = false
             return
         }
 
@@ -89,8 +174,8 @@ struct ShareExtensionView: View {
         for item in items {
             for provider in item.attachments ?? [] {
                 if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
-                    if let url = try? await provider.loadItem(forTypeIdentifier: UTType.url.identifier) as? URL {
-                        sharedURL = url.absoluteString
+                    if let urlItem = try? await provider.loadItem(forTypeIdentifier: UTType.url.identifier) as? URL {
+                        sharedURL = urlItem.absoluteString
                     }
                 }
                 if provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
@@ -101,61 +186,56 @@ struct ShareExtensionView: View {
             }
         }
 
+        // Extract URL from text if not found as URL type
         if sharedURL.isEmpty && !sharedText.isEmpty {
-            // Text might contain a URL
-            if let url = URL(string: sharedText), url.scheme != nil {
-                sharedURL = sharedText
+            if let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) {
+                let range = NSRange(sharedText.startIndex..., in: sharedText)
+                let matches = detector.matches(in: sharedText, range: range)
+                if let firstURL = matches.first?.url {
+                    sharedURL = firstURL.absoluteString
+                }
             }
         }
 
-        guard !sharedURL.isEmpty else {
-            status = .error("URLが見つかりませんでした")
-            return
-        }
-
-        // Extract manga info using Foundation Model or fallback
-        let info = await MangaExtractor.extract(sharedText: sharedText, sharedURL: sharedURL)
-            ?? MangaExtractor.extractFallback(sharedText: sharedText, sharedURL: sharedURL)
+        // Set URL
+        url = sharedURL
 
         // Fetch OGP image
-        let imageData = await OGPImageFetcher.fetchOGPImageData(from: info.url)
-
-        let pending = PendingShareData(
-            name: info.title,
-            url: info.url,
-            publisher: info.publisher,
-            imageData: imageData
-        )
-
-        pendingData = pending
-
-        do {
-            try pending.save()
-            status = .result
-        } catch {
-            status = .error("データの保存に失敗しました")
+        if !url.isEmpty {
+            imageData = await OGPImageFetcher.fetchOGPImageData(from: url)
         }
+
+        isLoading = false
     }
 
-    private func openMainApp() {
-        guard let data = pendingData else { return }
-        let urlString = "mangalauncher://add?pending=\(data.id.uuidString)"
-        guard let url = URL(string: urlString) else { return }
+    private func saveEntry() {
+        do {
+            let container = try SharedModelContainer.create()
+            let context = ModelContext(container)
 
-        // Open main app via responder chain URL opening trick since UIApplication.shared is not available in extensions
-        let selector = sel_registerName("openURL:")
-        var responder: UIResponder? = extensionContext as? UIResponder
-        // Walk the responder chain to find UIApplication
-        while responder != nil {
-            if responder!.responds(to: selector) {
-                responder!.perform(selector, with: url)
-                break
-            }
-            responder = responder?.next
-        }
+            let dayRawValue = selectedDay.rawValue
+            let descriptor = FetchDescriptor<MangaEntry>(
+                predicate: #Predicate { $0.dayOfWeekRawValue == dayRawValue },
+                sortBy: [SortDescriptor(\.sortOrder)]
+            )
+            let existingEntries = (try? context.fetch(descriptor)) ?? []
+            let maxOrder = existingEntries.map(\.sortOrder).max() ?? -1
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            let entry = MangaEntry(
+                name: name,
+                url: url,
+                dayOfWeek: selectedDay,
+                sortOrder: maxOrder + 1,
+                iconColor: selectedColor,
+                publisher: publisher,
+                imageData: imageData
+            )
+            context.insert(entry)
+            try context.save()
+
             extensionContext?.completeRequest(returningItems: nil)
+        } catch {
+            saveError = "保存に失敗しました: \(error.localizedDescription)"
         }
     }
 }

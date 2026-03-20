@@ -1,12 +1,13 @@
 import UIKit
 import SwiftUI
-import UniformTypeIdentifiers
 
 class ShareViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let hostingView = UIHostingController(rootView: ShareExtensionView(extensionContext: extensionContext))
+        let hostingView = UIHostingController(
+            rootView: ShareExtensionView(extensionContext: extensionContext)
+        )
         addChild(hostingView)
         view.addSubview(hostingView.view)
         hostingView.view.translatesAutoresizingMaskIntoConstraints = false
