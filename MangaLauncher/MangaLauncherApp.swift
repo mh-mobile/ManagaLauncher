@@ -1,9 +1,24 @@
 import SwiftUI
 import SwiftData
 
+extension Notification.Name {
+    static let mangaDataDidChange = Notification.Name("mangaDataDidChange")
+}
+
+struct IntentPrefill: Identifiable {
+    let id = UUID()
+    let name: String
+    let url: String
+    let dayOfWeek: DayOfWeek
+    let publisher: String
+    let iconColor: String
+}
+
 @main
 struct MangaLauncherApp: App {
     let container: ModelContainer
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var intentPrefill: IntentPrefill?
 
     init() {
         DataMigration.migrateToAppGroupIfNeeded()
@@ -20,8 +35,44 @@ struct MangaLauncherApp: App {
                 .onOpenURL { url in
                     handleDeepLink(url)
                 }
+                .sheet(item: $intentPrefill, onDismiss: {
+                    // Force refresh ContentView after intent registration
+                    NotificationCenter.default.post(name: .mangaDataDidChange, object: nil)
+                }) { prefill in
+                    EditEntryView(
+                        viewModel: MangaViewModel(modelContext: container.mainContext),
+                        prefilledName: prefill.name,
+                        prefilledURL: prefill.url,
+                        prefilledDay: prefill.dayOfWeek,
+                        prefilledPublisher: prefill.publisher,
+                        prefilledColor: prefill.iconColor
+                    )
+                }
+                .onAppear {
+                    checkPendingIntent()
+                }
+                .onChange(of: scenePhase) { _, newPhase in
+                    if newPhase == .active {
+                        checkPendingIntent()
+                    }
+                }
         }
         .modelContainer(container)
+    }
+
+    private func checkPendingIntent() {
+        let defaults = UserDefaults(suiteName: SharedModelContainer.appGroupIdentifier)
+        guard let data = defaults?.dictionary(forKey: "pendingIntentData") as? [String: String] else { return }
+        defaults?.removeObject(forKey: "pendingIntentData")
+
+        let dayRaw = Int(data["dayOfWeek"] ?? "") ?? DayOfWeek.today.rawValue
+        intentPrefill = IntentPrefill(
+            name: data["name"] ?? "",
+            url: data["url"] ?? "",
+            dayOfWeek: DayOfWeek(rawValue: dayRaw) ?? .today,
+            publisher: data["publisher"] ?? "",
+            iconColor: data["iconColor"] ?? "blue"
+        )
     }
 
     private func handleDeepLink(_ url: URL) {

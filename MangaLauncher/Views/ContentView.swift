@@ -104,6 +104,9 @@ struct ContentView: View {
                 viewModel = MangaViewModel(modelContext: modelContext)
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .mangaDataDidChange)) { _ in
+            viewModel?.refresh()
+        }
     }
 
     @ViewBuilder

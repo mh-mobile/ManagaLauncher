@@ -45,6 +45,17 @@ struct EditEntryView: View {
         _selectedDay = State(initialValue: day)
     }
 
+    init(viewModel: MangaViewModel, prefilledName: String, prefilledURL: String, prefilledDay: DayOfWeek, prefilledPublisher: String, prefilledColor: String, prefilledImageData: Data? = nil) {
+        self.viewModel = viewModel
+        self.entry = nil
+        _name = State(initialValue: prefilledName)
+        _url = State(initialValue: prefilledURL)
+        _selectedDay = State(initialValue: prefilledDay)
+        _publisher = State(initialValue: prefilledPublisher)
+        _selectedColor = State(initialValue: prefilledColor)
+        _imageData = State(initialValue: prefilledImageData)
+    }
+
     var body: some View {
         NavigationStack {
             Form {

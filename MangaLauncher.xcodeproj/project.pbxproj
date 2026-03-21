@@ -34,6 +34,7 @@
 		A1A8B2ACB18D6E541985F304 /* MasonryLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96C7D9E283FFCADD60181726 /* MasonryLayout.swift */; };
 		AA1A443BC272B614249A8616 /* MangaExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B138E27E85232B142C3EE04 /* MangaExtractor.swift */; };
 		B26E164ECFAC0FC6A4B39CC6 /* SharedModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C7FA9735199D021E15CEED8 /* SharedModelContainer.swift */; };
+		B31B9EA2FE243CD2D6209258 /* AddMangaIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A55D3FF44BE586A52AAF2B43 /* AddMangaIntent.swift */; };
 		BA7DD3DF9519EF632F306D36 /* OGPImageFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9992960F4542D9303A849505 /* OGPImageFetcher.swift */; };
 		C6C5CFFF9326B9E91FED309D /* OGPImageFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9992960F4542D9303A849505 /* OGPImageFetcher.swift */; };
 		D43D0695E7E3840F3142A594 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CDE508C489E5FAA3881A522 /* SettingsView.swift */; };
@@ -102,6 +103,7 @@
 		A2000005 /* EditEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditEntryView.swift; sourceTree = "<group>"; };
 		A2000006 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A3000001 /* MangaLauncher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MangaLauncher.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A55D3FF44BE586A52AAF2B43 /* AddMangaIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AddMangaIntent.swift; sourceTree = "<group>"; };
 		A576F9BEFBD3B37AA9275FAB /* MangaWidget.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaWidget.entitlements; sourceTree = "<group>"; };
 		BB770326E8D34706AF8B81EC /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = SDKROOT; };
 		BC0276ADB2A6EFEC185148CA /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -194,6 +196,15 @@
 			path = MangaShareExtension;
 			sourceTree = "<group>";
 		};
+		873452A3D59E456024C0BC36 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				A55D3FF44BE586A52AAF2B43 /* AddMangaIntent.swift */,
+			);
+			name = Intents;
+			path = Intents;
+			sourceTree = "<group>";
+		};
 		A5000001 = {
 			isa = PBXGroup;
 			children = (
@@ -219,6 +230,7 @@
 				F75AA6830F31ABE5BD81DE01 /* MangaLauncherDebug.entitlements */,
 				1C15BF6E9DE64673E7194826 /* Services */,
 				9E18CC353D62E01CB4A12BC8 /* Info.plist */,
+				873452A3D59E456024C0BC36 /* Intents */,
 			);
 			path = MangaLauncher;
 			sourceTree = "<group>";
@@ -445,6 +457,7 @@
 				A1A8B2ACB18D6E541985F304 /* MasonryLayout.swift in Sources */,
 				BA7DD3DF9519EF632F306D36 /* OGPImageFetcher.swift in Sources */,
 				07DC3626A7CCE68BC3104819 /* MangaExtractor.swift in Sources */,
+				B31B9EA2FE243CD2D6209258 /* AddMangaIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
