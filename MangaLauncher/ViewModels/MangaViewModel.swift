@@ -137,6 +137,10 @@ final class MangaViewModel {
         return try? modelContext.fetch(descriptor).first
     }
 
+    func refresh() {
+        refreshCounter += 1
+    }
+
     private func save() {
         try? modelContext.save()
         refreshCounter += 1
