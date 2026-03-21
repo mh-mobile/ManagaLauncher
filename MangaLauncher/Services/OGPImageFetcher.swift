@@ -1,34 +1,52 @@
 import Foundation
 
-enum OGPImageFetcher {
-    static func fetchOGPImageData(from urlString: String) async -> Data? {
-        guard let url = URL(string: urlString) else { return nil }
+struct OGPResult {
+    var imageData: Data?
+    var siteName: String?
+    var title: String?
+}
+
+enum OGPFetcher {
+    static func fetch(from urlString: String) async -> OGPResult {
+        guard let url = URL(string: urlString) else { return OGPResult() }
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
-            guard let html = String(data: data, encoding: .utf8) else { return nil }
-            guard let imageURLString = extractOGPImageURL(from: html, baseURL: url) else { return nil }
-            guard let imageURL = URL(string: imageURLString) else { return nil }
-            let (imageData, _) = try await URLSession.shared.data(from: imageURL)
-            return downsizedJPEGData(imageData, maxDimension: 600)
+            guard let html = String(data: data, encoding: .utf8) else { return OGPResult() }
+
+            let siteName = extractMetaContent(from: html, property: "og:site_name")
+            let ogTitle = extractMetaContent(from: html, property: "og:title")
+
+            var imageData: Data?
+            if let imageURLString = extractMetaContent(from: html, property: "og:image") {
+                let resolvedURL: String
+                if imageURLString.hasPrefix("http") {
+                    resolvedURL = imageURLString
+                } else {
+                    resolvedURL = URL(string: imageURLString, relativeTo: url)?.absoluteString ?? imageURLString
+                }
+                if let imageURL = URL(string: resolvedURL),
+                   let (imgData, _) = try? await URLSession.shared.data(from: imageURL) {
+                    imageData = downsizedJPEGData(imgData, maxDimension: 600)
+                }
+            }
+
+            return OGPResult(imageData: imageData, siteName: siteName, title: ogTitle)
         } catch {
-            return nil
+            return OGPResult()
         }
     }
 
-    private static func extractOGPImageURL(from html: String, baseURL: URL) -> String? {
-        // Try pattern: <meta property="og:image" content="...">
+    private static func extractMetaContent(from html: String, property: String) -> String? {
         let patterns = [
-            #/<meta[^>]*property\s*=\s*"og:image"[^>]*content\s*=\s*"([^"]+)"/#,
-            #/<meta[^>]*content\s*=\s*"([^"]+)"[^>]*property\s*=\s*"og:image"/#
+            "property\\s*=\\s*\"\(property)\"[^>]*content\\s*=\\s*\"([^\"]+)\"",
+            "content\\s*=\\s*\"([^\"]+)\"[^>]*property\\s*=\\s*\"\(property)\""
         ]
-        for pattern in patterns {
-            if let match = html.firstMatch(of: pattern) {
-                let urlString = String(match.1)
-                if urlString.hasPrefix("http") {
-                    return urlString
-                }
-                // Handle relative URLs
-                return URL(string: urlString, relativeTo: baseURL)?.absoluteString
+        for patternString in patterns {
+            guard let regex = try? NSRegularExpression(pattern: patternString) else { continue }
+            let range = NSRange(html.startIndex..., in: html)
+            if let match = regex.firstMatch(in: html, range: range),
+               let captureRange = Range(match.range(at: 1), in: html) {
+                return String(html[captureRange])
             }
         }
         return nil

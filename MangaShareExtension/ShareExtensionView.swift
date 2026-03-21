@@ -6,6 +6,7 @@ struct ShareExtensionView: View {
     let extensionContext: NSExtensionContext?
 
     @State private var isLoading = true
+    @State private var aiExtracted = false
     @State private var name = ""
     @State private var url = ""
     @State private var publisher = ""
@@ -51,7 +52,7 @@ struct ShareExtensionView: View {
                 }
             } else {
                 Form {
-                    Section("基本情報") {
+                    Section {
                         TextField("名前", text: $name)
                             .textInputAutocapitalization(.never)
                         TextField("URL", text: $url)
@@ -65,6 +66,12 @@ struct ShareExtensionView: View {
                         }
                         TextField("掲載誌", text: $publisher)
                             .textInputAutocapitalization(.never)
+                    } header: {
+                        Text("基本情報")
+                    } footer: {
+                        if aiExtracted {
+                            Text("名前はAIによる推定です。内容を確認してください。")
+                        }
                     }
 
                     Section("画像") {
@@ -197,12 +204,28 @@ struct ShareExtensionView: View {
             }
         }
 
-        // Set URL
         url = sharedURL
 
-        // Fetch OGP image
-        if !url.isEmpty {
-            imageData = await OGPImageFetcher.fetchOGPImageData(from: url)
+        // Fetch OGP data (image, site_name)
+        if !sharedURL.isEmpty {
+            let ogp = await OGPFetcher.fetch(from: sharedURL)
+            imageData = ogp.imageData
+            if let siteName = ogp.siteName, !siteName.isEmpty {
+                publisher = siteName
+            }
+        }
+
+        // Extract manga title using Foundation Model
+        let result = await MangaExtractor.extract(sharedText: sharedText, sharedURL: sharedURL)
+
+        // Only use AI results if title and publisher are different
+        if result.method == "ai" && !result.title.isEmpty && !result.publisher.isEmpty && result.title != result.publisher {
+            name = result.title
+            // AI publisher overrides OGP site_name only if publisher is still empty
+            if publisher.isEmpty {
+                publisher = result.publisher
+            }
+            aiExtracted = true
         }
 
         isLoading = false
