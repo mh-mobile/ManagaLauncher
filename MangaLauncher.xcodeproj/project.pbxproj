@@ -11,6 +11,7 @@
 		0AD569E2465106D7BC72914B /* PlatformHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDD9A4D8748B9496E85A2A67 /* PlatformHelpers.swift */; };
 		0F66A6093327A5A5BD16B10F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E7D977DE254FB1F216740BE6 /* Foundation.framework */; };
 		125D8CEEBC201DD7B9C5BCE3 /* ShareExtensionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 358605C94F78CC23682FF911 /* ShareExtensionView.swift */; };
+		1299E093C31E1C940DD2CAC4 /* ImageCropView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC07D90615785B81C2E71C8 /* ImageCropView.swift */; };
 		2AA2BDFC2D4CFE5BF3F85D4A /* DataMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CF568E5CBBFA07B55373C73 /* DataMigration.swift */; };
 		3650352634B47DCA879C45C1 /* ChangeDayIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4117777580B33705902FA67A /* ChangeDayIntent.swift */; };
 		39725E0E00E8E4FE9F2A7FF2 /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB770326E8D34706AF8B81EC /* UniformTypeIdentifiers.framework */; };
@@ -41,6 +42,7 @@
 		D500BDE07E6FE7D0E0396EA7 /* PlatformHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDD9A4D8748B9496E85A2A67 /* PlatformHelpers.swift */; };
 		E79C1EBA2299356887386C0C /* SharedModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C7FA9735199D021E15CEED8 /* SharedModelContainer.swift */; };
 		EB0EDF1F28050F1FBD0AC968 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 23E67B082915C8518CC0A973 /* WidgetKit.framework */; };
+		ECA66F7B2F6EAEE10096B6E5 /* Mantis in Frameworks */ = {isa = PBXBuildFile; productRef = ECA66F7A2F6EAEE10096B6E5 /* Mantis */; };
 		ECCD2FCE2F65596900BF3309 /* PublisherPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECCD2FCD2F65596900BF3309 /* PublisherPickerView.swift */; };
 		F8659628D6F745CA942803EB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E7D977DE254FB1F216740BE6 /* Foundation.framework */; };
 /* End PBXBuildFile section */
@@ -85,7 +87,7 @@
 		358605C94F78CC23682FF911 /* ShareExtensionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShareExtensionView.swift; sourceTree = "<group>"; };
 		39DE3D6D992FBD1015ED0769 /* ShareViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		3AFF912AECB7C6B219DD1600 /* BackupData.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackupData.swift; sourceTree = "<group>"; };
-		40221490621705DE4B77F085 /* MangaShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; name = MangaShareExtension.appex; path = MangaShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		40221490621705DE4B77F085 /* MangaShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MangaShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		4117777580B33705902FA67A /* ChangeDayIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChangeDayIntent.swift; sourceTree = "<group>"; };
 		501DFBA332C24E2F563C81D7 /* MangaWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MangaWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		68E247987CED890FF8E2D6A1 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -111,6 +113,7 @@
 		D899D5F8F3BA6AC39B41C8B4 /* MangaShareExtension.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaShareExtension.entitlements; sourceTree = "<group>"; };
 		E7D977DE254FB1F216740BE6 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		ECCD2FCD2F65596900BF3309 /* PublisherPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherPickerView.swift; sourceTree = "<group>"; };
+		EEC07D90615785B81C2E71C8 /* ImageCropView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ImageCropView.swift; sourceTree = "<group>"; };
 		EEEF347AB79EE547A4014C35 /* MangaLauncher.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaLauncher.entitlements; sourceTree = "<group>"; };
 		F75AA6830F31ABE5BD81DE01 /* MangaLauncherDebug.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaLauncherDebug.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -140,6 +143,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ECA66F7B2F6EAEE10096B6E5 /* Mantis in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -164,7 +168,6 @@
 				9992960F4542D9303A849505 /* OGPImageFetcher.swift */,
 				8B138E27E85232B142C3EE04 /* MangaExtractor.swift */,
 			);
-			name = Services;
 			path = Services;
 			sourceTree = "<group>";
 		};
@@ -192,7 +195,6 @@
 				0557E9481117CB9F8B903947 /* Info.plist */,
 				D899D5F8F3BA6AC39B41C8B4 /* MangaShareExtension.entitlements */,
 			);
-			name = MangaShareExtension;
 			path = MangaShareExtension;
 			sourceTree = "<group>";
 		};
@@ -201,7 +203,6 @@
 			children = (
 				A55D3FF44BE586A52AAF2B43 /* AddMangaIntent.swift */,
 			);
-			name = Intents;
 			path = Intents;
 			sourceTree = "<group>";
 		};
@@ -252,6 +253,7 @@
 				A2000005 /* EditEntryView.swift */,
 				0CDE508C489E5FAA3881A522 /* SettingsView.swift */,
 				96C7D9E283FFCADD60181726 /* MasonryLayout.swift */,
+				EEC07D90615785B81C2E71C8 /* ImageCropView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -376,6 +378,9 @@
 				ja,
 			);
 			mainGroup = A5000001;
+			packageReferences = (
+				ECA66F792F6EAEE10096B6E5 /* XCRemoteSwiftPackageReference "Mantis.git" */,
+			);
 			productRefGroup = A5000006 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -458,6 +463,7 @@
 				BA7DD3DF9519EF632F306D36 /* OGPImageFetcher.swift in Sources */,
 				07DC3626A7CCE68BC3104819 /* MangaExtractor.swift in Sources */,
 				B31B9EA2FE243CD2D6209258 /* AddMangaIntent.swift in Sources */,
+				1299E093C31E1C940DD2CAC4 /* ImageCropView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -826,6 +832,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		ECA66F792F6EAEE10096B6E5 /* XCRemoteSwiftPackageReference "Mantis.git" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/guoyingtao/Mantis.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.7.5;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		ECA66F7A2F6EAEE10096B6E5 /* Mantis */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = ECA66F792F6EAEE10096B6E5 /* XCRemoteSwiftPackageReference "Mantis.git" */;
+			productName = Mantis;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A9000001 /* Project object */;
 }

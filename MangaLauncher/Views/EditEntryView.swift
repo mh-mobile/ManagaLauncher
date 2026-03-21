@@ -1,6 +1,9 @@
 import SwiftUI
 import SwiftData
 import PhotosUI
+#if canImport(UIKit)
+import Mantis
+#endif
 
 struct EditEntryView: View {
     @Environment(\.dismiss) private var dismiss
@@ -17,6 +20,7 @@ struct EditEntryView: View {
     @State private var imageData: Data?
     @State private var isLoadingImage = false
     @State private var ogpFetchFailed = false
+    @State private var showingCropView = false
 
     private let colorOptions: [(name: String, color: Color)] = [
         ("red", .red),
@@ -97,6 +101,13 @@ struct EditEntryView: View {
                             .scaledToFill()
                             .frame(width: 80, height: 80)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
+                        #if canImport(UIKit)
+                        Button {
+                            showingCropView = true
+                        } label: {
+                            Label("画像を編集", systemImage: "crop")
+                        }
+                        #endif
                         Button(role: .destructive) {
                             self.imageData = nil
                             selectedPhotoItem = nil
@@ -236,6 +247,23 @@ struct EditEntryView: View {
                     imageData = entry.imageData
                 }
             }
+            #if canImport(UIKit)
+            .fullScreenCover(isPresented: $showingCropView) {
+                if let imageData {
+                    ImageCropView(
+                        imageData: imageData,
+                        onCropped: { croppedData in
+                            self.imageData = croppedData
+                            showingCropView = false
+                        },
+                        onCancel: {
+                            showingCropView = false
+                        }
+                    )
+                    .ignoresSafeArea()
+                }
+            }
+            #endif
         }
     }
 
