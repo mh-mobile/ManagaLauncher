@@ -55,6 +55,26 @@ func downsizedJPEGData(_ data: Data, maxDimension: CGFloat, compressionQuality: 
     return mutableData as Data
 }
 
+// MARK: - PasteButton Image Support
+
+#if canImport(UIKit)
+struct PasteImage: Transferable {
+    let data: Data
+
+    static var transferRepresentation: some TransferRepresentation {
+        DataRepresentation(importedContentType: .png) { data in
+            PasteImage(data: data)
+        }
+        DataRepresentation(importedContentType: .jpeg) { data in
+            PasteImage(data: data)
+        }
+        DataRepresentation(importedContentType: .tiff) { data in
+            PasteImage(data: data)
+        }
+    }
+}
+#endif
+
 // MARK: - Cross-platform Colors
 
 extension Color {

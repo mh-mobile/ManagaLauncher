@@ -15,6 +15,8 @@ struct EditEntryView: View {
     @State private var publisher: String = ""
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var imageData: Data?
+    @State private var isLoadingImage = false
+    @State private var ogpFetchFailed = false
 
     private let colorOptions: [(name: String, color: Color)] = [
         ("red", .red),
@@ -90,26 +92,46 @@ struct EditEntryView: View {
 
                 Section("画像") {
                     if let imageData, let image = imageData.toSwiftUIImage() {
-                        HStack {
-                            image
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 80, height: 80)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                            Spacer()
-                            PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                                Label("画像を変更", systemImage: "photo")
-                            }
-                        }
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 80, height: 80)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                         Button(role: .destructive) {
                             self.imageData = nil
                             selectedPhotoItem = nil
                         } label: {
                             Label("画像を削除", systemImage: "trash")
                         }
+                    } else if isLoadingImage {
+                        HStack {
+                            ProgressView()
+                            Text("画像を取得中...")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     } else {
                         PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                            Label("画像を選択", systemImage: "photo")
+                            Label("カメラロールから選択", systemImage: "photo")
+                        }
+                        #if canImport(UIKit)
+                        PasteButton(payloadType: PasteImage.self) { items in
+                            guard let item = items.first,
+                                  let jpeg = downsizedJPEGData(item.data, maxDimension: 600) else { return }
+                            imageData = jpeg
+                        }
+                        #endif
+                        if isValidURL {
+                            Button {
+                                fetchOGPImage()
+                            } label: {
+                                Label("URLからOGP画像を取得", systemImage: "link")
+                            }
+                        }
+                        if ogpFetchFailed {
+                            Text("OGP画像を取得できませんでした")
+                                .font(.caption)
+                                .foregroundStyle(.red)
                         }
                     }
                 }
@@ -214,6 +236,21 @@ struct EditEntryView: View {
                     imageData = entry.imageData
                 }
             }
+        }
+    }
+
+    private func fetchOGPImage() {
+        guard isValidURL else { return }
+        isLoadingImage = true
+        ogpFetchFailed = false
+        Task {
+            let ogp = await OGPFetcher.fetch(from: url)
+            if let ogpImageData = ogp.imageData {
+                imageData = ogpImageData
+            } else {
+                ogpFetchFailed = true
+            }
+            isLoadingImage = false
         }
     }
 
