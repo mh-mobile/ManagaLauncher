@@ -10,7 +10,7 @@ final class MangaViewModel {
     var selectedDay: DayOfWeek = .today
     private(set) var refreshCounter = 0
 
-    private var modelContext: ModelContext
+    private(set) var modelContext: ModelContext
 
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
@@ -138,6 +138,7 @@ final class MangaViewModel {
     }
 
     func refresh() {
+        modelContext = ModelContext(modelContext.container)
         refreshCounter += 1
     }
 
