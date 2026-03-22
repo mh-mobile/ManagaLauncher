@@ -54,6 +54,7 @@ struct MangaLauncherApp: App {
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
                         checkPendingIntent()
+                        NotificationCenter.default.post(name: .mangaDataDidChange, object: nil)
                     }
                 }
         }
