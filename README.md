@@ -6,7 +6,7 @@
 
 週間連載のマンガを曜日ごとに登録して、今日読むマンガをすぐに開けます。
 
-[![App Store](https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/ja-jp)](https://apps.apple.com/us/app/%E3%83%9E%E3%83%B3%E3%82%AC%E6%9B%9C%E6%97%A5/id6760709060)
+[![App Store](https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/ja-jp)](https://apps.apple.com/jp/app/%E3%83%9E%E3%83%B3%E3%82%AC%E6%9B%9C%E6%97%A5/id6760709060)
 
 ## 機能
 
