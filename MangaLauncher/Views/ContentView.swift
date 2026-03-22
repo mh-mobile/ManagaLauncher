@@ -12,7 +12,7 @@ struct ContentView: View {
     @State private var showingAddSheet = false
     @State private var showingSettings = false
     @State private var editingEntry: MangaEntry?
-    @State private var displayMode: DisplayMode = .list
+    @AppStorage("displayMode") private var displayMode: DisplayMode = .grid
     @State private var draggingEntryID: UUID?
     #if os(iOS) || os(visionOS)
     @State private var listEditMode: EditMode = .inactive
