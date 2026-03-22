@@ -3,6 +3,7 @@ import WidgetKit
 
 struct ChangeDayIntent: AppIntent {
     static var title: LocalizedStringResource = "曜日を変更"
+    static var isDiscoverable = false
 
     @Parameter(title: "Direction")
     var direction: Int // -1 = prev, 1 = next, 0 = reset to today
