@@ -21,6 +21,7 @@ struct EditEntryView: View {
     @State private var isLoadingImage = false
     @State private var ogpFetchFailed = false
     @State private var showingCropView = false
+    @State private var didLoadEntry = false
 
     private let colorOptions: [(name: String, color: Color)] = [
         ("red", .red),
@@ -238,13 +239,14 @@ struct EditEntryView: View {
                 }
             }
             .onAppear {
-                if let entry {
+                if let entry, !didLoadEntry {
                     name = entry.name
                     url = entry.url
                     selectedColor = entry.iconColor
                     selectedDay = entry.dayOfWeek
                     publisher = entry.publisher
                     imageData = entry.imageData
+                    didLoadEntry = true
                 }
             }
             #if canImport(UIKit)
