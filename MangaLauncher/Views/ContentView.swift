@@ -344,11 +344,6 @@ struct ContentView: View {
                     Text(entry.publisher)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                } else {
-                    Text(entry.url)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
                 }
             }
 
