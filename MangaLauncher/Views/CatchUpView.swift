@@ -11,6 +11,7 @@ struct CatchUpView: View {
     @State private var currentIndex: Int = 0
     @State private var offset: CGSize = .zero
     @State private var undoStack: [(entry: MangaEntry, action: SwipeAction)] = []
+    @State private var completionAnimated = false
 
     private enum SwipeAction {
         case read, skip
@@ -316,10 +317,14 @@ struct CatchUpView: View {
             Image(systemName: "checkmark.seal.fill")
                 .font(.system(size: 64))
                 .foregroundStyle(.green)
+                .scaleEffect(completionAnimated ? 1.0 : 0.3)
+                .opacity(completionAnimated ? 1.0 : 0.0)
             Text(message)
                 .font(.title2.bold())
+                .opacity(completionAnimated ? 1.0 : 0.0)
             if remainingUnread > 0 {
                 Button {
+                    completionAnimated = false
                     unreadItems = viewModel.unreadEntries(for: day)
                     currentIndex = 0
                     undoStack = []
@@ -327,10 +332,19 @@ struct CatchUpView: View {
                     Label("未読を再チェック（\(remainingUnread)件）", systemImage: "arrow.counterclockwise")
                 }
                 .buttonStyle(.bordered)
+                .opacity(completionAnimated ? 1.0 : 0.0)
             }
             Spacer()
         }
         .frame(maxWidth: .infinity)
+        .onAppear {
+            completionAnimated = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                withAnimation(.spring(duration: 0.6, bounce: 0.5)) {
+                    completionAnimated = true
+                }
+            }
+        }
     }
 
     private func colorFromName(_ name: String) -> Color {
