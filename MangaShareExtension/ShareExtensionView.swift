@@ -204,6 +204,24 @@ struct ShareExtensionView: View {
             }
         }
 
+        // If shared URL is an X/Twitter post, fetch the page and extract external URLs
+        let xDomains = ["x.com", "twitter.com"]
+        let isXPost = URL(string: sharedURL).flatMap { url in
+            xDomains.contains(where: { url.host?.hasSuffix($0) == true })
+        } ?? false
+
+        if isXPost {
+            let xResult = await extractFromXPost(sharedURL)
+            if let extractedURL = xResult.url {
+                sharedURL = extractedURL
+            }
+            if let tweetText = xResult.text, !tweetText.isEmpty {
+                sharedText = tweetText
+            }
+        } else if !sharedURL.isEmpty {
+            sharedURL = await URLResolver.resolveAll(sharedURL)
+        }
+
         url = sharedURL
 
         // Fetch OGP data (image, site_name)
@@ -229,6 +247,50 @@ struct ShareExtensionView: View {
         }
 
         isLoading = false
+    }
+
+    private func extractFromXPost(_ xURL: String) async -> (url: String?, text: String?) {
+        // Use Twitter oEmbed API to get tweet HTML with links
+        guard let encoded = xURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let oembedURL = URL(string: "https://publish.twitter.com/oembed?url=\(encoded)") else { return (nil, nil) }
+
+        guard let (data, _) = try? await URLSession.shared.data(from: oembedURL),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let html = json["html"] as? String else { return (nil, nil) }
+
+        // Extract plain text from oEmbed HTML (strip tags)
+        let tweetText = html
+            .replacingOccurrences(of: "<[^>]+>", with: " ", options: .regularExpression)
+            .replacingOccurrences(of: "&amp;", with: "&")
+            .replacingOccurrences(of: "&lt;", with: "<")
+            .replacingOccurrences(of: "&gt;", with: ">")
+            .replacingOccurrences(of: "&quot;", with: "\"")
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Extract t.co links from the oEmbed HTML
+        let pattern = "https?://t\\.co/[A-Za-z0-9]+"
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return (nil, tweetText) }
+        let range = NSRange(html.startIndex..., in: html)
+        let matches = regex.matches(in: html, range: range)
+
+        var seen = Set<String>()
+        for match in matches {
+            guard let matchRange = Range(match.range, in: html) else { continue }
+            let tcoURL = String(html[matchRange])
+            guard !seen.contains(tcoURL) else { continue }
+            seen.insert(tcoURL)
+
+            let resolved = await URLResolver.resolveAll(tcoURL)
+            let resolvedHost = URL(string: resolved)?.host ?? ""
+
+            let xDomains = ["x.com", "twitter.com", "t.co"]
+            if !xDomains.contains(where: { resolvedHost.hasSuffix($0) }) {
+                return (resolved, tweetText)
+            }
+        }
+
+        return (nil, tweetText)
     }
 
     private func saveEntry() {
