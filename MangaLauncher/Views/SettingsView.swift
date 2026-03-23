@@ -9,6 +9,7 @@ struct SettingsView: View {
     @State private var showingExporter = false
     @State private var showingImporter = false
     @State private var importResult: ImportResult?
+    @State private var badgeEnabled = BadgeManager.isEnabled
 
     private enum ImportResult: Identifiable {
         case success(Int)
@@ -67,6 +68,30 @@ struct SettingsView: View {
                     Text("データ管理")
                 } footer: {
                     Text("バックアップはJSON形式で保存されます。インポート時、同じIDのエントリはスキップされます。")
+                }
+
+                Section {
+                    Toggle("未読バッジ", isOn: $badgeEnabled)
+                        .onChange(of: badgeEnabled) { _, newValue in
+                            if newValue {
+                                Task {
+                                    let granted = await BadgeManager.requestPermissionAndEnable()
+                                    if !granted {
+                                        badgeEnabled = false
+                                    } else {
+                                        let count = viewModel.unreadCount(for: .today)
+                                        BadgeManager.updateBadge(unreadCount: count)
+                                    }
+                                }
+                            } else {
+                                BadgeManager.isEnabled = false
+                                BadgeManager.clearBadge()
+                            }
+                        }
+                } header: {
+                    Text("通知")
+                } footer: {
+                    Text("アプリアイコンに本日の未読マンガ数を表示します")
                 }
 
                 Section {

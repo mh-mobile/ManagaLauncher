@@ -55,6 +55,7 @@ struct MangaLauncherApp: App {
                     if newPhase == .active {
                         checkPendingIntent()
                         NotificationCenter.default.post(name: .mangaDataDidChange, object: nil)
+                        updateBadge()
                     }
                 }
         }
@@ -74,6 +75,12 @@ struct MangaLauncherApp: App {
             publisher: data["publisher"] ?? "",
             iconColor: data["iconColor"] ?? "blue"
         )
+    }
+
+    private func updateBadge() {
+        let viewModel = MangaViewModel(modelContext: container.mainContext)
+        let count = viewModel.unreadCount(for: .today)
+        BadgeManager.updateBadge(unreadCount: count)
     }
 
     private func handleDeepLink(_ url: URL) {
