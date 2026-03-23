@@ -6,6 +6,29 @@ struct OGPResult {
     var title: String?
 }
 
+enum URLResolver {
+    static func resolveAll(_ urlString: String) async -> String {
+        guard let url = URL(string: urlString) else { return urlString }
+
+        let shortDomains = ["t.co", "bit.ly", "tinyurl.com", "ow.ly", "is.gd"]
+        guard let host = url.host, shortDomains.contains(where: { host.hasSuffix($0) }) else {
+            return urlString
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            if let finalURL = response.url {
+                return finalURL.absoluteString
+            }
+        } catch {}
+
+        return urlString
+    }
+}
+
 enum OGPFetcher {
     static func fetch(from urlString: String) async -> OGPResult {
         guard let url = URL(string: urlString) else { return OGPResult() }
