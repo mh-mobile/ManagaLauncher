@@ -127,6 +127,12 @@ struct ContentView: View {
                                     ? Color.accentColor
                                     : .secondary
                             )
+                        Circle()
+                            .fill(day == .today
+                                ? (viewModel.selectedDay == day ? Color.accentColor : .secondary)
+                                : .clear
+                            )
+                            .frame(width: 5, height: 5)
                         Rectangle()
                             .fill(viewModel.selectedDay == day ? Color.accentColor : .clear)
                             .frame(height: 2)
