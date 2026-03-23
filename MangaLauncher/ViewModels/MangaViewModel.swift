@@ -172,5 +172,6 @@ final class MangaViewModel {
         #if canImport(WidgetKit)
         WidgetCenter.shared.reloadAllTimelines()
         #endif
+        BadgeManager.updateBadge(unreadCount: unreadCount(for: .today))
     }
 }
