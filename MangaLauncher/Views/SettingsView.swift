@@ -10,6 +10,13 @@ struct SettingsView: View {
     @State private var showingImporter = false
     @State private var importResult: ImportResult?
     @State private var badgeEnabled = BadgeManager.isEnabled
+    @State private var notificationEnabled = NotificationManager.isEnabled
+    @State private var notificationTime: Date = {
+        var components = DateComponents()
+        components.hour = NotificationManager.notificationHour
+        components.minute = NotificationManager.notificationMinute
+        return Calendar.current.date(from: components) ?? Date()
+    }()
 
     private enum ImportResult: Identifiable {
         case success(Int)
@@ -88,10 +95,35 @@ struct SettingsView: View {
                                 BadgeManager.clearBadge()
                             }
                         }
+                    Toggle("更新通知", isOn: $notificationEnabled)
+                        .onChange(of: notificationEnabled) { _, newValue in
+                            if newValue {
+                                Task {
+                                    let granted = await NotificationManager.requestPermissionAndEnable()
+                                    if !granted {
+                                        notificationEnabled = false
+                                    } else {
+                                        viewModel.rescheduleNotifications()
+                                    }
+                                }
+                            } else {
+                                NotificationManager.isEnabled = false
+                                NotificationManager.cancelAllNotifications()
+                            }
+                        }
+                    if notificationEnabled {
+                        DatePicker("通知時間", selection: $notificationTime, displayedComponents: .hourAndMinute)
+                            .onChange(of: notificationTime) { _, newValue in
+                                let components = Calendar.current.dateComponents([.hour, .minute], from: newValue)
+                                NotificationManager.notificationHour = components.hour ?? 9
+                                NotificationManager.notificationMinute = components.minute ?? 0
+                                viewModel.rescheduleNotifications()
+                            }
+                    }
                 } header: {
                     Text("通知")
                 } footer: {
-                    Text("アプリアイコンに本日の未読マンガ数を表示します")
+                    Text("未読バッジはアプリアイコンに未読数を表示します。更新通知は登録がある曜日の指定時間にリマインドします。")
                 }
 
                 Section {

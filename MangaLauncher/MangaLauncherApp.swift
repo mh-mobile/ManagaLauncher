@@ -1,8 +1,25 @@
 import SwiftUI
 import SwiftData
 
+import UserNotifications
+
 extension Notification.Name {
     static let mangaDataDidChange = Notification.Name("mangaDataDidChange")
+    static let switchToDay = Notification.Name("switchToDay")
+}
+
+class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        let identifier = response.notification.request.identifier
+        // identifier format: "manga_reminder_X" where X is DayOfWeek.rawValue
+        if identifier.hasPrefix("manga_reminder_"),
+           let rawString = identifier.split(separator: "_").last,
+           let rawValue = Int(rawString),
+           let day = DayOfWeek(rawValue: rawValue) {
+            NotificationCenter.default.post(name: .switchToDay, object: day.rawValue)
+        }
+        completionHandler()
+    }
 }
 
 struct IntentPrefill: Identifiable {
@@ -19,9 +36,11 @@ struct MangaLauncherApp: App {
     let container: ModelContainer
     @Environment(\.scenePhase) private var scenePhase
     @State private var intentPrefill: IntentPrefill?
+    private let notificationDelegate = NotificationDelegate()
 
     init() {
         DataMigration.migrateToAppGroupIfNeeded()
+        UNUserNotificationCenter.current().delegate = notificationDelegate
         do {
             container = try SharedModelContainer.create()
         } catch {

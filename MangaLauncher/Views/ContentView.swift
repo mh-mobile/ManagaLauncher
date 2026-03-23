@@ -128,6 +128,14 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .mangaDataDidChange)) { _ in
             viewModel?.refresh()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .switchToDay)) { notification in
+            if let rawValue = notification.object as? Int,
+               let day = DayOfWeek(rawValue: rawValue),
+               let viewModel {
+                viewModel.selectedDay = day
+                pageIndex = pageIndexForDay(day)
+            }
+        }
     }
 
     @ViewBuilder

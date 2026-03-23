@@ -157,6 +157,14 @@ final class MangaViewModel {
         unreadEntries(for: day).count
     }
 
+    func rescheduleNotifications() {
+        var counts: [DayOfWeek: Int] = [:]
+        for day in DayOfWeek.allCases {
+            counts[day] = fetchEntries(for: day).count
+        }
+        NotificationManager.scheduleNotifications(entryCounts: counts)
+    }
+
     func notifyChange() {
         refreshCounter += 1
     }
@@ -173,5 +181,6 @@ final class MangaViewModel {
         WidgetCenter.shared.reloadAllTimelines()
         #endif
         BadgeManager.updateBadge(unreadCount: unreadCount(for: .today))
+        rescheduleNotifications()
     }
 }
