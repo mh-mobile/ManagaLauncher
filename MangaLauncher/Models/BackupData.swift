@@ -16,11 +16,37 @@ struct BackupData: Codable {
         let iconColor: String
         let publisher: String
         let imageData: Data?
+        let lastReadDate: Date?
+
+        init(id: UUID, name: String, url: String, dayOfWeekRawValue: Int, sortOrder: Int, iconColor: String, publisher: String, imageData: Data?, lastReadDate: Date? = nil) {
+            self.id = id
+            self.name = name
+            self.url = url
+            self.dayOfWeekRawValue = dayOfWeekRawValue
+            self.sortOrder = sortOrder
+            self.iconColor = iconColor
+            self.publisher = publisher
+            self.imageData = imageData
+            self.lastReadDate = lastReadDate
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(UUID.self, forKey: .id)
+            name = try container.decode(String.self, forKey: .name)
+            url = try container.decode(String.self, forKey: .url)
+            dayOfWeekRawValue = try container.decode(Int.self, forKey: .dayOfWeekRawValue)
+            sortOrder = try container.decode(Int.self, forKey: .sortOrder)
+            iconColor = try container.decode(String.self, forKey: .iconColor)
+            publisher = try container.decode(String.self, forKey: .publisher)
+            imageData = try container.decodeIfPresent(Data.self, forKey: .imageData)
+            lastReadDate = try container.decodeIfPresent(Date.self, forKey: .lastReadDate)
+        }
     }
 
     static func from(_ entries: [MangaEntry]) -> BackupData {
         BackupData(
-            version: 1,
+            version: 2,
             exportDate: Date(),
             entries: entries.map {
                 BackupEntry(
@@ -31,7 +57,8 @@ struct BackupData: Codable {
                     sortOrder: $0.sortOrder,
                     iconColor: $0.iconColor,
                     publisher: $0.publisher,
-                    imageData: $0.imageData
+                    imageData: $0.imageData,
+                    lastReadDate: $0.lastReadDate
                 )
             }
         )

@@ -18,6 +18,7 @@ struct MangaWidgetItem: Identifiable {
     let iconColor: String
     let publisher: String
     let imageData: Data?
+    let isRead: Bool
 }
 
 // MARK: - Timeline Provider
@@ -53,7 +54,8 @@ struct MangaTimelineProvider: TimelineProvider {
             MangaWidgetItem(
                 id: $0.id, name: $0.name, url: $0.url,
                 iconColor: $0.iconColor, publisher: $0.publisher,
-                imageData: $0.imageData
+                imageData: $0.imageData,
+                isRead: $0.isRead
             )
         }
         return MangaTimelineEntry(
@@ -327,6 +329,14 @@ struct MangaWidgetEntryView: View {
             }
             .frame(width: size, height: size)
             .clipShape(RoundedRectangle(cornerRadius: 6))
+            .overlay(alignment: .topLeading) {
+                if !item.isRead {
+                    Circle()
+                        .fill(Color.accentColor)
+                        .frame(width: 6, height: 6)
+                        .padding(3)
+                }
+            }
         }
     }
 
