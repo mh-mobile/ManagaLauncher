@@ -309,13 +309,24 @@ struct CatchUpView: View {
     // MARK: - Completed View
 
     private func completedView(message: String) -> some View {
-        VStack(spacing: 16) {
+        let remainingUnread = viewModel.unreadCount(for: day)
+        return VStack(spacing: 16) {
             Spacer()
             Image(systemName: "checkmark.seal.fill")
                 .font(.system(size: 64))
                 .foregroundStyle(.green)
             Text(message)
                 .font(.title2.bold())
+            if remainingUnread > 0 {
+                Button {
+                    unreadItems = viewModel.unreadEntries(for: day)
+                    currentIndex = 0
+                    undoStack = []
+                } label: {
+                    Label("未読を再チェック（\(remainingUnread)件）", systemImage: "arrow.counterclockwise")
+                }
+                .buttonStyle(.bordered)
+            }
             Spacer()
         }
         .frame(maxWidth: .infinity)
