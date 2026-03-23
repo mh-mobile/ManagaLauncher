@@ -17,6 +17,7 @@ final class MangaViewModel {
     }
 
     func fetchEntries(for day: DayOfWeek) -> [MangaEntry] {
+        let _ = refreshCounter
         let dayRawValue = day.rawValue
         let descriptor = FetchDescriptor<MangaEntry>(
             predicate: #Predicate { $0.dayOfWeekRawValue == dayRawValue },
@@ -123,6 +124,7 @@ final class MangaViewModel {
                 publisher: backupEntry.publisher,
                 imageData: backupEntry.imageData
             )
+            entry.lastReadDate = backupEntry.lastReadDate
             modelContext.insert(entry)
             importedCount += 1
         }
@@ -135,6 +137,28 @@ final class MangaViewModel {
             predicate: #Predicate { $0.id == id }
         )
         return try? modelContext.fetch(descriptor).first
+    }
+
+    func markAsRead(_ entry: MangaEntry) {
+        entry.lastReadDate = Date()
+        save()
+    }
+
+    func markAsUnread(_ entry: MangaEntry) {
+        entry.lastReadDate = nil
+        save()
+    }
+
+    func unreadEntries(for day: DayOfWeek) -> [MangaEntry] {
+        fetchEntries(for: day).filter { !$0.isRead }
+    }
+
+    func unreadCount(for day: DayOfWeek) -> Int {
+        unreadEntries(for: day).count
+    }
+
+    func notifyChange() {
+        refreshCounter += 1
     }
 
     func refresh() {

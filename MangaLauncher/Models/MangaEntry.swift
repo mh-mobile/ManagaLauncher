@@ -55,11 +55,27 @@ final class MangaEntry {
     var iconColor: String = "blue"
     var publisher: String = ""
     @Attribute(.externalStorage) var imageData: Data?
+    var lastReadDate: Date?
 
     @Transient
     var dayOfWeek: DayOfWeek {
         get { DayOfWeek(rawValue: dayOfWeekRawValue) ?? .sunday }
         set { dayOfWeekRawValue = newValue.rawValue }
+    }
+
+    @Transient
+    var isRead: Bool {
+        guard let lastReadDate else { return false }
+        let mostRecentDay = Self.mostRecentOccurrence(of: dayOfWeek)
+        return lastReadDate >= mostRecentDay
+    }
+
+    static func mostRecentOccurrence(of day: DayOfWeek, from date: Date = .now) -> Date {
+        let calendar = Calendar.current
+        let todayWeekday = calendar.component(.weekday, from: date) - 1 // 0=Sun
+        let targetWeekday = day.rawValue
+        let daysBack = (todayWeekday - targetWeekday + 7) % 7
+        return calendar.startOfDay(for: calendar.date(byAdding: .day, value: -daysBack, to: date)!)
     }
 
     init(

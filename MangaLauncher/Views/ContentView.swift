@@ -11,6 +11,7 @@ struct ContentView: View {
     @State private var viewModel: MangaViewModel?
     @State private var showingAddSheet = false
     @State private var showingSettings = false
+    @State private var showingCatchUp = false
     @State private var editingEntry: MangaEntry?
     @AppStorage("displayMode") private var displayMode: DisplayMode = .grid
     @State private var draggingEntryID: UUID?
@@ -42,11 +43,26 @@ struct ContentView: View {
                     }
                     dayPager(viewModel: viewModel)
                 }
-                .navigationTitle("マンガ曜日")
-                #if os(iOS) || os(visionOS)
-                .navigationBarTitleDisplayMode(.inline)
-                #endif
                 .toolbar {
+                    ToolbarItem(placement: .navigation) {
+                        let unreadCount = viewModel.unreadCount(for: viewModel.selectedDay)
+                        Button {
+                            showingCatchUp = true
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "rectangle.stack")
+                                if unreadCount > 0 {
+                                    Text("\(unreadCount)")
+                                        .font(.caption2.bold())
+                                        .foregroundStyle(.white)
+                                        .padding(.horizontal, 5)
+                                        .padding(.vertical, 2)
+                                        .background(.red, in: Capsule())
+                                }
+                            }
+                        }
+                        .disabled(unreadCount == 0)
+                    }
                     ToolbarItem(placement: .automatic) {
                         Button {
                             withAnimation {
@@ -93,6 +109,11 @@ struct ContentView: View {
                 }
                 .sheet(isPresented: $showingSettings) {
                     SettingsView(viewModel: viewModel)
+                }
+                .fullScreenCover(isPresented: $showingCatchUp, onDismiss: {
+                    viewModel.notifyChange()
+                }) {
+                    CatchUpView(viewModel: viewModel, day: viewModel.selectedDay)
                 }
                 .onAppear {
                     pageIndex = pageIndexForDay(viewModel.selectedDay)
@@ -308,15 +329,23 @@ struct ContentView: View {
                     }
             }
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(entry.name)
-                    .font(.caption)
-                    .foregroundStyle(.primary)
-                    .lineLimit(2)
-                if !entry.publisher.isEmpty {
-                    Text(entry.publisher)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+            HStack(alignment: .top, spacing: 4) {
+                if !entry.isRead {
+                    Circle()
+                        .fill(Color.accentColor)
+                        .frame(width: 6, height: 6)
+                        .padding(.top, 4)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(entry.name)
+                        .font(.caption)
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                    if !entry.publisher.isEmpty {
+                        Text(entry.publisher)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
         }
@@ -325,6 +354,16 @@ struct ContentView: View {
             if let url = URL(string: entry.url) { openURL(url) }
         }
         .contextMenu {
+            Button {
+                if entry.isRead {
+                    viewModel.markAsUnread(entry)
+                } else {
+                    viewModel.markAsRead(entry)
+                }
+            } label: {
+                Label(entry.isRead ? "未読にする" : "既読にする",
+                      systemImage: entry.isRead ? "envelope.badge" : "envelope.open")
+            }
             Button {
                 editingEntry = entry
             } label: {
@@ -341,6 +380,15 @@ struct ContentView: View {
     @ViewBuilder
     private func entryRow(entry: MangaEntry) -> some View {
         HStack(spacing: 12) {
+            if !entry.isRead {
+                Circle()
+                    .fill(Color.accentColor)
+                    .frame(width: 8, height: 8)
+            } else {
+                Color.clear
+                    .frame(width: 8, height: 8)
+            }
+
             entryIcon(for: entry, size: 36)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -364,6 +412,18 @@ struct ContentView: View {
             if let url = URL(string: entry.url) { openURL(url) }
         }
         .contextMenu {
+            Button {
+                if let viewModel {
+                    if entry.isRead {
+                        viewModel.markAsUnread(entry)
+                    } else {
+                        viewModel.markAsRead(entry)
+                    }
+                }
+            } label: {
+                Label(entry.isRead ? "未読にする" : "既読にする",
+                      systemImage: entry.isRead ? "envelope.badge" : "envelope.open")
+            }
             Button {
                 editingEntry = entry
             } label: {
