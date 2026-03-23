@@ -86,6 +86,7 @@ struct CatchUpView: View {
                     cardView(for: unreadItems[currentIndex + 1])
                         .scaleEffect(0.95)
                         .opacity(0.5)
+                        .allowsHitTesting(false)
                 }
 
                 // Current card
