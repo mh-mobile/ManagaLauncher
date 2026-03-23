@@ -75,6 +75,8 @@ struct MangaWidgetEntryView: View {
             smallView
         case .systemMedium:
             mediumView
+        case .systemLarge:
+            largeView
         #if os(iOS)
         case .accessoryRectangular:
             lockScreenView
@@ -230,6 +232,55 @@ struct MangaWidgetEntryView: View {
         .containerBackground(.fill.tertiary, for: .widget)
     }
 
+    // MARK: - Large Widget (4x4)
+
+    private var largeView: some View {
+        GeometryReader { geo in
+            let headerHeight: CGFloat = 16
+            let spacing: CGFloat = 4
+            let cols = 4
+            let rows = 4
+            let gridWidth = geo.size.width
+            let gridHeight = geo.size.height - headerHeight - spacing
+            let cellW = (gridWidth - spacing * CGFloat(cols - 1)) / CGFloat(cols)
+            let cellH = (gridHeight - spacing * CGFloat(rows - 1)) / CGFloat(rows)
+            let cellSize = min(cellW, cellH)
+
+            VStack(spacing: spacing) {
+                header()
+                    .frame(height: headerHeight)
+
+                if entry.items.isEmpty {
+                    Spacer()
+                    Text("登録なし")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                    Spacer()
+                } else {
+                    let items = Array(entry.items.prefix(16))
+                    Spacer(minLength: 0)
+                    VStack(spacing: spacing) {
+                        ForEach(0..<rows, id: \.self) { row in
+                            HStack(spacing: spacing) {
+                                ForEach(0..<cols, id: \.self) { col in
+                                    let idx = row * cols + col
+                                    if idx < items.count {
+                                        gridCell(item: items[idx], size: cellSize)
+                                    } else {
+                                        Color.clear.frame(width: cellSize, height: cellSize)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+        .containerBackground(.fill.tertiary, for: .widget)
+    }
+
     // MARK: - Lock Screen
 
     #if os(iOS)
@@ -314,7 +365,7 @@ struct MangaLauncherWidget: Widget {
     }
 
     private var supportedFamilies: [WidgetFamily] {
-        var families: [WidgetFamily] = [.systemSmall, .systemMedium]
+        var families: [WidgetFamily] = [.systemSmall, .systemMedium, .systemLarge]
         #if os(iOS)
         families.append(.accessoryRectangular)
         #endif
