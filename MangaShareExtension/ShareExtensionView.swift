@@ -224,26 +224,27 @@ struct ShareExtensionView: View {
 
         url = sharedURL
 
-        // Fetch OGP data (image, site_name)
+        // Fetch OGP data (image, site_name) and extract via LLM in parallel
+        var ogpSiteName: String?
         if !sharedURL.isEmpty {
             let ogp = await OGPFetcher.fetch(from: sharedURL)
             imageData = ogp.imageData
-            if let siteName = ogp.siteName, !siteName.isEmpty {
-                publisher = siteName
-            }
+            ogpSiteName = ogp.siteName
         }
 
-        // Extract manga title using Foundation Model
         let result = await MangaExtractor.extract(sharedText: sharedText, sharedURL: sharedURL)
 
-        // Only use AI results if title and publisher are different
-        if result.method == "ai" && !result.title.isEmpty && !result.publisher.isEmpty && result.title != result.publisher {
+        // Title from LLM
+        if result.method == "ai" && !result.title.isEmpty {
             name = result.title
-            // AI publisher overrides OGP site_name only if publisher is still empty
-            if publisher.isEmpty {
-                publisher = result.publisher
-            }
             aiExtracted = true
+        }
+
+        // Publisher: LLM first, fallback to OGP site_name
+        if result.method == "ai" && !result.publisher.isEmpty {
+            publisher = result.publisher
+        } else if let siteName = ogpSiteName, !siteName.isEmpty {
+            publisher = siteName
         }
 
         isLoading = false
