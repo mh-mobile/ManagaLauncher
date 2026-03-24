@@ -190,6 +190,7 @@ struct ContentView: View {
         TabView(selection: $pageIndex) {
             ForEach(0..<9, id: \.self) { index in
                 dayPage(day: dayForPageIndex(index), viewModel: viewModel)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .tag(index)
             }
         }
