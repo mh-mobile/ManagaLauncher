@@ -13,15 +13,20 @@
 - 曜日ごとにマンガのURLを登録・管理
 - ワンタップでマンガサイトやアプリを起動
 - リスト表示 / Pinterest風グリッド表示（Masonryレイアウト）
-- ホーム画面・ロック画面ウィジェット（曜日切り替えボタン付き）
+- 未読・既読管理（曜日ごとに自動リセット）
+- キャッチアップUI（Tinder風カードスワイプで未読マンガをチェック）
+- ホーム画面・ロック画面ウィジェット（Small / Medium / Large、曜日切り替え・未読ドット付き）
+- アプリアイコンバッジに本日の未読数を表示
+- 更新通知（マンガ登録がある曜日の指定時間にリマインド）
 - iCloud同期（iPhone / iPad / Mac / Apple Vision Pro）
-- Share Extension（他アプリから共有してマンガを登録、OGP画像・掲載誌を自動取得）
+- Share Extension（他アプリやX投稿から共有してマンガを登録、OGP画像・掲載誌を自動取得）
 - Apple Intelligence Foundation Modelによるマンガタイトル自動抽出
 - iOSショートカット連携（AppIntent）
+- 削除Undo（5秒間の取り消し猶予）
 - バックアップ・インポート（JSON形式）
 - 掲載誌フィルタリング
 - ドラッグ&ドロップで並び替え
-- 設定画面（バージョン表示、データリセット）
+- 画像クロップ機能
 
 ## 対応プラットフォーム
 
@@ -37,6 +42,7 @@
 - WidgetKit
 - AppIntents
 - FoundationModels（Apple Intelligence）
+- UserNotifications
 
 ## ビルド
 
