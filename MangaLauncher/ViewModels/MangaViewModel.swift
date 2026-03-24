@@ -27,7 +27,12 @@ final class MangaViewModel {
         )
         let results = (try? modelContext.fetch(descriptor)) ?? []
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
-        return results.filter { !pendingIDs.contains($0.id) }
+        // Deduplicate by ID (CloudKit sync can cause temporary duplicates)
+        var seenIDs = Set<UUID>()
+        return results.filter { entry in
+            guard !pendingIDs.contains(entry.id) else { return false }
+            return seenIDs.insert(entry.id).inserted
+        }
     }
 
     func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil) {
