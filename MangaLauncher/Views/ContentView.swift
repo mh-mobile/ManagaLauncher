@@ -35,14 +35,22 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             if let viewModel {
-                VStack(spacing: 0) {
-                    dayTabBar(viewModel: viewModel)
-                    let publishers = viewModel.publishers(for: viewModel.selectedDay)
-                    if !publishers.isEmpty {
-                        publisherFilter(publishers: publishers)
+                ZStack(alignment: .bottom) {
+                    VStack(spacing: 0) {
+                        dayTabBar(viewModel: viewModel)
+                        let publishers = viewModel.publishers(for: viewModel.selectedDay)
+                        if !publishers.isEmpty {
+                            publisherFilter(publishers: publishers)
+                        }
+                        dayPager(viewModel: viewModel)
                     }
-                    dayPager(viewModel: viewModel)
+
+                    if !viewModel.pendingDeleteEntries.isEmpty {
+                        deleteToast(viewModel: viewModel)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
                 }
+                .animation(.easeInOut(duration: 0.3), value: viewModel.pendingDeleteEntries.isEmpty)
                 .toolbar {
                     ToolbarItem(placement: .navigation) {
                         let unreadCount = viewModel.unreadCount(for: viewModel.selectedDay)
@@ -282,7 +290,7 @@ struct ContentView: View {
             .onDelete { indexSet in
                 let entriesToDelete = indexSet.map { entries[$0] }
                 for entry in entriesToDelete {
-                    viewModel.deleteEntry(entry)
+                    viewModel.queueDelete(entry)
                 }
             }
             .onMove { source, destination in
@@ -378,7 +386,7 @@ struct ContentView: View {
                 Label("編集", systemImage: "pencil")
             }
             Button(role: .destructive) {
-                viewModel.deleteEntry(entry)
+                viewModel.queueDelete(entry)
             } label: {
                 Label("削除", systemImage: "trash")
             }
@@ -438,7 +446,7 @@ struct ContentView: View {
                 Label("編集", systemImage: "pencil")
             }
             Button(role: .destructive) {
-                if let viewModel { viewModel.deleteEntry(entry) }
+                if let viewModel { viewModel.queueDelete(entry) }
             } label: {
                 Label("削除", systemImage: "trash")
             }
@@ -463,6 +471,32 @@ struct ContentView: View {
                         .foregroundStyle(.white)
                 }
         }
+    }
+
+    @ViewBuilder
+    private func deleteToast(viewModel: MangaViewModel) -> some View {
+        let count = viewModel.pendingDeleteEntries.count
+        HStack {
+            Text("\(count)件削除しました")
+                .font(.subheadline)
+                .foregroundStyle(.white)
+            Spacer()
+            Button {
+                viewModel.undoPendingDeletes()
+            } label: {
+                Text("元に戻す")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.yellow)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.darkGray))
+        )
+        .padding(.horizontal)
+        .padding(.bottom, 8)
     }
 
     private func colorFromName(_ name: String) -> Color {

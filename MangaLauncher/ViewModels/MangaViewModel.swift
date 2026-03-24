@@ -9,6 +9,8 @@ import WidgetKit
 final class MangaViewModel {
     var selectedDay: DayOfWeek = .today
     private(set) var refreshCounter = 0
+    var pendingDeleteEntries: [MangaEntry] = []
+    private var deleteTimer: Timer?
 
     private(set) var modelContext: ModelContext
 
@@ -23,7 +25,9 @@ final class MangaViewModel {
             predicate: #Predicate { $0.dayOfWeekRawValue == dayRawValue },
             sortBy: [SortDescriptor(\.sortOrder)]
         )
-        return (try? modelContext.fetch(descriptor)) ?? []
+        let results = (try? modelContext.fetch(descriptor)) ?? []
+        let pendingIDs = Set(pendingDeleteEntries.map(\.id))
+        return results.filter { !pendingIDs.contains($0.id) }
     }
 
     func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil) {
@@ -70,6 +74,38 @@ final class MangaViewModel {
     func deleteEntry(_ entry: MangaEntry) {
         modelContext.delete(entry)
         save()
+    }
+
+    func queueDelete(_ entry: MangaEntry) {
+        pendingDeleteEntries.append(entry)
+        refreshCounter += 1
+        restartDeleteTimer()
+    }
+
+    func undoPendingDeletes() {
+        deleteTimer?.invalidate()
+        deleteTimer = nil
+        pendingDeleteEntries.removeAll()
+        refreshCounter += 1
+    }
+
+    func commitPendingDeletes() {
+        deleteTimer?.invalidate()
+        deleteTimer = nil
+        for entry in pendingDeleteEntries {
+            modelContext.delete(entry)
+        }
+        pendingDeleteEntries.removeAll()
+        save()
+    }
+
+    private func restartDeleteTimer() {
+        deleteTimer?.invalidate()
+        deleteTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                self?.commitPendingDeletes()
+            }
+        }
     }
 
     func moveEntries(for day: DayOfWeek, from source: IndexSet, to destination: Int) {
