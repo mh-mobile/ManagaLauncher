@@ -504,7 +504,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = MangaWidget/MangaWidget.entitlements;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MangaWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "マンガ曜日ウィジェット";
@@ -535,7 +535,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = MangaShareExtension/MangaShareExtension.entitlements;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MangaShareExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "マンガ曜日に追加";
@@ -561,7 +561,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = MangaWidget/MangaWidget.entitlements;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MangaWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "マンガ曜日ウィジェット";
@@ -716,7 +716,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = MangaLauncher/MangaLauncherDebug.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -751,7 +751,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = MangaLauncher/MangaLauncher.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -784,7 +784,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = MangaShareExtension/MangaShareExtension.entitlements;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MangaShareExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "マンガ曜日に追加";
