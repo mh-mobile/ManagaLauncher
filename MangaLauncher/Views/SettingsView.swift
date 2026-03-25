@@ -9,6 +9,7 @@ struct SettingsView: View {
     @State private var showingExporter = false
     @State private var showingImporter = false
     @State private var importResult: ImportResult?
+    @AppStorage("browserMode") private var browserMode: String = "external"
     @State private var badgeEnabled = BadgeManager.isEnabled
     @State private var notificationEnabled = NotificationManager.isEnabled
     @State private var notificationTime: Date = {
@@ -75,6 +76,17 @@ struct SettingsView: View {
                     Text("データ管理")
                 } footer: {
                     Text("バックアップはJSON形式で保存されます。インポート時、同じIDのエントリはスキップされます。")
+                }
+
+                Section {
+                    Picker("ブラウザ", selection: $browserMode) {
+                        Text("アプリ内（Safari）").tag("inApp")
+                        Text("デフォルトブラウザ").tag("external")
+                    }
+                } header: {
+                    Text("ブラウザ")
+                } footer: {
+                    Text("「アプリ内」はSafariベースのブラウザで表示します。「デフォルトブラウザ」はiOSで設定したブラウザで開きます。")
                 }
 
                 Section {
