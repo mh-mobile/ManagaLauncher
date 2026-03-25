@@ -1,4 +1,4 @@
-#if canImport(SafariServices)
+#if canImport(UIKit)
 import SwiftUI
 import SafariServices
 
