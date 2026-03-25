@@ -132,7 +132,7 @@ struct ContentView: View {
                 .onAppear {
                     pageIndex = pageIndexForDay(viewModel.selectedDay)
                 }
-                #if canImport(SafariServices)
+                #if canImport(UIKit)
                 .sheet(item: $safariURL) { url in
                     SafariView(url: url)
                         .ignoresSafeArea()
@@ -495,7 +495,7 @@ struct ContentView: View {
 
     private func openMangaURL(_ urlString: String) {
         guard let url = URL(string: urlString) else { return }
-        #if canImport(SafariServices)
+        #if canImport(UIKit)
         if browserMode == "inApp" {
             safariURL = url
         } else {

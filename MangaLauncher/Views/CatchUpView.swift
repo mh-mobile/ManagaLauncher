@@ -61,7 +61,7 @@ struct CatchUpView: View {
         .onReceive(NotificationCenter.default.publisher(for: .mangaDataDidChange)) { _ in
             reloadEntries()
         }
-        #if canImport(SafariServices)
+        #if canImport(UIKit)
         .sheet(item: $safariURL) { url in
             SafariView(url: url)
                 .ignoresSafeArea()
@@ -355,7 +355,7 @@ struct CatchUpView: View {
 
     private func openMangaURL(_ urlString: String) {
         guard let url = URL(string: urlString) else { return }
-        #if canImport(SafariServices)
+        #if canImport(UIKit)
         if browserMode == "inApp" {
             safariURL = url
         } else {
