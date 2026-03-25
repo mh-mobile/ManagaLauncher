@@ -5,6 +5,10 @@ enum DisplayMode: String {
     case list, grid
 }
 
+extension URL: @retroactive Identifiable {
+    public var id: String { absoluteString }
+}
+
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.openURL) private var openURL
@@ -14,6 +18,8 @@ struct ContentView: View {
     @State private var showingCatchUp = false
     @State private var editingEntry: MangaEntry?
     @AppStorage("displayMode") private var displayMode: DisplayMode = .grid
+    @AppStorage("browserMode") private var browserMode: String = "external"
+    @State private var safariURL: URL?
     @State private var draggingEntryID: UUID?
     #if os(iOS) || os(visionOS)
     @State private var listEditMode: EditMode = .inactive
@@ -126,6 +132,12 @@ struct ContentView: View {
                 .onAppear {
                     pageIndex = pageIndexForDay(viewModel.selectedDay)
                 }
+                #if canImport(SafariServices)
+                .sheet(item: $safariURL) { url in
+                    SafariView(url: url)
+                        .ignoresSafeArea()
+                }
+                #endif
             }
         }
         .onAppear {
@@ -375,7 +387,7 @@ struct ContentView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            if let url = URL(string: entry.url) { openURL(url) }
+            openMangaURL(entry.url)
         }
         .contextMenu {
             Button {
@@ -433,7 +445,7 @@ struct ContentView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            if let url = URL(string: entry.url) { openURL(url) }
+            openMangaURL(entry.url)
         }
         .contextMenu {
             Button {
@@ -479,6 +491,19 @@ struct ContentView: View {
                         .foregroundStyle(.white)
                 }
         }
+    }
+
+    private func openMangaURL(_ urlString: String) {
+        guard let url = URL(string: urlString) else { return }
+        #if canImport(SafariServices)
+        if browserMode == "inApp" {
+            safariURL = url
+        } else {
+            openURL(url)
+        }
+        #else
+        openURL(url)
+        #endif
     }
 
     @ViewBuilder

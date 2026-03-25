@@ -3,6 +3,7 @@ import SwiftUI
 struct CatchUpView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    @AppStorage("browserMode") private var browserMode: String = "external"
 
     var viewModel: MangaViewModel
     let day: DayOfWeek
@@ -12,6 +13,7 @@ struct CatchUpView: View {
     @State private var offset: CGSize = .zero
     @State private var undoStack: [(entry: MangaEntry, action: SwipeAction)] = []
     @State private var completionAnimated = false
+    @State private var safariURL: URL?
 
     private enum SwipeAction {
         case read, skip
@@ -59,6 +61,12 @@ struct CatchUpView: View {
         .onReceive(NotificationCenter.default.publisher(for: .mangaDataDidChange)) { _ in
             reloadEntries()
         }
+        #if canImport(SafariServices)
+        .sheet(item: $safariURL) { url in
+            SafariView(url: url)
+                .ignoresSafeArea()
+        }
+        #endif
     }
 
     // MARK: - Card Stack
@@ -185,9 +193,7 @@ struct CatchUpView: View {
         )
         .contentShape(Rectangle())
         .onTapGesture {
-            if let url = URL(string: entry.url) {
-                openURL(url)
-            }
+            openMangaURL(entry.url)
         }
     }
 
@@ -345,6 +351,19 @@ struct CatchUpView: View {
                 }
             }
         }
+    }
+
+    private func openMangaURL(_ urlString: String) {
+        guard let url = URL(string: urlString) else { return }
+        #if canImport(SafariServices)
+        if browserMode == "inApp" {
+            safariURL = url
+        } else {
+            openURL(url)
+        }
+        #else
+        openURL(url)
+        #endif
     }
 
     private func colorFromName(_ name: String) -> Color {
