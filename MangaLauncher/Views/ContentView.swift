@@ -156,19 +156,26 @@ struct ContentView: View {
                         pageIndex = pageIndexForDay(day)
                     }
                 } label: {
+                    let hasUnread = viewModel.unreadCount(for: day) > 0
                     VStack(spacing: 4) {
                         Text(day.shortName)
                             .font(.headline)
                             .foregroundStyle(
-                                viewModel.selectedDay == day
-                                    ? Color.accentColor
-                                    : .secondary
+                                day == .today
+                                    ? .white
+                                    : viewModel.selectedDay == day
+                                        ? Color.accentColor
+                                        : .secondary
                             )
+                            .frame(width: 32, height: 32)
+                            .background {
+                                if day == .today {
+                                    Circle()
+                                        .fill(Color.accentColor)
+                                }
+                            }
                         Circle()
-                            .fill(day == .today
-                                ? (viewModel.selectedDay == day ? Color.accentColor : .secondary)
-                                : .clear
-                            )
+                            .fill(hasUnread ? Color.accentColor : .clear)
                             .frame(width: 5, height: 5)
                         Rectangle()
                             .fill(viewModel.selectedDay == day ? Color.accentColor : .clear)
