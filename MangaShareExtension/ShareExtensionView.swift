@@ -179,13 +179,18 @@ struct ShareExtensionView: View {
         var sharedText = ""
 
         for item in items {
+            // attributedContentText contains the full share text
+            if let attrText = item.attributedContentText?.string, !attrText.isEmpty {
+                sharedText = attrText
+            }
+
             for provider in item.attachments ?? [] {
                 if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
                     if let urlItem = try? await provider.loadItem(forTypeIdentifier: UTType.url.identifier) as? URL {
                         sharedURL = urlItem.absoluteString
                     }
                 }
-                if provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
+                if sharedText.isEmpty, provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
                     if let text = try? await provider.loadItem(forTypeIdentifier: UTType.plainText.identifier) as? String {
                         sharedText = text
                     }
