@@ -46,6 +46,7 @@
 		EC04B7D12F71384C00AEE45F /* BadgeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC04B7D02F71384C00AEE45F /* BadgeManager.swift */; };
 		EC04B7D32F71441D00AEE45F /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC04B7D22F71441D00AEE45F /* NotificationManager.swift */; };
 		EC04B7D82F74202400AEE45F /* SafariView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC04B7D72F74202400AEE45F /* SafariView.swift */; };
+		EC04B7DA2F74E2BE00AEE45F /* CloudSyncMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC04B7D92F74E2BE00AEE45F /* CloudSyncMonitor.swift */; };
 		ECA66F7B2F6EAEE10096B6E5 /* Mantis in Frameworks */ = {isa = PBXBuildFile; productRef = ECA66F7A2F6EAEE10096B6E5 /* Mantis */; };
 		ECCD2FCE2F65596900BF3309 /* PublisherPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECCD2FCD2F65596900BF3309 /* PublisherPickerView.swift */; };
 		F8659628D6F745CA942803EB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E7D977DE254FB1F216740BE6 /* Foundation.framework */; };
@@ -120,6 +121,7 @@
 		EC04B7D02F71384C00AEE45F /* BadgeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeManager.swift; sourceTree = "<group>"; };
 		EC04B7D22F71441D00AEE45F /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		EC04B7D72F74202400AEE45F /* SafariView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariView.swift; sourceTree = "<group>"; };
+		EC04B7D92F74E2BE00AEE45F /* CloudSyncMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncMonitor.swift; sourceTree = "<group>"; };
 		ECCD2FCD2F65596900BF3309 /* PublisherPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherPickerView.swift; sourceTree = "<group>"; };
 		EEC07D90615785B81C2E71C8 /* ImageCropView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ImageCropView.swift; sourceTree = "<group>"; };
 		EEEF347AB79EE547A4014C35 /* MangaLauncher.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaLauncher.entitlements; sourceTree = "<group>"; };
@@ -182,6 +184,7 @@
 		6238B354545AE6BD66DCA01C /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
+				EC04B7D92F74E2BE00AEE45F /* CloudSyncMonitor.swift */,
 				EC04B7D22F71441D00AEE45F /* NotificationManager.swift */,
 				EC04B7D02F71384C00AEE45F /* BadgeManager.swift */,
 				CDD9A4D8748B9496E85A2A67 /* PlatformHelpers.swift */,
@@ -464,6 +467,7 @@
 				ECCD2FCE2F65596900BF3309 /* PublisherPickerView.swift in Sources */,
 				A1000002 /* MangaEntry.swift in Sources */,
 				A1000003 /* MangaViewModel.swift in Sources */,
+				EC04B7DA2F74E2BE00AEE45F /* CloudSyncMonitor.swift in Sources */,
 				EC04B7D82F74202400AEE45F /* SafariView.swift in Sources */,
 				A1000004 /* ContentView.swift in Sources */,
 				A1000005 /* EditEntryView.swift in Sources */,
