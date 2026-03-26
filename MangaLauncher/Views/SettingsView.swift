@@ -13,6 +13,7 @@ struct SettingsView: View {
     @AppStorage("browserMode") private var browserMode: String = "external"
     @State private var badgeEnabled = BadgeManager.isEnabled
     @State private var updateStatus: UpdateStatus = .idle
+    @State private var showingOnboarding = false
 
     private enum UpdateStatus {
         case idle, checking, available(String), upToDate, error
@@ -192,6 +193,9 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Button("アプリについて") {
+                        showingOnboarding = true
+                    }
                     NavigationLink("ライセンス") {
                         LicenseListView()
                     }
@@ -257,6 +261,9 @@ struct SettingsView: View {
                 allowedContentTypes: [.json]
             ) { result in
                 handleImport(result)
+            }
+            .fullScreenCover(isPresented: $showingOnboarding) {
+                OnboardingView()
             }
         }
     }

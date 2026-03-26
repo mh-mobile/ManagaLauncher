@@ -13,6 +13,7 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.openURL) private var openURL
     @State private var viewModel: MangaViewModel?
+    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
     @State private var showingAddSheet = false
     @State private var showingSettings = false
     @State private var showingCatchUp = false
@@ -42,6 +43,11 @@ struct ContentView: View {
     }
 
     var body: some View {
+        if !hasSeenOnboarding {
+            OnboardingView {
+                hasSeenOnboarding = true
+            }
+        } else {
         NavigationStack {
             if let viewModel {
                 ZStack(alignment: .bottom) {
@@ -158,6 +164,7 @@ struct ContentView: View {
                 viewModel.selectedDay = day
                 pageIndex = pageIndexForDay(day)
             }
+        }
         }
     }
 
