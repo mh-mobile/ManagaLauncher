@@ -36,6 +36,7 @@ struct MangaLauncherApp: App {
     let container: ModelContainer
     @Environment(\.scenePhase) private var scenePhase
     @State private var intentPrefill: IntentPrefill?
+    @State private var syncMonitor = CloudSyncMonitor()
     private let notificationDelegate = NotificationDelegate()
 
     init() {
@@ -51,6 +52,7 @@ struct MangaLauncherApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(syncMonitor)
                 .onOpenURL { url in
                     handleDeepLink(url)
                 }
