@@ -71,10 +71,12 @@ struct MangaLauncherApp: App {
                 }
                 .onAppear {
                     checkPendingIntent()
+                    checkPendingOpenDay()
                 }
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
                         checkPendingIntent()
+                        checkPendingOpenDay()
                         NotificationCenter.default.post(name: .mangaDataDidChange, object: nil)
                         updateBadge()
                     }
@@ -98,6 +100,13 @@ struct MangaLauncherApp: App {
         )
     }
 
+    private func checkPendingOpenDay() {
+        let defaults = UserDefaults(suiteName: SharedModelContainer.appGroupIdentifier)
+        guard let rawValue = defaults?.object(forKey: "pendingOpenDay") as? Int else { return }
+        defaults?.removeObject(forKey: "pendingOpenDay")
+        NotificationCenter.default.post(name: .switchToDay, object: rawValue)
+    }
+
     private func updateBadge() {
         let viewModel = MangaViewModel(modelContext: container.mainContext)
         let count = viewModel.unreadCount(for: .today)
@@ -106,22 +115,30 @@ struct MangaLauncherApp: App {
 
     private func handleDeepLink(_ url: URL) {
         guard url.scheme == "mangalauncher",
-              url.host == "open",
-              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              let idString = components.queryItems?.first(where: { $0.name == "id" })?.value,
-              let entryID = UUID(uuidString: idString) else { return }
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return }
 
-        let context = container.mainContext
-        let descriptor = FetchDescriptor<MangaEntry>(
-            predicate: #Predicate { $0.id == entryID }
-        )
-        guard let entry = try? context.fetch(descriptor).first,
-              let targetURL = URL(string: entry.url) else { return }
+        if url.host == "day",
+           let weekdayString = components.queryItems?.first(where: { $0.name == "weekday" })?.value,
+           let rawValue = Int(weekdayString) {
+            NotificationCenter.default.post(name: .switchToDay, object: rawValue)
+            return
+        }
 
-        #if canImport(UIKit)
-        UIApplication.shared.open(targetURL)
-        #elseif canImport(AppKit)
-        NSWorkspace.shared.open(targetURL)
-        #endif
+        if url.host == "open",
+           let idString = components.queryItems?.first(where: { $0.name == "id" })?.value,
+           let entryID = UUID(uuidString: idString) {
+            let context = container.mainContext
+            let descriptor = FetchDescriptor<MangaEntry>(
+                predicate: #Predicate { $0.id == entryID }
+            )
+            guard let entry = try? context.fetch(descriptor).first,
+                  let targetURL = URL(string: entry.url) else { return }
+
+            #if canImport(UIKit)
+            UIApplication.shared.open(targetURL)
+            #elseif canImport(AppKit)
+            NSWorkspace.shared.open(targetURL)
+            #endif
+        }
     }
 }

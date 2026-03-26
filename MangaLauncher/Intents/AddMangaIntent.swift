@@ -90,6 +90,29 @@ struct AddMangaIntent: AppIntent {
     }
 }
 
+// MARK: - Open Day Intent
+
+struct OpenDayIntent: AppIntent {
+    static var title: LocalizedStringResource = "曜日を開く"
+    static var description: IntentDescription = "マンガ曜日で指定した曜日のタブを開きます"
+    static var openAppWhenRun = true
+
+    @Parameter(title: "曜日")
+    var dayOfWeek: DayOfWeekAppEnum
+
+    func perform() async throws -> some IntentResult {
+        let rawValue = dayOfWeek.toDayOfWeek.rawValue
+        // For when app needs to launch
+        let defaults = UserDefaults(suiteName: SharedModelContainer.appGroupIdentifier)
+        defaults?.set(rawValue, forKey: "pendingOpenDay")
+        // For when app is already running
+        await MainActor.run {
+            NotificationCenter.default.post(name: .switchToDay, object: rawValue)
+        }
+        return .result()
+    }
+}
+
 // MARK: - App Shortcuts
 
 struct MangaShortcuts: AppShortcutsProvider {
@@ -102,6 +125,15 @@ struct MangaShortcuts: AppShortcutsProvider {
             ],
             shortTitle: "マンガを登録",
             systemImageName: "plus.circle"
+        )
+        AppShortcut(
+            intent: OpenDayIntent(),
+            phrases: [
+                "\(.applicationName)で\(\.$dayOfWeek)を開く",
+                "\(.applicationName)の\(\.$dayOfWeek)",
+            ],
+            shortTitle: "曜日を開く",
+            systemImageName: "calendar"
         )
     }
 }
