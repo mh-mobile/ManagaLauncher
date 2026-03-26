@@ -38,6 +38,11 @@ enum DayOfWeek: Int, Codable, CaseIterable, Identifiable {
         DayOfWeek(rawValue: (rawValue + 6) % 7)!
     }
 
+    /// Monday-start order for display
+    static var orderedCases: [DayOfWeek] {
+        [.monday, .tuesday, .wednesday, .thursday, .friday, .saturday, .sunday]
+    }
+
     static var today: DayOfWeek {
         let weekday = Calendar.current.component(.weekday, from: Date())
         // Calendar.weekday: 1=Sunday, 2=Monday, ...

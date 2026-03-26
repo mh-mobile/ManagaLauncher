@@ -98,7 +98,7 @@ struct ShareExtensionView: View {
 
                     Section("曜日") {
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
-                            ForEach(DayOfWeek.allCases) { day in
+                            ForEach(DayOfWeek.orderedCases) { day in
                                 Text(day.shortName)
                                     .font(.subheadline.bold())
                                     .frame(width: 36, height: 36)

@@ -25,17 +25,20 @@ struct ContentView: View {
     @State private var listEditMode: EditMode = .inactive
     #endif
     @State private var selectedPublisher: String?
-    // 0=sat(fake), 1=sun, 2=mon, ..., 7=sat, 8=sun(fake) → 9 pages for looping
+    // Monday-start paging: 0=sun(fake), 1=mon, 2=tue, ..., 7=sun, 8=mon(fake) → 9 pages for looping
     @State private var pageIndex: Int = 0
 
+    private let orderedDays = DayOfWeek.orderedCases // [mon, tue, wed, thu, fri, sat, sun]
+
     private func dayForPageIndex(_ index: Int) -> DayOfWeek {
-        // page 0 = fake saturday, 1=sunday, 2=monday, ..., 7=saturday, 8=fake sunday
-        let raw = (index - 1 + 7) % 7  // 0=sunday ... 6=saturday
-        return DayOfWeek(rawValue: raw) ?? .sunday
+        // page 0 = fake sunday, 1=monday, ..., 7=sunday, 8=fake monday
+        let orderedIndex = ((index - 1) % 7 + 7) % 7
+        return orderedDays[orderedIndex]
     }
 
     private func pageIndexForDay(_ day: DayOfWeek) -> Int {
-        return day.rawValue + 1  // sunday(0)→1, monday(1)→2, ..., saturday(6)→7
+        guard let index = orderedDays.firstIndex(of: day) else { return 1 }
+        return index + 1
     }
 
     var body: some View {
@@ -161,7 +164,7 @@ struct ContentView: View {
     @ViewBuilder
     private func dayTabBar(viewModel: MangaViewModel) -> some View {
         HStack(spacing: 0) {
-            ForEach(DayOfWeek.allCases) { day in
+            ForEach(DayOfWeek.orderedCases) { day in
                 Button {
                     withAnimation(.easeInOut(duration: 0.2)) {
                         viewModel.selectedDay = day
@@ -205,7 +208,7 @@ struct ContentView: View {
     @ViewBuilder
     private func dayPager(viewModel: MangaViewModel) -> some View {
         #if os(iOS) || os(visionOS)
-        // 9 pages: [sat(fake), sun, mon, tue, wed, thu, fri, sat, sun(fake)]
+        // 9 pages: [sun(fake), mon, tue, wed, thu, fri, sat, sun, mon(fake)]
         TabView(selection: $pageIndex) {
             ForEach(0..<9, id: \.self) { index in
                 dayPage(day: dayForPageIndex(index), viewModel: viewModel)
@@ -222,14 +225,14 @@ struct ContentView: View {
 
             // Loop: if landed on fake page, jump to real page
             if newValue == 0 {
-                // fake saturday → real saturday (index 7)
+                // fake sunday → real sunday (index 7)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     withAnimation(.none) {
                         pageIndex = 7
                     }
                 }
             } else if newValue == 8 {
-                // fake sunday → real sunday (index 1)
+                // fake monday → real monday (index 1)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     withAnimation(.none) {
                         pageIndex = 1
