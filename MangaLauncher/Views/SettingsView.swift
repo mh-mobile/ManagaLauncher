@@ -12,6 +12,11 @@ struct SettingsView: View {
     @State private var importResult: ImportResult?
     @AppStorage("browserMode") private var browserMode: String = "external"
     @State private var badgeEnabled = BadgeManager.isEnabled
+    @State private var updateStatus: UpdateStatus = .idle
+
+    private enum UpdateStatus {
+        case idle, checking, available(String), upToDate, error
+    }
     @State private var notificationEnabled = NotificationManager.isEnabled
     @State private var notificationTime: Date = {
         var components = DateComponents()
@@ -51,6 +56,40 @@ struct SettingsView: View {
                         Spacer()
                         Text("\(viewModel.totalEntryCount())件")
                             .foregroundStyle(.secondary)
+                    }
+                    switch updateStatus {
+                    case .idle:
+                        Button("アップデートを確認") {
+                            checkForUpdate()
+                        }
+                    case .checking:
+                        HStack {
+                            Text("確認中...")
+                            Spacer()
+                            ProgressView()
+                                .controlSize(.small)
+                        }
+                    case .available(let version):
+                        Link(destination: URL(string: "https://apps.apple.com/jp/app/%E3%83%9E%E3%83%B3%E3%82%AC%E6%9B%9C%E6%97%A5/id6760709060")!) {
+                            HStack {
+                                Text("v\(version)が利用可能です")
+                                Spacer()
+                                Image(systemName: "arrow.up.circle.fill")
+                                    .foregroundStyle(.blue)
+                            }
+                        }
+                    case .upToDate:
+                        HStack {
+                            Text("最新バージョンです")
+                            Spacer()
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.green)
+                        }
+                    case .error:
+                        Button("確認できませんでした（再試行）") {
+                            checkForUpdate()
+                        }
+                        .foregroundStyle(.red)
                     }
                 }
 
@@ -254,6 +293,33 @@ struct SettingsView: View {
         case .notAvailable:
             Text("iCloud未設定")
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    private func checkForUpdate() {
+        updateStatus = .checking
+        Task {
+            guard let url = URL(string: "https://itunes.apple.com/lookup?bundleId=com.mh-mobile.MangaYoubi&country=jp") else {
+                updateStatus = .error
+                return
+            }
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let results = json["results"] as? [[String: Any]],
+                      let latest = results.first,
+                      let storeVersion = latest["version"] as? String else {
+                    updateStatus = .error
+                    return
+                }
+                if storeVersion.compare(appVersion, options: .numeric) == .orderedDescending {
+                    updateStatus = .available(storeVersion)
+                } else {
+                    updateStatus = .upToDate
+                }
+            } catch {
+                updateStatus = .error
+            }
         }
     }
 
