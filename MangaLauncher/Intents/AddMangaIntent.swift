@@ -143,7 +143,10 @@ struct MangaShortcuts: AppShortcutsProvider {
             intent: OpenDayIntent(),
             phrases: [
                 "\(.applicationName)で\(\.$dayOfWeek)を開く",
+                "\(.applicationName)で\(\.$dayOfWeek)を開いて",
+                "\(.applicationName)で\(\.$dayOfWeek)を見せて",
                 "\(.applicationName)の\(\.$dayOfWeek)",
+                "\(.applicationName)の\(\.$dayOfWeek)を開いて",
             ],
             shortTitle: "曜日を開く",
             systemImageName: "calendar"
