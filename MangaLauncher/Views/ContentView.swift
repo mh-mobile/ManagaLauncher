@@ -22,6 +22,7 @@ struct ContentView: View {
     @AppStorage("browserMode") private var browserMode: String = "external"
     @State private var safariURL: URL?
     @State private var draggingEntryID: UUID?
+    @State private var isGridEditMode = false
     #if os(iOS) || os(visionOS)
     @State private var listEditMode: EditMode = .inactive
     #endif
@@ -84,7 +85,7 @@ struct ContentView: View {
                                 }
                             }
                         }
-                        .disabled(unreadCount == 0)
+                        .disabled(unreadCount == 0 || isGridEditMode)
                     }
                     ToolbarItem(placement: .automatic) {
                         Button {
@@ -97,6 +98,7 @@ struct ContentView: View {
                         } label: {
                             Image(systemName: displayMode == .list ? "square.grid.2x2" : "list.bullet")
                         }
+                        .disabled(isGridEditMode)
                     }
                     #if os(iOS) || os(visionOS)
                     if displayMode == .list && !viewModel.fetchEntries(for: viewModel.selectedDay).isEmpty {
@@ -115,6 +117,7 @@ struct ContentView: View {
                         } label: {
                             Image(systemName: "plus")
                         }
+                        .disabled(isGridEditMode)
                     }
                     ToolbarItem(placement: .automatic) {
                         Button {
@@ -122,6 +125,7 @@ struct ContentView: View {
                         } label: {
                             Image(systemName: "gearshape")
                         }
+                        .disabled(isGridEditMode)
                     }
                 }
                 .sheet(isPresented: $showingAddSheet) {
@@ -168,6 +172,8 @@ struct ContentView: View {
         }
     }
 
+    @State private var dropTargetDay: DayOfWeek?
+
     @ViewBuilder
     private func dayTabBar(viewModel: MangaViewModel) -> some View {
         HStack(spacing: 0) {
@@ -205,6 +211,26 @@ struct ContentView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(dropTargetDay == day ? Color.accentColor.opacity(0.3) : .clear)
+                        .padding(.horizontal, 2)
+                )
+                .onDrop(of: [.text], isTargeted: Binding(
+                    get: { dropTargetDay == day },
+                    set: { dropTargetDay = $0 ? day : nil }
+                )) { _ in
+                    guard let draggingID = draggingEntryID,
+                          let entry = viewModel.findEntry(by: draggingID),
+                          entry.dayOfWeek != day else { return false }
+                    viewModel.moveEntryToDay(entry, to: day)
+                    draggingEntryID = nil
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        viewModel.selectedDay = day
+                        pageIndex = pageIndexForDay(day)
+                    }
+                    return true
+                }
             }
         }
         .padding(.horizontal, 8)
@@ -338,9 +364,26 @@ struct ContentView: View {
         ScrollView {
             MasonryLayout(entries: entries) { entry in
                 gridCell(entry: entry, viewModel: viewModel)
+                    .overlay(alignment: .topLeading) {
+                        if isGridEditMode {
+                            Button {
+                                viewModel.queueDelete(entry)
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.title3)
+                                    .symbolRenderingMode(.palette)
+                                    .foregroundStyle(.white, .gray)
+                            }
+                            .offset(x: -6, y: -6)
+                        }
+                    }
+                    .modifier(WiggleModifier(isActive: isGridEditMode))
                     .onDrag {
                         draggingEntryID = entry.id
                         return NSItemProvider(object: entry.id.uuidString as NSString)
+                    } preview: {
+                        gridCell(entry: entry, viewModel: viewModel)
+                            .frame(width: 120)
                     }
                     .onDrop(of: [.text], delegate: GridDropDelegate(
                         entry: entry,
@@ -351,6 +394,33 @@ struct ContentView: View {
                     ))
             }
             .padding()
+        }
+        .contentShape(Rectangle())
+        .onLongPressGesture {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isGridEditMode = true
+            }
+        }
+        .onDrop(of: [.text], delegate: EmptyPageDropDelegate(
+            day: day,
+            draggingEntryID: $draggingEntryID,
+            viewModel: viewModel
+        ))
+        .overlay(alignment: .bottom) {
+            if isGridEditMode {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isGridEditMode = false
+                    }
+                } label: {
+                    Text("完了")
+                        .font(.headline)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 10)
+                        .background(.ultraThinMaterial, in: Capsule())
+                }
+                .padding(.bottom, 16)
+            }
         }
     }
 
@@ -397,7 +467,13 @@ struct ContentView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            openMangaURL(entry.url)
+            if isGridEditMode {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isGridEditMode = false
+                }
+            } else {
+                openMangaURL(entry.url)
+            }
         }
         .contextMenu {
             Button {
@@ -414,6 +490,13 @@ struct ContentView: View {
                 editingEntry = entry
             } label: {
                 Label("編集", systemImage: "pencil")
+            }
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isGridEditMode = true
+                }
+            } label: {
+                Label("並び替え", systemImage: "arrow.up.arrow.down")
             }
             Button(role: .destructive) {
                 viewModel.queueDelete(entry)
@@ -557,6 +640,28 @@ struct ContentView: View {
     }
 }
 
+struct WiggleModifier: ViewModifier {
+    let isActive: Bool
+    @State private var isWiggling = false
+
+    func body(content: Content) -> some View {
+        content
+            .rotationEffect(.degrees(isActive ? (isWiggling ? 2 : -2) : 0))
+            .animation(
+                isActive
+                    ? .easeInOut(duration: 0.12).repeatForever(autoreverses: true)
+                    : .easeInOut(duration: 0.15),
+                value: isActive ? isWiggling : false
+            )
+            .onChange(of: isActive) { _, active in
+                isWiggling = active
+            }
+            .onAppear {
+                isWiggling = isActive
+            }
+    }
+}
+
 struct GridDropDelegate: DropDelegate {
     let entry: MangaEntry
     let entries: [MangaEntry]
@@ -571,8 +676,19 @@ struct GridDropDelegate: DropDelegate {
 
     func dropEntered(info: DropInfo) {
         guard let draggingID = draggingEntryID,
-              draggingID != entry.id,
-              let fromIndex = entries.firstIndex(where: { $0.id == draggingID }),
+              draggingID != entry.id else { return }
+
+        // Cross-day: move entry to this day first
+        if !entries.contains(where: { $0.id == draggingID }),
+           let draggedEntry = viewModel.findEntry(by: draggingID) {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                viewModel.moveEntryToDay(draggedEntry, to: day, at: entry)
+            }
+            return
+        }
+
+        // Same-day reorder
+        guard let fromIndex = entries.firstIndex(where: { $0.id == draggingID }),
               let toIndex = entries.firstIndex(where: { $0.id == entry.id }) else { return }
 
         withAnimation(.easeInOut(duration: 0.2)) {
@@ -582,6 +698,26 @@ struct GridDropDelegate: DropDelegate {
                 to: toIndex > fromIndex ? toIndex + 1 : toIndex
             )
         }
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
+    }
+}
+
+struct EmptyPageDropDelegate: DropDelegate {
+    let day: DayOfWeek
+    @Binding var draggingEntryID: UUID?
+    let viewModel: MangaViewModel
+
+    func performDrop(info: DropInfo) -> Bool {
+        if let draggingID = draggingEntryID,
+           let draggedEntry = viewModel.findEntry(by: draggingID),
+           draggedEntry.dayOfWeek != day {
+            viewModel.moveEntryToDay(draggedEntry, to: day)
+        }
+        draggingEntryID = nil
+        return true
     }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
