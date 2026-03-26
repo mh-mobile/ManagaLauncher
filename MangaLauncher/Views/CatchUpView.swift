@@ -266,6 +266,7 @@ struct CatchUpView: View {
     // MARK: - Actions
 
     private func performAction(_ action: SwipeAction) {
+        guard currentIndex < unreadItems.count else { return }
         let entry = unreadItems[currentIndex]
         undoStack.append((entry: entry, action: action))
 
