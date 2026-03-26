@@ -1,0 +1,78 @@
+import Foundation
+import CoreData
+import Observation
+
+enum CloudSyncStatus: Equatable {
+    case idle
+    case syncing
+    case failed(String)
+    case notAvailable
+
+    static func == (lhs: CloudSyncStatus, rhs: CloudSyncStatus) -> Bool {
+        switch (lhs, rhs) {
+        case (.idle, .idle), (.syncing, .syncing), (.notAvailable, .notAvailable):
+            return true
+        case (.failed(let a), .failed(let b)):
+            return a == b
+        default:
+            return false
+        }
+    }
+}
+
+@Observable
+final class CloudSyncMonitor {
+    private(set) var syncStatus: CloudSyncStatus = .idle
+    private(set) var lastSyncDate: Date?
+
+    init() {
+        startMonitoring()
+        checkAccountStatus()
+    }
+
+    private func startMonitoring() {
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("NSPersistentCloudKitContainerEventChangedNotification"),
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            self?.handleSyncEvent(notification)
+        }
+    }
+
+    private func handleSyncEvent(_ notification: Notification) {
+        guard let event = notification.userInfo?["event"] as? NSObject else { return }
+
+        let endDate = event.value(forKey: "endDate") as? Date
+        let succeeded = (event.value(forKey: "succeeded") as? Bool) ?? false
+        let error = event.value(forKey: "error") as? NSError
+
+        if endDate == nil {
+            syncStatus = .syncing
+        } else if succeeded {
+            lastSyncDate = endDate
+            syncStatus = .idle
+        } else if let error {
+            syncStatus = .failed(error.localizedDescription)
+        }
+    }
+
+    private func checkAccountStatus() {
+        #if canImport(CloudKit)
+        Task {
+            do {
+                let status = try await CKContainer.default().accountStatus()
+                if status != .available {
+                    await MainActor.run {
+                        syncStatus = .notAvailable
+                    }
+                }
+            } catch {}
+        }
+        #endif
+    }
+}
+
+#if canImport(CloudKit)
+import CloudKit
+#endif

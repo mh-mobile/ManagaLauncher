@@ -3,6 +3,7 @@ import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(CloudSyncMonitor.self) private var syncMonitor
     var viewModel: MangaViewModel
 
     @State private var showingResetConfirmation = false
@@ -50,6 +51,19 @@ struct SettingsView: View {
                         Spacer()
                         Text("\(viewModel.totalEntryCount())件")
                             .foregroundStyle(.secondary)
+                    }
+                }
+
+                Section("iCloud同期") {
+                    HStack {
+                        syncStatusIcon
+                        syncStatusText
+                        Spacer()
+                        if let date = syncMonitor.lastSyncDate {
+                            Text(date, style: .time)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
 
@@ -205,6 +219,41 @@ struct SettingsView: View {
             ) { result in
                 handleImport(result)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var syncStatusIcon: some View {
+        switch syncMonitor.syncStatus {
+        case .idle:
+            Image(systemName: "checkmark.icloud")
+                .foregroundStyle(.green)
+        case .syncing:
+            Image(systemName: "arrow.triangle.2.circlepath.icloud")
+                .symbolEffect(.rotate, isActive: true)
+                .foregroundStyle(.blue)
+        case .failed:
+            Image(systemName: "exclamationmark.icloud")
+                .foregroundStyle(.red)
+        case .notAvailable:
+            Image(systemName: "xmark.icloud")
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private var syncStatusText: some View {
+        switch syncMonitor.syncStatus {
+        case .idle:
+            Text("同期済み")
+        case .syncing:
+            Text("同期中...")
+        case .failed(let message):
+            Text("同期エラー")
+                .foregroundStyle(.red)
+        case .notAvailable:
+            Text("iCloud未設定")
+                .foregroundStyle(.secondary)
         }
     }
 
