@@ -29,6 +29,7 @@ struct IntentPrefill: Identifiable {
     let dayOfWeek: DayOfWeek
     let publisher: String
     let iconColor: String
+    let imageData: Data?
 }
 
 @main
@@ -66,7 +67,8 @@ struct MangaLauncherApp: App {
                         prefilledURL: prefill.url,
                         prefilledDay: prefill.dayOfWeek,
                         prefilledPublisher: prefill.publisher,
-                        prefilledColor: prefill.iconColor
+                        prefilledColor: prefill.iconColor,
+                        prefilledImageData: prefill.imageData
                     )
                 }
                 .onAppear {
@@ -90,13 +92,22 @@ struct MangaLauncherApp: App {
         guard let data = defaults?.dictionary(forKey: "pendingIntentData") as? [String: String] else { return }
         defaults?.removeObject(forKey: "pendingIntentData")
 
+        // Load image from temp file if exists
+        var imageData: Data?
+        if let containerURL = SharedModelContainer.appGroupContainerURL {
+            let imageURL = containerURL.appendingPathComponent("pendingIntentImage.jpg")
+            imageData = try? Data(contentsOf: imageURL)
+            try? FileManager.default.removeItem(at: imageURL)
+        }
+
         let dayRaw = Int(data["dayOfWeek"] ?? "") ?? DayOfWeek.today.rawValue
         intentPrefill = IntentPrefill(
             name: data["name"] ?? "",
             url: data["url"] ?? "",
             dayOfWeek: DayOfWeek(rawValue: dayRaw) ?? .today,
             publisher: data["publisher"] ?? "",
-            iconColor: data["iconColor"] ?? "blue"
+            iconColor: data["iconColor"] ?? "blue",
+            imageData: imageData
         )
     }
 

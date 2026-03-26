@@ -76,6 +76,9 @@ struct AddMangaIntent: AppIntent {
     @Parameter(title: "アイコンカラー", default: .blue)
     var iconColor: IconColorAppEnum?
 
+    @Parameter(title: "画像", supportedContentTypes: [.image])
+    var image: IntentFile?
+
     func perform() async throws -> some IntentResult {
         let defaults = UserDefaults(suiteName: SharedModelContainer.appGroupIdentifier)
         let intentData: [String: String] = [
@@ -86,6 +89,16 @@ struct AddMangaIntent: AppIntent {
             "iconColor": (iconColor ?? .blue).rawValue,
         ]
         defaults?.set(intentData, forKey: "pendingIntentData")
+
+        // Save image to App Group temp file
+        if let image,
+           let containerURL = SharedModelContainer.appGroupContainerURL {
+            let imageURL = containerURL.appendingPathComponent("pendingIntentImage.jpg")
+            if let jpeg = downsizedJPEGData(image.data, maxDimension: 600) {
+                try? jpeg.write(to: imageURL)
+            }
+        }
+
         return .result()
     }
 }
