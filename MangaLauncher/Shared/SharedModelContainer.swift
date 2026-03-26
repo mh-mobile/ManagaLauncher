@@ -2,7 +2,11 @@ import Foundation
 import SwiftData
 
 enum SharedModelContainer {
+    #if DEBUG
+    static let appGroupIdentifier = "group.com.mh-mobile.MangaYoubi.dev"
+    #else
     static let appGroupIdentifier = "group.com.mh-mobile.MangaYoubi"
+    #endif
 
     static func create() throws -> ModelContainer {
         let schema = Schema([MangaEntry.self])
