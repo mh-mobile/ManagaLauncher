@@ -113,6 +113,22 @@ final class MangaViewModel {
         }
     }
 
+    func moveEntryToDay(_ entry: MangaEntry, to newDay: DayOfWeek, at targetEntry: MangaEntry? = nil) {
+        entry.dayOfWeek = newDay
+        var entries = fetchEntries(for: newDay)
+        if !entries.contains(where: { $0.id == entry.id }) {
+            if let targetEntry, let targetIndex = entries.firstIndex(where: { $0.id == targetEntry.id }) {
+                entries.insert(entry, at: targetIndex)
+            } else {
+                entries.append(entry)
+            }
+        }
+        for (index, e) in entries.enumerated() {
+            e.sortOrder = index
+        }
+        save()
+    }
+
     func moveEntries(for day: DayOfWeek, from source: IndexSet, to destination: Int) {
         var entries = fetchEntries(for: day)
         entries.move(fromOffsets: source, toOffset: destination)
