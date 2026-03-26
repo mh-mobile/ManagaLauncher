@@ -148,8 +148,15 @@ final class MangaViewModel {
     }
 
     func totalEntryCount() -> Int {
+        let _ = refreshCounter
         let descriptor = FetchDescriptor<MangaEntry>()
-        return (try? modelContext.fetchCount(descriptor)) ?? 0
+        let results = (try? modelContext.fetch(descriptor)) ?? []
+        let pendingIDs = Set(pendingDeleteEntries.map(\.id))
+        var seenIDs = Set<UUID>()
+        return results.filter { entry in
+            guard !pendingIDs.contains(entry.id) else { return false }
+            return seenIDs.insert(entry.id).inserted
+        }.count
     }
 
     func exportBackupData() -> Data? {
