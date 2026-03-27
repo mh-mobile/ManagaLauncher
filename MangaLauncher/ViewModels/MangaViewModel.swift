@@ -119,7 +119,7 @@ final class MangaViewModel {
 
     func moveEntryToDay(_ entry: MangaEntry, to newDay: DayOfWeek, at targetEntry: MangaEntry? = nil) {
         entry.dayOfWeek = newDay
-        entry.advanceToNextUpdate()
+        entry.resetNextUpdate()
         var entries = fetchEntries(for: newDay)
         if !entries.contains(where: { $0.id == entry.id }) {
             if let targetEntry, let targetIndex = entries.firstIndex(where: { $0.id == targetEntry.id }) {

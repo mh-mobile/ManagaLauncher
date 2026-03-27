@@ -98,6 +98,20 @@ final class MangaEntry {
         nextExpectedUpdate = Calendar.current.date(byAdding: .day, value: updateIntervalWeeks * 7, to: mostRecent)
     }
 
+    func resetNextUpdate() {
+        guard updateIntervalWeeks > 1 else {
+            nextExpectedUpdate = nil
+            return
+        }
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let todayWeekday = calendar.component(.weekday, from: today) - 1
+        let target = dayOfWeek.rawValue
+        let daysAhead = (target - todayWeekday + 7) % 7
+        let nextDay = daysAhead == 0 ? today : calendar.date(byAdding: .day, value: daysAhead, to: today)!
+        nextExpectedUpdate = nextDay
+    }
+
     init(
         id: UUID = UUID(),
         name: String = "",
