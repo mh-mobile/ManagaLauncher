@@ -453,6 +453,9 @@ struct ContentView: View {
 
     @ViewBuilder
     private func gridCell(entry: MangaEntry, viewModel: MangaViewModel) -> some View {
+        if entry.isDeleted || entry.modelContext == nil {
+            EmptyView()
+        } else {
         VStack(alignment: .leading, spacing: 6) {
             if let imageData = entry.imageData, let image = imageData.toSwiftUIImage() {
                 image
@@ -540,10 +543,14 @@ struct ContentView: View {
                 Label("削除", systemImage: "trash")
             }
         }
+        }
     }
 
     @ViewBuilder
     private func entryRow(entry: MangaEntry) -> some View {
+        if entry.isDeleted || entry.modelContext == nil {
+            EmptyView()
+        } else {
         HStack(spacing: 12) {
             if !entry.isRead {
                 Circle()
@@ -612,6 +619,7 @@ struct ContentView: View {
             } label: {
                 Label("削除", systemImage: "trash")
             }
+        }
         }
     }
 

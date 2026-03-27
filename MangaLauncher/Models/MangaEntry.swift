@@ -61,6 +61,8 @@ final class MangaEntry {
     var publisher: String = ""
     @Attribute(.externalStorage) var imageData: Data?
     var lastReadDate: Date?
+    var updateIntervalWeeks: Int = 1
+    var nextExpectedUpdate: Date?
 
     @Transient
     var dayOfWeek: DayOfWeek {
@@ -71,6 +73,10 @@ final class MangaEntry {
     @Transient
     var isRead: Bool {
         guard let lastReadDate else { return false }
+        // If next expected update is in the future, stay read
+        if let nextUpdate = nextExpectedUpdate, nextUpdate > Date.now {
+            return true
+        }
         let mostRecentDay = Self.mostRecentOccurrence(of: dayOfWeek)
         return lastReadDate >= mostRecentDay
     }
@@ -83,6 +89,29 @@ final class MangaEntry {
         return calendar.startOfDay(for: calendar.date(byAdding: .day, value: -daysBack, to: date)!)
     }
 
+    func advanceToNextUpdate() {
+        guard updateIntervalWeeks > 1 else {
+            nextExpectedUpdate = nil
+            return
+        }
+        let mostRecent = Self.mostRecentOccurrence(of: dayOfWeek)
+        nextExpectedUpdate = Calendar.current.date(byAdding: .day, value: updateIntervalWeeks * 7, to: mostRecent)
+    }
+
+    func resetNextUpdate() {
+        guard updateIntervalWeeks > 1 else {
+            nextExpectedUpdate = nil
+            return
+        }
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let todayWeekday = calendar.component(.weekday, from: today) - 1
+        let target = dayOfWeek.rawValue
+        let daysAhead = (target - todayWeekday + 7) % 7
+        let nextDay = daysAhead == 0 ? today : calendar.date(byAdding: .day, value: daysAhead, to: today)!
+        nextExpectedUpdate = nextDay
+    }
+
     init(
         id: UUID = UUID(),
         name: String = "",
@@ -91,7 +120,8 @@ final class MangaEntry {
         sortOrder: Int = 0,
         iconColor: String = "blue",
         publisher: String = "",
-        imageData: Data? = nil
+        imageData: Data? = nil,
+        updateIntervalWeeks: Int = 1
     ) {
         self.id = id
         self.name = name
@@ -101,5 +131,6 @@ final class MangaEntry {
         self.iconColor = iconColor
         self.publisher = publisher
         self.imageData = imageData
+        self.updateIntervalWeeks = updateIntervalWeeks
     }
 }
