@@ -19,6 +19,7 @@ struct EditEntryView: View {
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var imageData: Data?
     @State private var updateIntervalWeeks: Int = 1
+    @State private var isCustomInterval = false
     @State private var isLoadingImage = false
     @State private var ogpFetchFailed = false
     @State private var showingCropView = false
@@ -40,13 +41,23 @@ struct EditEntryView: View {
     private static let presetIntervals = [1, 2, 3, 4, 8]
 
     private var actualIntervalWeeks: Int {
-        updateIntervalWeeks == -1 ? 5 : updateIntervalWeeks
+        isCustomInterval && updateIntervalWeeks == -1 ? 5 : max(updateIntervalWeeks, 1)
     }
 
     private var pickerValue: Binding<Int> {
         Binding(
-            get: { Self.presetIntervals.contains(updateIntervalWeeks) ? updateIntervalWeeks : -1 },
-            set: { updateIntervalWeeks = $0 }
+            get: { isCustomInterval ? -1 : (Self.presetIntervals.contains(updateIntervalWeeks) ? updateIntervalWeeks : -1) },
+            set: { newValue in
+                if newValue == -1 {
+                    isCustomInterval = true
+                    if Self.presetIntervals.contains(updateIntervalWeeks) {
+                        updateIntervalWeeks = 5
+                    }
+                } else {
+                    isCustomInterval = false
+                    updateIntervalWeeks = newValue
+                }
+            }
         )
     }
 
@@ -205,11 +216,8 @@ struct EditEntryView: View {
                         Text("2ヶ月ごと").tag(8)
                         Text("カスタム").tag(-1)
                     }
-                    if updateIntervalWeeks == -1 || ![1, 2, 3, 4, 8].contains(updateIntervalWeeks) {
-                        Stepper("\(actualIntervalWeeks)週ごと", value: Binding(
-                            get: { actualIntervalWeeks },
-                            set: { updateIntervalWeeks = $0 }
-                        ), in: 1...52)
+                    if isCustomInterval {
+                        Stepper("\(updateIntervalWeeks)週ごと", value: $updateIntervalWeeks, in: 1...52)
                     }
                 }
 
@@ -278,6 +286,7 @@ struct EditEntryView: View {
                     publisher = entry.publisher
                     imageData = entry.imageData
                     updateIntervalWeeks = entry.updateIntervalWeeks
+                    isCustomInterval = !Self.presetIntervals.contains(entry.updateIntervalWeeks)
                     didLoadEntry = true
                 }
             }
