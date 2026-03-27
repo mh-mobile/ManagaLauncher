@@ -41,7 +41,7 @@ struct MasonryLayout<Content: View>: View {
         var columns: [[MangaEntry]] = Array(repeating: [], count: columnCount)
         var heights: [CGFloat] = Array(repeating: 0, count: columnCount)
 
-        for entry in entries {
+        for entry in entries where entry.modelContext != nil {
             let ratio = imageAspectRatio(for: entry)
             let shortestColumn = heights.enumerated().min(by: { $0.element < $1.element })?.offset ?? 0
             columns[shortestColumn].append(entry)
@@ -52,7 +52,8 @@ struct MasonryLayout<Content: View>: View {
     }
 
     private func imageAspectRatio(for entry: MangaEntry) -> CGFloat {
-        guard let data = entry.imageData,
+        guard entry.modelContext != nil,
+              let data = entry.imageData,
               let source = CGImageSourceCreateWithData(data as CFData, nil),
               let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
               let width = properties[kCGImagePropertyPixelWidth] as? CGFloat,
