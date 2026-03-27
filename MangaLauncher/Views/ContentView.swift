@@ -401,8 +401,9 @@ struct ContentView: View {
 
     @ViewBuilder
     private func gridView(entries: [MangaEntry], day: DayOfWeek, viewModel: MangaViewModel) -> some View {
+        GeometryReader { geo in
         ScrollView {
-            MasonryLayout(entries: entries) { entry in
+            MasonryLayout(entries: entries, availableWidth: geo.size.width - 32) { entry in
                 gridCell(entry: entry, viewModel: viewModel)
                     .overlay(alignment: .topLeading) {
                         if isGridEditMode {
@@ -447,6 +448,7 @@ struct ContentView: View {
             draggingEntryID: $draggingEntryID,
             viewModel: viewModel
         ))
+        }
     }
 
     @ViewBuilder
