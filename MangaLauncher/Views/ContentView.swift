@@ -453,7 +453,7 @@ struct ContentView: View {
 
     @ViewBuilder
     private func gridCell(entry: MangaEntry, viewModel: MangaViewModel) -> some View {
-        if entry.isDeleted {
+        if entry.isDeleted || entry.modelContext == nil {
             EmptyView()
         } else {
         VStack(alignment: .leading, spacing: 6) {
@@ -548,7 +548,7 @@ struct ContentView: View {
 
     @ViewBuilder
     private func entryRow(entry: MangaEntry) -> some View {
-        if entry.isDeleted {
+        if entry.isDeleted || entry.modelContext == nil {
             EmptyView()
         } else {
         HStack(spacing: 12) {
