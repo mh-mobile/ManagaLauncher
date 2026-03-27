@@ -62,6 +62,18 @@ struct EditEntryView: View {
         )
     }
 
+    private var nextUpdateCandidates: [Date] {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let todayWeekday = calendar.component(.weekday, from: today) - 1
+        let target = selectedDay.rawValue
+        let daysToNext = (target - todayWeekday + 7) % 7
+        let firstDate = daysToNext == 0 ? today : calendar.date(byAdding: .day, value: daysToNext, to: today)!
+        return (0..<8).map { i in
+            calendar.date(byAdding: .day, value: i * 7, to: firstDate)!
+        }
+    }
+
     private func nextOccurrence(of day: DayOfWeek) -> Date {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
@@ -212,7 +224,13 @@ struct EditEntryView: View {
                                 .clipShape(Circle())
                                 .onTapGesture {
                                     selectedDay = day
-                                    nextUpdateDate = nextOccurrence(of: day)
+                                    // nextUpdateCandidatesはselectedDayに依存するので
+                                    // 先に更新してから候補の先頭を設定
+                                    DispatchQueue.main.async {
+                                        if let first = nextUpdateCandidates.first {
+                                            nextUpdateDate = first
+                                        }
+                                    }
                                 }
                         }
                     }
@@ -232,10 +250,12 @@ struct EditEntryView: View {
                         Stepper("\(updateIntervalWeeks)週ごと", value: $updateIntervalWeeks, in: 1...52)
                     }
                     if actualIntervalWeeks >= 2 {
-                        DatePicker("次の更新日",
-                                   selection: $nextUpdateDate,
-                                   in: Calendar.current.startOfDay(for: Date())...,
-                                   displayedComponents: .date)
+                        Picker("次の更新日", selection: $nextUpdateDate) {
+                            ForEach(nextUpdateCandidates, id: \.self) { date in
+                                Text(date.formatted(.dateTime.month().day().weekday()))
+                                    .tag(date)
+                            }
+                        }
                     }
                 }
 
@@ -305,7 +325,12 @@ struct EditEntryView: View {
                     imageData = entry.imageData
                     updateIntervalWeeks = entry.updateIntervalWeeks
                     isCustomInterval = !Self.presetIntervals.contains(entry.updateIntervalWeeks)
-                    nextUpdateDate = entry.nextExpectedUpdate ?? nextOccurrence(of: entry.dayOfWeek)
+                    let candidates = nextUpdateCandidates
+                    if let saved = entry.nextExpectedUpdate, candidates.contains(saved) {
+                        nextUpdateDate = saved
+                    } else {
+                        nextUpdateDate = candidates.first ?? nextOccurrence(of: entry.dayOfWeek)
+                    }
                     didLoadEntry = true
                 }
             }
