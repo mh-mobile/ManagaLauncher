@@ -35,7 +35,7 @@ final class MangaViewModel {
         }
     }
 
-    func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1) {
+    func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil) {
         for day in days {
             let existingEntries = fetchEntries(for: day)
             let maxOrder = existingEntries.map(\.sortOrder).max() ?? -1
@@ -49,13 +49,13 @@ final class MangaViewModel {
                 imageData: imageData,
                 updateIntervalWeeks: updateIntervalWeeks
             )
+            entry.nextExpectedUpdate = nextExpectedUpdate
             modelContext.insert(entry)
         }
         save()
     }
 
-    func updateEntry(_ entry: MangaEntry, name: String, url: String, dayOfWeek: DayOfWeek, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1) {
-        let scheduleChanged = entry.updateIntervalWeeks != updateIntervalWeeks || entry.dayOfWeek != dayOfWeek
+    func updateEntry(_ entry: MangaEntry, name: String, url: String, dayOfWeek: DayOfWeek, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil) {
         entry.name = name
         entry.url = url
         entry.dayOfWeek = dayOfWeek
@@ -63,9 +63,7 @@ final class MangaViewModel {
         entry.publisher = publisher
         entry.imageData = imageData
         entry.updateIntervalWeeks = updateIntervalWeeks
-        if scheduleChanged {
-            entry.advanceToNextUpdate()
-        }
+        entry.nextExpectedUpdate = nextExpectedUpdate
         save()
     }
 

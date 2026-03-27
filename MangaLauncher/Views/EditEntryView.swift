@@ -20,6 +20,7 @@ struct EditEntryView: View {
     @State private var imageData: Data?
     @State private var updateIntervalWeeks: Int = 1
     @State private var isCustomInterval = false
+    @State private var nextUpdateDate: Date = Date()
     @State private var isLoadingImage = false
     @State private var ogpFetchFailed = false
     @State private var showingCropView = false
@@ -59,6 +60,16 @@ struct EditEntryView: View {
                 }
             }
         )
+    }
+
+    private func nextOccurrence(of day: DayOfWeek) -> Date {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let todayWeekday = calendar.component(.weekday, from: today) - 1 // 0=Sun
+        let target = day.rawValue
+        let daysAhead = (target - todayWeekday + 7) % 7
+        let next = daysAhead == 0 ? 7 : daysAhead // if today, go to next week
+        return calendar.date(byAdding: .day, value: next, to: today)!
     }
 
     private var isValidURL: Bool {
@@ -201,6 +212,7 @@ struct EditEntryView: View {
                                 .clipShape(Circle())
                                 .onTapGesture {
                                     selectedDay = day
+                                    nextUpdateDate = nextOccurrence(of: day)
                                 }
                         }
                     }
@@ -218,6 +230,12 @@ struct EditEntryView: View {
                     }
                     if isCustomInterval {
                         Stepper("\(updateIntervalWeeks)週ごと", value: $updateIntervalWeeks, in: 1...52)
+                    }
+                    if actualIntervalWeeks >= 2 {
+                        DatePicker("次の更新日",
+                                   selection: $nextUpdateDate,
+                                   in: Calendar.current.startOfDay(for: Date())...,
+                                   displayedComponents: .date)
                     }
                 }
 
@@ -287,6 +305,7 @@ struct EditEntryView: View {
                     imageData = entry.imageData
                     updateIntervalWeeks = entry.updateIntervalWeeks
                     isCustomInterval = !Self.presetIntervals.contains(entry.updateIntervalWeeks)
+                    nextUpdateDate = entry.nextExpectedUpdate ?? nextOccurrence(of: entry.dayOfWeek)
                     didLoadEntry = true
                 }
             }
@@ -328,9 +347,9 @@ struct EditEntryView: View {
     private func saveEntry() {
         let interval = actualIntervalWeeks
         if let entry {
-            viewModel.updateEntry(entry, name: name, url: url, dayOfWeek: selectedDay, iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval)
+            viewModel.updateEntry(entry, name: name, url: url, dayOfWeek: selectedDay, iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval, nextExpectedUpdate: interval >= 2 ? nextUpdateDate : nil)
         } else {
-            viewModel.addEntry(name: name, url: url, days: [selectedDay], iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval)
+            viewModel.addEntry(name: name, url: url, days: [selectedDay], iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval, nextExpectedUpdate: interval >= 2 ? nextUpdateDate : nil)
         }
     }
 }
