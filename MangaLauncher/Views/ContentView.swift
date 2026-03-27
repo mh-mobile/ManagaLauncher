@@ -21,6 +21,8 @@ struct ContentView: View {
     @AppStorage("displayMode") private var displayMode: DisplayMode = .grid
     @AppStorage("browserMode") private var browserMode: String = "external"
     @State private var safariURL: URL?
+    @State private var showingWallpaperPicker = false
+    @State private var wallpaperRefresh = false
     @State private var draggingEntryID: UUID?
     @State private var isGridEditMode = false
     #if os(iOS) || os(visionOS)
@@ -30,6 +32,8 @@ struct ContentView: View {
     // Monday-start paging: 0=sun(fake), 1=mon, 2=tue, ..., 7=sun, 8=mon(fake) → 9 pages for looping
     @State private var pageIndex: Int = 0
 
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    private var hasWallpaper: Bool { WallpaperManager.wallpaperType != .none }
     private let orderedDays = DayOfWeek.orderedCases // [mon, tue, wed, thu, fri, sat, sun]
 
     private func dayForPageIndex(_ index: Int) -> DayOfWeek {
@@ -52,6 +56,7 @@ struct ContentView: View {
         NavigationStack {
             if let viewModel {
                 ZStack(alignment: .bottom) {
+                    wallpaperBackground
                     VStack(spacing: 0) {
                         dayTabBar(viewModel: viewModel)
                         let publishers = viewModel.publishers(for: viewModel.selectedDay)
@@ -61,12 +66,18 @@ struct ContentView: View {
                         dayPager(viewModel: viewModel)
                     }
 
+                    if isGridEditMode {
+                        editModeButtons
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+
                     if !viewModel.pendingDeleteEntries.isEmpty {
                         deleteToast(viewModel: viewModel)
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
                 .animation(.easeInOut(duration: 0.3), value: viewModel.pendingDeleteEntries.isEmpty)
+                .animation(.easeInOut(duration: 0.2), value: isGridEditMode)
                 .toolbar {
                     ToolbarItem(placement: .navigation) {
                         let unreadCount = viewModel.unreadCount(for: viewModel.selectedDay)
@@ -127,6 +138,12 @@ struct ContentView: View {
                         }
                         .disabled(isGridEditMode)
                     }
+                }
+                .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
+                .sheet(isPresented: $showingWallpaperPicker, onDismiss: {
+                    wallpaperRefresh.toggle()
+                }) {
+                    WallpaperPickerView()
                 }
                 .sheet(isPresented: $showingAddSheet) {
                     EditEntryView(viewModel: viewModel, day: viewModel.selectedDay)
@@ -189,17 +206,20 @@ struct ContentView: View {
                         Text(day.shortName)
                             .font(.headline)
                             .foregroundStyle(
-                                day == .today
+                                day == .today || (hasWallpaper && viewModel.selectedDay == day)
                                     ? .white
                                     : viewModel.selectedDay == day
                                         ? Color.accentColor
-                                        : .secondary
+                                        : .primary
                             )
                             .frame(width: 32, height: 32)
                             .background {
                                 if day == .today {
                                     Circle()
                                         .fill(Color.accentColor)
+                                } else if hasWallpaper && viewModel.selectedDay == day {
+                                    Circle()
+                                        .fill(Color.black.opacity(0.3))
                                 }
                             }
                         Circle()
@@ -235,7 +255,15 @@ struct ContentView: View {
         }
         .padding(.horizontal, 8)
         .padding(.top, 4)
-        .background(Color.platformBackground)
+        .background {
+            if hasWallpaper {
+                Rectangle().fill(reduceTransparency ? .thinMaterial : .ultraThinMaterial)
+                    .ignoresSafeArea(edges: .top)
+            } else {
+                Rectangle().fill(.regularMaterial)
+                    .ignoresSafeArea(edges: .top)
+            }
+        }
     }
 
     @ViewBuilder
@@ -289,23 +317,27 @@ struct ContentView: View {
         }
 
         if allEntries.isEmpty {
-            ContentUnavailableView {
-                Label("エントリなし", systemImage: "book.closed")
-            } description: {
-                Text("\(day.displayName)に登録された漫画はありません")
-            } actions: {
-                Button("追加する") {
-                    showingAddSheet = true
+            emptyStateView {
+                ContentUnavailableView {
+                    Label("エントリなし", systemImage: "book.closed")
+                } description: {
+                    Text("\(day.displayName)に登録された漫画はありません")
+                } actions: {
+                    Button("追加する") {
+                        showingAddSheet = true
+                    }
                 }
             }
         } else if entries.isEmpty {
-            ContentUnavailableView {
-                Label("該当なし", systemImage: "line.3.horizontal.decrease.circle")
-            } description: {
-                Text("この掲載誌の漫画はありません")
-            } actions: {
-                Button("フィルター解除") {
-                    selectedPublisher = nil
+            emptyStateView {
+                ContentUnavailableView {
+                    Label("該当なし", systemImage: "line.3.horizontal.decrease.circle")
+                } description: {
+                    Text("この掲載誌の漫画はありません")
+                } actions: {
+                    Button("フィルター解除") {
+                        selectedPublisher = nil
+                    }
                 }
             }
         } else {
@@ -334,7 +366,13 @@ struct ContentView: View {
             .padding(.horizontal)
             .padding(.vertical, 6)
         }
-        .background(Color.platformBackground)
+        .background {
+            if hasWallpaper {
+                Rectangle().fill(reduceTransparency ? .thinMaterial : .ultraThinMaterial)
+            } else {
+                Rectangle().fill(.regularMaterial)
+            }
+        }
     }
 
     @ViewBuilder
@@ -352,8 +390,10 @@ struct ContentView: View {
             .onMove { source, destination in
                 viewModel.moveEntries(for: day, from: source, to: destination)
             }
+            .listRowSeparator(hasWallpaper ? .hidden : .automatic)
         }
         .listStyle(.plain)
+        .scrollContentBackground(hasWallpaper ? .hidden : .automatic)
         #if os(iOS) || os(visionOS)
         .environment(\.editMode, $listEditMode)
         #endif
@@ -395,6 +435,7 @@ struct ContentView: View {
             }
             .padding()
         }
+        .scrollContentBackground(.hidden)
         .contentShape(Rectangle())
         .onLongPressGesture {
             withAnimation(.easeInOut(duration: 0.2)) {
@@ -406,22 +447,6 @@ struct ContentView: View {
             draggingEntryID: $draggingEntryID,
             viewModel: viewModel
         ))
-        .overlay(alignment: .bottom) {
-            if isGridEditMode {
-                Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        isGridEditMode = false
-                    }
-                } label: {
-                    Text("完了")
-                        .font(.headline)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 10)
-                        .background(.ultraThinMaterial, in: Capsule())
-                }
-                .padding(.bottom, 16)
-            }
-        }
     }
 
     @ViewBuilder
@@ -462,6 +487,15 @@ struct ContentView: View {
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, hasWallpaper ? 8 : 0)
+            .padding(.vertical, hasWallpaper ? 6 : 0)
+            .background {
+                if hasWallpaper {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
                 }
             }
         }
@@ -536,10 +570,23 @@ struct ContentView: View {
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
+        .padding(.vertical, hasWallpaper ? 4 : 0)
         .contentShape(Rectangle())
         .onTapGesture {
             openMangaURL(entry.url)
         }
+        .listRowBackground(
+            Group {
+                if hasWallpaper {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 2)
+                } else {
+                    Color.platformBackground
+                }
+            }
+        )
         .contextMenu {
             Button {
                 if let viewModel {
@@ -567,6 +614,52 @@ struct ContentView: View {
     }
 
     @ViewBuilder
+    private func emptyStateView<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        if hasWallpaper {
+            content()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
+                        .padding()
+                }
+        } else {
+            content()
+        }
+    }
+
+    @ViewBuilder
+    private var editModeButtons: some View {
+        HStack(spacing: 12) {
+            Button {
+                showingWallpaperPicker = true
+            } label: {
+                Label("壁紙", systemImage: "photo.artframe")
+                    .font(.headline)
+                    .fixedSize()
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+                    .foregroundStyle(.primary)
+                    .background(.regularMaterial, in: Capsule())
+            }
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isGridEditMode = false
+                }
+            } label: {
+                Text("完了")
+                    .font(.headline)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 10)
+                    .foregroundStyle(.primary)
+                    .background(.regularMaterial, in: Capsule())
+            }
+        }
+        .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
+        .padding(.bottom, 16)
+    }
+
+    @ViewBuilder
     private func entryIcon(for entry: MangaEntry, size: CGFloat) -> some View {
         if let imageData = entry.imageData, let image = imageData.toSwiftUIImage() {
             image
@@ -583,6 +676,46 @@ struct ContentView: View {
                         .font(size > 40 ? .title : .headline)
                         .foregroundStyle(.white)
                 }
+        }
+    }
+
+    @ViewBuilder
+    private var wallpaperBackground: some View {
+        let _ = wallpaperRefresh
+        GeometryReader { geo in
+            switch WallpaperManager.wallpaperType {
+            case .color:
+                wallpaperColor(WallpaperManager.wallpaperColor)
+                    .frame(width: geo.size.width, height: geo.size.height)
+            case .image:
+                if let data = WallpaperManager.loadImage(), let image = data.toSwiftUIImage() {
+                    image
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .clipped()
+                }
+            case .none:
+                EmptyView()
+            }
+        }
+        .ignoresSafeArea()
+    }
+
+    private func wallpaperColor(_ name: String) -> Color {
+        switch name {
+        case "blue": .blue
+        case "purple": .purple
+        case "pink": .pink
+        case "red": .red
+        case "orange": .orange
+        case "yellow": .yellow
+        case "green": .green
+        case "teal": .teal
+        case "gray": .gray
+        case "black": .black
+        case "custom": Color(hex: WallpaperManager.customColorHex)
+        default: .blue
         }
     }
 

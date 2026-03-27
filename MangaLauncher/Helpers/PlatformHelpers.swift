@@ -19,6 +19,18 @@ extension Data {
 // MARK: - Cross-platform Image Resize
 
 func downsizedJPEGData(_ data: Data, maxDimension: CGFloat, compressionQuality: CGFloat = 0.7) -> Data? {
+    #if canImport(UIKit)
+    guard let uiImage = UIImage(data: data) else { return nil }
+    let width = uiImage.size.width
+    let height = uiImage.size.height
+    let scale = min(maxDimension / width, maxDimension / height, 1.0)
+    let newSize = CGSize(width: width * scale, height: height * scale)
+    let renderer = UIGraphicsImageRenderer(size: newSize)
+    let resizedImage = renderer.image { _ in
+        uiImage.draw(in: CGRect(origin: .zero, size: newSize))
+    }
+    return resizedImage.jpegData(compressionQuality: compressionQuality)
+    #else
     guard let source = CGImageSourceCreateWithData(data as CFData, nil),
           let cgImage = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return nil }
 
@@ -53,6 +65,7 @@ func downsizedJPEGData(_ data: Data, maxDimension: CGFloat, compressionQuality: 
     guard CGImageDestinationFinalize(destination) else { return nil }
 
     return mutableData as Data
+    #endif
 }
 
 // MARK: - PasteButton Image Support
