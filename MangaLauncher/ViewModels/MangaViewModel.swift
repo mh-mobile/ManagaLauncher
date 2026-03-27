@@ -35,7 +35,7 @@ final class MangaViewModel {
         }
     }
 
-    func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil) {
+    func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1) {
         for day in days {
             let existingEntries = fetchEntries(for: day)
             let maxOrder = existingEntries.map(\.sortOrder).max() ?? -1
@@ -46,20 +46,26 @@ final class MangaViewModel {
                 sortOrder: maxOrder + 1,
                 iconColor: iconColor,
                 publisher: publisher,
-                imageData: imageData
+                imageData: imageData,
+                updateIntervalWeeks: updateIntervalWeeks
             )
             modelContext.insert(entry)
         }
         save()
     }
 
-    func updateEntry(_ entry: MangaEntry, name: String, url: String, dayOfWeek: DayOfWeek, iconColor: String, publisher: String = "", imageData: Data? = nil) {
+    func updateEntry(_ entry: MangaEntry, name: String, url: String, dayOfWeek: DayOfWeek, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1) {
+        let scheduleChanged = entry.updateIntervalWeeks != updateIntervalWeeks || entry.dayOfWeek != dayOfWeek
         entry.name = name
         entry.url = url
         entry.dayOfWeek = dayOfWeek
         entry.iconColor = iconColor
         entry.publisher = publisher
         entry.imageData = imageData
+        entry.updateIntervalWeeks = updateIntervalWeeks
+        if scheduleChanged {
+            entry.advanceToNextUpdate()
+        }
         save()
     }
 
@@ -115,6 +121,7 @@ final class MangaViewModel {
 
     func moveEntryToDay(_ entry: MangaEntry, to newDay: DayOfWeek, at targetEntry: MangaEntry? = nil) {
         entry.dayOfWeek = newDay
+        entry.advanceToNextUpdate()
         var entries = fetchEntries(for: newDay)
         if !entries.contains(where: { $0.id == entry.id }) {
             if let targetEntry, let targetIndex = entries.firstIndex(where: { $0.id == targetEntry.id }) {
@@ -186,9 +193,11 @@ final class MangaViewModel {
                 sortOrder: backupEntry.sortOrder,
                 iconColor: backupEntry.iconColor,
                 publisher: backupEntry.publisher,
-                imageData: backupEntry.imageData
+                imageData: backupEntry.imageData,
+                updateIntervalWeeks: backupEntry.updateIntervalWeeks
             )
             entry.lastReadDate = backupEntry.lastReadDate
+            entry.nextExpectedUpdate = backupEntry.nextExpectedUpdate
             modelContext.insert(entry)
             importedCount += 1
         }
@@ -205,6 +214,7 @@ final class MangaViewModel {
 
     func markAsRead(_ entry: MangaEntry) {
         entry.lastReadDate = Date()
+        entry.advanceToNextUpdate()
         save()
     }
 

@@ -18,6 +18,7 @@ struct EditEntryView: View {
     @State private var publisher: String = ""
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var imageData: Data?
+    @State private var updateIntervalWeeks: Int = 1
     @State private var isLoadingImage = false
     @State private var ogpFetchFailed = false
     @State private var showingCropView = false
@@ -35,6 +36,19 @@ struct EditEntryView: View {
     ]
 
     private var isEditing: Bool { entry != nil }
+
+    private static let presetIntervals = [1, 2, 3, 4, 8]
+
+    private var actualIntervalWeeks: Int {
+        updateIntervalWeeks == -1 ? 5 : updateIntervalWeeks
+    }
+
+    private var pickerValue: Binding<Int> {
+        Binding(
+            get: { Self.presetIntervals.contains(updateIntervalWeeks) ? updateIntervalWeeks : -1 },
+            set: { updateIntervalWeeks = $0 }
+        )
+    }
 
     private var isValidURL: Bool {
         guard let url = URL(string: url) else { return false }
@@ -182,6 +196,23 @@ struct EditEntryView: View {
                     .padding(.vertical, 4)
                 }
 
+                Section("更新頻度") {
+                    Picker("頻度", selection: pickerValue) {
+                        Text("毎週").tag(1)
+                        Text("隔週").tag(2)
+                        Text("3週ごと").tag(3)
+                        Text("月1回").tag(4)
+                        Text("2ヶ月ごと").tag(8)
+                        Text("カスタム").tag(-1)
+                    }
+                    if updateIntervalWeeks == -1 || ![1, 2, 3, 4, 8].contains(updateIntervalWeeks) {
+                        Stepper("\(actualIntervalWeeks)週ごと", value: Binding(
+                            get: { actualIntervalWeeks },
+                            set: { updateIntervalWeeks = $0 }
+                        ), in: 1...52)
+                    }
+                }
+
                 Section("アイコンカラー") {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 8), spacing: 12) {
                         ForEach(colorOptions, id: \.name) { option in
@@ -246,6 +277,7 @@ struct EditEntryView: View {
                     selectedDay = entry.dayOfWeek
                     publisher = entry.publisher
                     imageData = entry.imageData
+                    updateIntervalWeeks = entry.updateIntervalWeeks
                     didLoadEntry = true
                 }
             }
@@ -285,10 +317,11 @@ struct EditEntryView: View {
     }
 
     private func saveEntry() {
+        let interval = actualIntervalWeeks
         if let entry {
-            viewModel.updateEntry(entry, name: name, url: url, dayOfWeek: selectedDay, iconColor: selectedColor, publisher: publisher, imageData: imageData)
+            viewModel.updateEntry(entry, name: name, url: url, dayOfWeek: selectedDay, iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval)
         } else {
-            viewModel.addEntry(name: name, url: url, days: [selectedDay], iconColor: selectedColor, publisher: publisher, imageData: imageData)
+            viewModel.addEntry(name: name, url: url, days: [selectedDay], iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval)
         }
     }
 }

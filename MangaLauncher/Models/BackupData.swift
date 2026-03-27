@@ -17,8 +17,10 @@ struct BackupData: Codable {
         let publisher: String
         let imageData: Data?
         let lastReadDate: Date?
+        let updateIntervalWeeks: Int
+        let nextExpectedUpdate: Date?
 
-        init(id: UUID, name: String, url: String, dayOfWeekRawValue: Int, sortOrder: Int, iconColor: String, publisher: String, imageData: Data?, lastReadDate: Date? = nil) {
+        init(id: UUID, name: String, url: String, dayOfWeekRawValue: Int, sortOrder: Int, iconColor: String, publisher: String, imageData: Data?, lastReadDate: Date? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil) {
             self.id = id
             self.name = name
             self.url = url
@@ -28,6 +30,8 @@ struct BackupData: Codable {
             self.publisher = publisher
             self.imageData = imageData
             self.lastReadDate = lastReadDate
+            self.updateIntervalWeeks = updateIntervalWeeks
+            self.nextExpectedUpdate = nextExpectedUpdate
         }
 
         init(from decoder: Decoder) throws {
@@ -41,12 +45,14 @@ struct BackupData: Codable {
             publisher = try container.decode(String.self, forKey: .publisher)
             imageData = try container.decodeIfPresent(Data.self, forKey: .imageData)
             lastReadDate = try container.decodeIfPresent(Date.self, forKey: .lastReadDate)
+            updateIntervalWeeks = try container.decodeIfPresent(Int.self, forKey: .updateIntervalWeeks) ?? 1
+            nextExpectedUpdate = try container.decodeIfPresent(Date.self, forKey: .nextExpectedUpdate)
         }
     }
 
     static func from(_ entries: [MangaEntry]) -> BackupData {
         BackupData(
-            version: 2,
+            version: 3,
             exportDate: Date(),
             entries: entries.map {
                 BackupEntry(
@@ -58,7 +64,9 @@ struct BackupData: Codable {
                     iconColor: $0.iconColor,
                     publisher: $0.publisher,
                     imageData: $0.imageData,
-                    lastReadDate: $0.lastReadDate
+                    lastReadDate: $0.lastReadDate,
+                    updateIntervalWeeks: $0.updateIntervalWeeks,
+                    nextExpectedUpdate: $0.nextExpectedUpdate
                 )
             }
         )
