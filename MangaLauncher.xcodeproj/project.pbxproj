@@ -48,6 +48,8 @@
 		EC04B7D82F74202400AEE45F /* SafariView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC04B7D72F74202400AEE45F /* SafariView.swift */; };
 		EC04B7DA2F74E2BE00AEE45F /* CloudSyncMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC04B7D92F74E2BE00AEE45F /* CloudSyncMonitor.swift */; };
 		EC04B7DC2F75301D00AEE45F /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC04B7DB2F75301D00AEE45F /* OnboardingView.swift */; };
+		EC04B7DE2F76093B00AEE45F /* WallpaperPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC04B7DD2F76093B00AEE45F /* WallpaperPickerView.swift */; };
+		EC04B7E02F76094700AEE45F /* WallpaperManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC04B7DF2F76094700AEE45F /* WallpaperManager.swift */; };
 		ECA66F7B2F6EAEE10096B6E5 /* Mantis in Frameworks */ = {isa = PBXBuildFile; productRef = ECA66F7A2F6EAEE10096B6E5 /* Mantis */; };
 		ECCD2FCE2F65596900BF3309 /* PublisherPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECCD2FCD2F65596900BF3309 /* PublisherPickerView.swift */; };
 		F8659628D6F745CA942803EB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E7D977DE254FB1F216740BE6 /* Foundation.framework */; };
@@ -124,6 +126,8 @@
 		EC04B7D72F74202400AEE45F /* SafariView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariView.swift; sourceTree = "<group>"; };
 		EC04B7D92F74E2BE00AEE45F /* CloudSyncMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncMonitor.swift; sourceTree = "<group>"; };
 		EC04B7DB2F75301D00AEE45F /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		EC04B7DD2F76093B00AEE45F /* WallpaperPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperPickerView.swift; sourceTree = "<group>"; };
+		EC04B7DF2F76094700AEE45F /* WallpaperManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperManager.swift; sourceTree = "<group>"; };
 		ECCD2FCD2F65596900BF3309 /* PublisherPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherPickerView.swift; sourceTree = "<group>"; };
 		EEC07D90615785B81C2E71C8 /* ImageCropView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ImageCropView.swift; sourceTree = "<group>"; };
 		EEEF347AB79EE547A4014C35 /* MangaLauncher.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaLauncher.entitlements; sourceTree = "<group>"; };
@@ -186,6 +190,7 @@
 		6238B354545AE6BD66DCA01C /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
+				EC04B7DF2F76094700AEE45F /* WallpaperManager.swift */,
 				EC04B7D92F74E2BE00AEE45F /* CloudSyncMonitor.swift */,
 				EC04B7D22F71441D00AEE45F /* NotificationManager.swift */,
 				EC04B7D02F71384C00AEE45F /* BadgeManager.swift */,
@@ -263,6 +268,7 @@
 		A5000004 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				EC04B7DD2F76093B00AEE45F /* WallpaperPickerView.swift */,
 				EC04B7DB2F75301D00AEE45F /* OnboardingView.swift */,
 				EC04B7D72F74202400AEE45F /* SafariView.swift */,
 				EC04B7CE2F70D9FE00AEE45F /* CatchUpView.swift */,
@@ -470,11 +476,13 @@
 				ECCD2FCE2F65596900BF3309 /* PublisherPickerView.swift in Sources */,
 				A1000002 /* MangaEntry.swift in Sources */,
 				A1000003 /* MangaViewModel.swift in Sources */,
+				EC04B7E02F76094700AEE45F /* WallpaperManager.swift in Sources */,
 				EC04B7DA2F74E2BE00AEE45F /* CloudSyncMonitor.swift in Sources */,
 				EC04B7D82F74202400AEE45F /* SafariView.swift in Sources */,
 				A1000004 /* ContentView.swift in Sources */,
 				A1000005 /* EditEntryView.swift in Sources */,
 				EC04B7CF2F70D9FE00AEE45F /* CatchUpView.swift in Sources */,
+				EC04B7DE2F76093B00AEE45F /* WallpaperPickerView.swift in Sources */,
 				0AD569E2465106D7BC72914B /* PlatformHelpers.swift in Sources */,
 				4975296B405867976ADBBA9F /* SharedModelContainer.swift in Sources */,
 				2AA2BDFC2D4CFE5BF3F85D4A /* DataMigration.swift in Sources */,
