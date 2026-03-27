@@ -149,7 +149,13 @@ final class MangaViewModel {
         for entry in entries {
             modelContext.delete(entry)
         }
-        save()
+        try? modelContext.save()
+        refreshCounter += 1
+        #if canImport(WidgetKit)
+        WidgetCenter.shared.reloadAllTimelines()
+        #endif
+        BadgeManager.updateBadge(unreadCount: 0)
+        NotificationManager.scheduleNotifications(entryCounts: [:])
     }
 
     func totalEntryCount() -> Int {
