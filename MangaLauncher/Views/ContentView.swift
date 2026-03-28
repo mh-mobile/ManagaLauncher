@@ -30,6 +30,7 @@ struct ContentView: View {
     @State private var listEditMode: EditMode = .inactive
     #endif
     @State private var selectedPublisher: String?
+    @State private var headerHeight: CGFloat = 100
     // Monday-start paging: 0=sun(fake), 1=mon, 2=tue, ..., 7=sun, 8=mon(fake) → 9 pages for looping
     @State private var pageIndex: Int = 0
 
@@ -58,10 +59,10 @@ struct ContentView: View {
             if let viewModel {
                 ZStack(alignment: .bottom) {
                     wallpaperBackground
-                    dayPager(viewModel: viewModel)
-                        .safeAreaInset(edge: .top, spacing: 0) {
-                            headerBar(viewModel: viewModel)
-                        }
+                    ZStack(alignment: .top) {
+                        dayPager(viewModel: viewModel)
+                        headerBar(viewModel: viewModel)
+                    }
 
                     if isGridEditMode {
                         editModeButtons
@@ -208,7 +209,11 @@ struct ContentView: View {
                     .ignoresSafeArea(edges: .top)
             }
         }
-        .animation(.none, value: viewModel.selectedDay)
+        .onGeometryChange(for: CGFloat.self) { geo in
+            geo.size.height
+        } action: { newHeight in
+            headerHeight = newHeight
+        }
     }
 
 
@@ -400,6 +405,7 @@ struct ContentView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(hasWallpaper ? .hidden : .automatic)
+        .contentMargins(.top, headerHeight, for: .scrollContent)
         #if os(iOS) || os(visionOS)
         .environment(\.editMode, $listEditMode)
         #endif
@@ -443,6 +449,7 @@ struct ContentView: View {
             .padding()
         }
         .scrollContentBackground(.hidden)
+        .contentMargins(.top, headerHeight, for: .scrollContent)
         .contentShape(Rectangle())
         .onLongPressGesture {
             withAnimation(.easeInOut(duration: 0.2)) {
