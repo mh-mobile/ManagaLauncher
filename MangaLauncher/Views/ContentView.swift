@@ -23,6 +23,7 @@ struct ContentView: View {
     @State private var safariURL: URL?
     @State private var showingWallpaperPicker = false
     @State private var wallpaperRefresh = false
+    @State private var cachedWallpaperImage: Image?
     @State private var draggingEntryID: UUID?
     @State private var isGridEditMode = false
     #if os(iOS) || os(visionOS)
@@ -67,7 +68,11 @@ struct ContentView: View {
                                     Color.clear.preference(key: HeaderHeightKey.self, value: geo.size.height)
                                 }
                             }
-                            .onPreferenceChange(HeaderHeightKey.self) { headerHeight = $0 }
+                            .onPreferenceChange(HeaderHeightKey.self) { newHeight in
+                                withAnimation(.none) {
+                                    headerHeight = newHeight
+                                }
+                            }
                     }
 
                     if isGridEditMode {
@@ -116,8 +121,8 @@ struct ContentView: View {
                         .disabled(isGridEditMode)
                     }
                     #if os(iOS) || os(visionOS)
-                    if displayMode == .list && !viewModel.fetchEntries(for: viewModel.selectedDay).isEmpty {
-                        ToolbarItem(placement: .automatic) {
+                    ToolbarItem(placement: .automatic) {
+                        if displayMode == .list && !viewModel.fetchEntries(for: viewModel.selectedDay).isEmpty {
                             Button(listEditMode == .active ? "完了" : "編集") {
                                 withAnimation {
                                     listEditMode = listEditMode == .active ? .inactive : .active
@@ -145,6 +150,7 @@ struct ContentView: View {
                 }
                 .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
                 .sheet(isPresented: $showingWallpaperPicker, onDismiss: {
+                    loadWallpaperImage()
                     wallpaperRefresh.toggle()
                 }) {
                     WallpaperPickerView()
@@ -178,6 +184,7 @@ struct ContentView: View {
             if viewModel == nil {
                 viewModel = MangaViewModel(modelContext: modelContext)
             }
+            loadWallpaperImage()
         }
         .onReceive(NotificationCenter.default.publisher(for: .mangaDataDidChange)) { _ in
             viewModel?.refresh()
@@ -213,15 +220,18 @@ struct ContentView: View {
                     .ignoresSafeArea(edges: .top)
             }
         }
+        .animation(.none, value: viewModel.selectedDay)
     }
+
 
     @ViewBuilder
     private func dayTabBar(viewModel: MangaViewModel) -> some View {
         HStack(spacing: 0) {
             ForEach(DayOfWeek.orderedCases) { day in
                 Button {
+                    viewModel.selectedDay = day
+                    selectedPublisher = nil
                     withAnimation(.easeInOut(duration: 0.2)) {
-                        viewModel.selectedDay = day
                         pageIndex = pageIndexForDay(day)
                     }
                 } label: {
@@ -708,7 +718,7 @@ struct ContentView: View {
                 wallpaperColor(WallpaperManager.wallpaperColor)
                     .frame(width: geo.size.width, height: geo.size.height)
             case .image:
-                if let data = WallpaperManager.loadImage(), let image = data.toSwiftUIImage() {
+                if let image = cachedWallpaperImage {
                     image
                         .resizable()
                         .scaledToFill()
@@ -720,6 +730,16 @@ struct ContentView: View {
             }
         }
         .ignoresSafeArea()
+    }
+
+    private func loadWallpaperImage() {
+        if WallpaperManager.wallpaperType == .image,
+           let data = WallpaperManager.loadImage(),
+           let image = data.toSwiftUIImage() {
+            cachedWallpaperImage = image
+        } else {
+            cachedWallpaperImage = nil
+        }
     }
 
     private func wallpaperColor(_ name: String) -> Color {
