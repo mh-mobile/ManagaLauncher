@@ -30,7 +30,6 @@ struct ContentView: View {
     @State private var listEditMode: EditMode = .inactive
     #endif
     @State private var selectedPublisher: String?
-    @State private var headerHeight: CGFloat = 0
     // Monday-start paging: 0=sun(fake), 1=mon, 2=tue, ..., 7=sun, 8=mon(fake) → 9 pages for looping
     @State private var pageIndex: Int = 0
 
@@ -59,21 +58,10 @@ struct ContentView: View {
             if let viewModel {
                 ZStack(alignment: .bottom) {
                     wallpaperBackground
-                    ZStack(alignment: .top) {
-                        dayPager(viewModel: viewModel)
-
-                        headerBar(viewModel: viewModel)
-                            .background {
-                                GeometryReader { geo in
-                                    Color.clear.preference(key: HeaderHeightKey.self, value: geo.size.height)
-                                }
-                            }
-                            .onPreferenceChange(HeaderHeightKey.self) { newHeight in
-                                if abs(headerHeight - newHeight) > 1 {
-                                    headerHeight = newHeight
-                                }
-                            }
-                    }
+                    dayPager(viewModel: viewModel)
+                        .safeAreaInset(edge: .top, spacing: 0) {
+                            headerBar(viewModel: viewModel)
+                        }
 
                     if isGridEditMode {
                         editModeButtons
@@ -412,7 +400,6 @@ struct ContentView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(hasWallpaper ? .hidden : .automatic)
-        .safeAreaPadding(.top, headerHeight)
         #if os(iOS) || os(visionOS)
         .environment(\.editMode, $listEditMode)
         #endif
@@ -454,7 +441,6 @@ struct ContentView: View {
                     ))
             }
             .padding()
-            .padding(.top, headerHeight)
         }
         .scrollContentBackground(.hidden)
         .contentShape(Rectangle())
@@ -648,16 +634,13 @@ struct ContentView: View {
         if hasWallpaper {
             content()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(.top, headerHeight)
                 .background {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
                         .padding()
-                        .padding(.top, headerHeight)
                 }
         } else {
             content()
-                .padding(.top, headerHeight)
         }
     }
 
@@ -920,13 +903,6 @@ struct FilterChip: View {
     }
 }
 
-
-private struct HeaderHeightKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
-    }
-}
 
 #Preview {
     ContentView()
