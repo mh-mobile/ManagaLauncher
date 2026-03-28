@@ -23,6 +23,7 @@ struct ContentView: View {
     @State private var safariURL: URL?
     @State private var showingWallpaperPicker = false
     @State private var wallpaperRefresh = false
+    @State private var cachedWallpaperImage: Image?
     @State private var draggingEntryID: UUID?
     @State private var isGridEditMode = false
     #if os(iOS) || os(visionOS)
@@ -141,6 +142,7 @@ struct ContentView: View {
                 }
                 .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
                 .sheet(isPresented: $showingWallpaperPicker, onDismiss: {
+                    loadWallpaperImage()
                     wallpaperRefresh.toggle()
                 }) {
                     WallpaperPickerView()
@@ -174,6 +176,7 @@ struct ContentView: View {
             if viewModel == nil {
                 viewModel = MangaViewModel(modelContext: modelContext)
             }
+            loadWallpaperImage()
         }
         .onReceive(NotificationCenter.default.publisher(for: .mangaDataDidChange)) { _ in
             viewModel?.refresh()
@@ -698,7 +701,7 @@ struct ContentView: View {
                 wallpaperColor(WallpaperManager.wallpaperColor)
                     .frame(width: geo.size.width, height: geo.size.height)
             case .image:
-                if let data = WallpaperManager.loadImage(), let image = data.toSwiftUIImage() {
+                if let image = cachedWallpaperImage {
                     image
                         .resizable()
                         .scaledToFill()
@@ -710,6 +713,16 @@ struct ContentView: View {
             }
         }
         .ignoresSafeArea()
+    }
+
+    private func loadWallpaperImage() {
+        if WallpaperManager.wallpaperType == .image,
+           let data = WallpaperManager.loadImage(),
+           let image = data.toSwiftUIImage() {
+            cachedWallpaperImage = image
+        } else {
+            cachedWallpaperImage = nil
+        }
     }
 
     private func wallpaperColor(_ name: String) -> Color {
