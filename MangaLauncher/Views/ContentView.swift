@@ -29,6 +29,7 @@ struct ContentView: View {
     @State private var listEditMode: EditMode = .inactive
     #endif
     @State private var selectedPublisher: String?
+    @State private var headerHeight: CGFloat = 0
     // Monday-start paging: 0=sun(fake), 1=mon, 2=tue, ..., 7=sun, 8=mon(fake) → 9 pages for looping
     @State private var pageIndex: Int = 0
 
@@ -57,13 +58,16 @@ struct ContentView: View {
             if let viewModel {
                 ZStack(alignment: .bottom) {
                     wallpaperBackground
-                    VStack(spacing: 0) {
-                        dayTabBar(viewModel: viewModel)
-                        let publishers = viewModel.publishers(for: viewModel.selectedDay)
-                        if !publishers.isEmpty {
-                            publisherFilter(publishers: publishers)
-                        }
+                    ZStack(alignment: .top) {
                         dayPager(viewModel: viewModel)
+
+                        headerBar(viewModel: viewModel)
+                            .background {
+                                GeometryReader { geo in
+                                    Color.clear.preference(key: HeaderHeightKey.self, value: geo.size.height)
+                                }
+                            }
+                            .onPreferenceChange(HeaderHeightKey.self) { headerHeight = $0 }
                     }
 
                     if isGridEditMode {
@@ -192,6 +196,26 @@ struct ContentView: View {
     @State private var dropTargetDay: DayOfWeek?
 
     @ViewBuilder
+    private func headerBar(viewModel: MangaViewModel) -> some View {
+        VStack(spacing: 0) {
+            dayTabBar(viewModel: viewModel)
+            let publishers = viewModel.publishers(for: viewModel.selectedDay)
+            if !publishers.isEmpty {
+                publisherFilter(publishers: publishers)
+            }
+        }
+        .background {
+            if hasWallpaper {
+                Rectangle().fill(reduceTransparency ? .thinMaterial : .ultraThinMaterial)
+                    .ignoresSafeArea(edges: .top)
+            } else {
+                Rectangle().fill(.regularMaterial)
+                    .ignoresSafeArea(edges: .top)
+            }
+        }
+    }
+
+    @ViewBuilder
     private func dayTabBar(viewModel: MangaViewModel) -> some View {
         HStack(spacing: 0) {
             ForEach(DayOfWeek.orderedCases) { day in
@@ -255,15 +279,6 @@ struct ContentView: View {
         }
         .padding(.horizontal, 8)
         .padding(.top, 4)
-        .background {
-            if hasWallpaper {
-                Rectangle().fill(reduceTransparency ? .thinMaterial : .ultraThinMaterial)
-                    .ignoresSafeArea(edges: .top)
-            } else {
-                Rectangle().fill(.regularMaterial)
-                    .ignoresSafeArea(edges: .top)
-            }
-        }
     }
 
     @ViewBuilder
@@ -366,13 +381,6 @@ struct ContentView: View {
             .padding(.horizontal)
             .padding(.vertical, 6)
         }
-        .background {
-            if hasWallpaper {
-                Rectangle().fill(reduceTransparency ? .thinMaterial : .ultraThinMaterial)
-            } else {
-                Rectangle().fill(.regularMaterial)
-            }
-        }
     }
 
     @ViewBuilder
@@ -394,6 +402,7 @@ struct ContentView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(hasWallpaper ? .hidden : .automatic)
+        .safeAreaPadding(.top, headerHeight)
         #if os(iOS) || os(visionOS)
         .environment(\.editMode, $listEditMode)
         #endif
@@ -435,6 +444,7 @@ struct ContentView: View {
                     ))
             }
             .padding()
+            .padding(.top, headerHeight)
         }
         .scrollContentBackground(.hidden)
         .contentShape(Rectangle())
@@ -887,6 +897,13 @@ struct FilterChip: View {
     }
 }
 
+
+private struct HeaderHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
 
 #Preview {
     ContentView()
