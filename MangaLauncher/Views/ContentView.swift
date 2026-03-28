@@ -64,18 +64,22 @@ struct ContentView: View {
                         headerBar(viewModel: viewModel)
                     }
 
-                    if isGridEditMode {
-                        editModeButtons
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    Group {
+                        if isGridEditMode {
+                            editModeButtons
+                                .transition(.move(edge: .bottom).combined(with: .opacity))
+                        }
                     }
+                    .animation(.easeInOut(duration: 0.2), value: isGridEditMode)
 
-                    if !viewModel.pendingDeleteEntries.isEmpty {
-                        deleteToast(viewModel: viewModel)
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
-                            .animation(.easeInOut(duration: 0.3), value: viewModel.pendingDeleteEntries.isEmpty)
+                    Group {
+                        if !viewModel.pendingDeleteEntries.isEmpty {
+                            deleteToast(viewModel: viewModel)
+                                .transition(.move(edge: .bottom).combined(with: .opacity))
+                        }
                     }
+                    .animation(.easeInOut(duration: 0.3), value: viewModel.pendingDeleteEntries.isEmpty)
                 }
-                .animation(.easeInOut(duration: 0.2), value: isGridEditMode)
                 .toolbar {
                     ToolbarItem(placement: .navigation) {
                         let unreadCount = viewModel.unreadCount(for: viewModel.selectedDay)
