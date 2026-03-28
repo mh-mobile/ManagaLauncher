@@ -72,9 +72,9 @@ struct ContentView: View {
                     if !viewModel.pendingDeleteEntries.isEmpty {
                         deleteToast(viewModel: viewModel)
                             .transition(.move(edge: .bottom).combined(with: .opacity))
+                            .animation(.easeInOut(duration: 0.3), value: viewModel.pendingDeleteEntries.isEmpty)
                     }
                 }
-                .animation(.easeInOut(duration: 0.3), value: viewModel.pendingDeleteEntries.isEmpty)
                 .animation(.easeInOut(duration: 0.2), value: isGridEditMode)
                 .toolbar {
                     ToolbarItem(placement: .navigation) {
