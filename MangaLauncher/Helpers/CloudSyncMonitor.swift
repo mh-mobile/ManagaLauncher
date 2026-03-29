@@ -53,7 +53,13 @@ final class CloudSyncMonitor {
             lastSyncDate = endDate
             syncStatus = .idle
         } else if let error {
-            syncStatus = .failed(error.localizedDescription)
+            let eventType = (event.value(forKey: "type") as? Int).map { String($0) } ?? "?"
+            let detail = "\(error.domain) code=\(error.code) type=\(eventType): \(error.localizedDescription)"
+            if let underlying = error.userInfo[NSUnderlyingErrorKey] as? NSError {
+                syncStatus = .failed("\(detail)\n↳ \(underlying.domain) code=\(underlying.code): \(underlying.localizedDescription)")
+            } else {
+                syncStatus = .failed(detail)
+            }
         }
     }
 
@@ -61,7 +67,8 @@ final class CloudSyncMonitor {
         #if canImport(CloudKit)
         Task {
             do {
-                let status = try await CKContainer.default().accountStatus()
+                let container = CKContainer(identifier: "iCloud.com.mh-mobile.MangaYoubi")
+                let status = try await container.accountStatus()
                 if status != .available {
                     await MainActor.run {
                         syncStatus = .notAvailable
