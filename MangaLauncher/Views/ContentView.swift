@@ -414,6 +414,8 @@ struct ContentView: View {
                                                 .font(.title3)
                                                 .symbolRenderingMode(.palette)
                                                 .foregroundStyle(.white, .gray)
+                                                .frame(width: 36, height: 36)
+                                                .contentShape(Rectangle())
                                         }
                                         .offset(x: -6, y: -6)
                                     }
