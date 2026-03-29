@@ -52,6 +52,11 @@ final class CloudSyncMonitor {
         } else if succeeded {
             lastSyncDate = endDate
             syncStatus = .idle
+            // import(type=1)完了時にデータ変更を通知
+            let eventType = (event.value(forKey: "type") as? Int) ?? 0
+            if eventType == 1 {
+                NotificationCenter.default.post(name: .mangaDataDidChange, object: nil)
+            }
         } else if let error {
             let eventType = (event.value(forKey: "type") as? Int).map { String($0) } ?? "?"
             let detail = "\(error.domain) code=\(error.code) type=\(eventType): \(error.localizedDescription)"
