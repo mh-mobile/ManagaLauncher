@@ -72,8 +72,7 @@ final class CloudSyncMonitor {
         #if canImport(CloudKit)
         Task {
             do {
-                let container = CKContainer(identifier: "iCloud.com.mh-mobile.MangaYoubi")
-                let status = try await container.accountStatus()
+                let status = try await CKContainer.default().accountStatus()
                 if status != .available {
                     await MainActor.run {
                         syncStatus = .notAvailable
