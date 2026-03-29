@@ -21,6 +21,9 @@ Carthage/Build/
 *.swp
 *~
 
+# OTA distribution
+.ota/
+
 # Xcode playground
 timeline.xctimeline
 playground.xcworkspace
