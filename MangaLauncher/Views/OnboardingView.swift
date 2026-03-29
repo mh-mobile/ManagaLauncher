@@ -59,13 +59,13 @@ struct OnboardingView: View {
             } label: {
                 Text(currentPage < pages.count - 1 ? "次へ" : "はじめる")
                     .font(.headline)
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: 320)
                     .padding()
                     .background(Color.accentColor)
                     .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
             }
-            .padding(.horizontal, 32)
+            .frame(maxWidth: .infinity)
             .padding(.bottom, 16)
 
             Button("スキップ") {

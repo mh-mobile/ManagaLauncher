@@ -83,6 +83,7 @@ struct CatchUpView: View {
 
     private var cardStackView: some View {
         VStack(spacing: 20) {
+            Spacer(minLength: 0)
             // Progress
             HStack {
                 Text("\(currentIndex + 1) / \(totalCount)")
@@ -158,7 +159,10 @@ struct CatchUpView: View {
                 }
             }
             .padding(.bottom)
+            Spacer(minLength: 0)
         }
+        .frame(maxWidth: 600)
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Card View
@@ -436,6 +440,7 @@ struct CatchUpView: View {
                 RoundedRectangle(cornerRadius: 20)
                     .fill(.ultraThinMaterial)
             )
+            .frame(maxWidth: 400)
             .padding(.horizontal, 32)
         }
         .transition(.opacity)

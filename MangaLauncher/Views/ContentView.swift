@@ -386,7 +386,8 @@ struct ContentView: View {
                                 }
                             }
                         }
-                        .frame(height: geo.size.height - headerHeight)
+                        .frame(maxWidth: 600)
+                        .frame(maxWidth: .infinity, minHeight: geo.size.height - headerHeight)
                     } else if entries.isEmpty {
                         emptyStateView {
                             ContentUnavailableView {
@@ -399,7 +400,8 @@ struct ContentView: View {
                                 }
                             }
                         }
-                        .frame(height: geo.size.height - headerHeight)
+                        .frame(maxWidth: 600)
+                        .frame(maxWidth: .infinity, minHeight: geo.size.height - headerHeight)
                     } else {
                         MasonryLayout(entries: entries, availableWidth: geo.size.width - 32) { entry in
                             gridCell(entry: entry, viewModel: viewModel)
