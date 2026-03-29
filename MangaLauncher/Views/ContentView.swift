@@ -25,6 +25,7 @@ struct ContentView: View {
     @State private var wallpaperRefresh = false
     @State private var cachedWallpaperImage: Image?
     @State private var headerHeight: CGFloat = 50
+    @State private var isAnimatingPageChange = false
     @State private var draggingEntryID: UUID?
     @State private var isGridEditMode = false
     #if os(iOS) || os(visionOS)
@@ -62,7 +63,6 @@ struct ContentView: View {
                         wallpaperBackground
 
                         dayPager(viewModel: viewModel)
-                            .contentMargins(.top, headerHeight, for: .scrollContent)
 
                         VStack(spacing: 0) {
                             dayTabBar(viewModel: viewModel)
@@ -223,9 +223,14 @@ struct ContentView: View {
         HStack(spacing: 0) {
             ForEach(DayOfWeek.orderedCases) { day in
                 Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        viewModel.selectedDay = day
+                    isAnimatingPageChange = true
+                    withAnimation(.easeInOut(duration: 0.3)) {
                         pageIndex = pageIndexForDay(day)
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        viewModel.selectedDay = day
+                        selectedPublisher = nil
+                        isAnimatingPageChange = false
                     }
                 } label: {
                     let hasUnread = viewModel.unreadCount(for: day) > 0
@@ -274,8 +279,7 @@ struct ContentView: View {
                        entry.dayOfWeek != day {
                         viewModel.moveEntryToDay(entry, to: day)
                         draggingEntryID = nil
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            viewModel.selectedDay = day
+                        withAnimation(.easeInOut(duration: 0.3)) {
                             pageIndex = pageIndexForDay(day)
                         }
                         return true
@@ -290,8 +294,7 @@ struct ContentView: View {
                                entry.dayOfWeek != day {
                                 viewModel.moveEntryToDay(entry, to: day)
                                 draggingEntryID = nil
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    viewModel.selectedDay = day
+                                withAnimation(.easeInOut(duration: 0.3)) {
                                     pageIndex = pageIndexForDay(day)
                                 }
                             }
@@ -319,9 +322,12 @@ struct ContentView: View {
         .tabViewStyle(.page(indexDisplayMode: .never))
         .onChange(of: pageIndex) { oldValue, newValue in
             let day = dayForPageIndex(newValue)
-            viewModel.selectedDay = day
-            listEditMode = .inactive
-            selectedPublisher = nil
+            if !isAnimatingPageChange {
+                // スワイプ時: UIPageViewControllerが既にアニメーション済みなので即更新
+                viewModel.selectedDay = day
+                listEditMode = .inactive
+                selectedPublisher = nil
+            }
 
             // Loop: if landed on fake page, jump to real page
             if newValue == 0 {
@@ -355,36 +361,81 @@ struct ContentView: View {
             allEntries
         }
 
-        if allEntries.isEmpty {
-            emptyStateView {
-                ContentUnavailableView {
-                    Label("エントリなし", systemImage: "book.closed")
-                } description: {
-                    Text("\(day.displayName)に登録された漫画はありません")
-                } actions: {
-                    Button("追加する") {
-                        showingAddSheet = true
-                    }
-                }
-            }
-        } else if entries.isEmpty {
-            emptyStateView {
-                ContentUnavailableView {
-                    Label("該当なし", systemImage: "line.3.horizontal.decrease.circle")
-                } description: {
-                    Text("この掲載誌の漫画はありません")
-                } actions: {
-                    Button("フィルター解除") {
-                        selectedPublisher = nil
-                    }
-                }
-            }
+        if displayMode == .list && !allEntries.isEmpty && !entries.isEmpty {
+            listView(entries: entries, day: day, viewModel: viewModel)
         } else {
-            switch displayMode {
-            case .list:
-                listView(entries: entries, day: day, viewModel: viewModel)
-            case .grid:
-                gridView(entries: entries, day: day, viewModel: viewModel)
+            GeometryReader { geo in
+                ScrollView {
+                    if allEntries.isEmpty {
+                        ContentUnavailableView {
+                            Label("エントリなし", systemImage: "book.closed")
+                        } description: {
+                            Text("\(day.displayName)に登録された漫画はありません")
+                        } actions: {
+                            Button("追加する") {
+                                showingAddSheet = true
+                            }
+                        }
+                        .frame(height: geo.size.height - headerHeight)
+                    } else if entries.isEmpty {
+                        ContentUnavailableView {
+                            Label("該当なし", systemImage: "line.3.horizontal.decrease.circle")
+                        } description: {
+                            Text("この掲載誌の漫画はありません")
+                        } actions: {
+                            Button("フィルター解除") {
+                                selectedPublisher = nil
+                            }
+                        }
+                        .frame(height: geo.size.height - headerHeight)
+                    } else {
+                        MasonryLayout(entries: entries, availableWidth: geo.size.width - 32) { entry in
+                            gridCell(entry: entry, viewModel: viewModel)
+                                .overlay(alignment: .topLeading) {
+                                    if isGridEditMode {
+                                        Button {
+                                            viewModel.queueDelete(entry)
+                                        } label: {
+                                            Image(systemName: "xmark.circle.fill")
+                                                .font(.title3)
+                                                .symbolRenderingMode(.palette)
+                                                .foregroundStyle(.white, .gray)
+                                        }
+                                        .offset(x: -6, y: -6)
+                                    }
+                                }
+                                .modifier(WiggleModifier(isActive: isGridEditMode))
+                                .onDrag {
+                                    draggingEntryID = entry.id
+                                    return NSItemProvider(object: entry.id.uuidString as NSString)
+                                } preview: {
+                                    gridCell(entry: entry, viewModel: viewModel)
+                                        .frame(width: 120)
+                                }
+                                .onDrop(of: [.text], delegate: GridDropDelegate(
+                                    entry: entry,
+                                    entries: entries,
+                                    day: day,
+                                    draggingEntryID: $draggingEntryID,
+                                    viewModel: viewModel
+                                ))
+                        }
+                        .padding()
+                    }
+                }
+                .contentMargins(.top, headerHeight, for: .scrollContent)
+                .scrollContentBackground(.hidden)
+                .contentShape(Rectangle())
+                .onLongPressGesture {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isGridEditMode = true
+                    }
+                }
+                .onDrop(of: [.text], delegate: EmptyPageDropDelegate(
+                    day: day,
+                    draggingEntryID: $draggingEntryID,
+                    viewModel: viewModel
+                ))
             }
         }
     }
@@ -425,6 +476,7 @@ struct ContentView: View {
             .listRowSeparator(hasWallpaper ? .hidden : .automatic)
         }
         .listStyle(.plain)
+        .contentMargins(.top, headerHeight, for: .scrollContent)
         .scrollContentBackground(hasWallpaper ? .hidden : .automatic)
         #if os(iOS) || os(visionOS)
         .environment(\.editMode, $listEditMode)
@@ -468,6 +520,7 @@ struct ContentView: View {
             }
             .padding()
         }
+        .contentMargins(.top, headerHeight, for: .scrollContent)
         .scrollContentBackground(.hidden)
         .contentShape(Rectangle())
         .onLongPressGesture {
