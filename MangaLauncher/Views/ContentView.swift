@@ -185,7 +185,11 @@ struct ContentView: View {
                     CatchUpView(viewModel: viewModel, day: viewModel.selectedDay)
                 }
                 .onAppear {
-                    pageIndex = pageIndexForDay(viewModel.selectedDay)
+                    var transaction = Transaction()
+                    transaction.disablesAnimations = true
+                    withTransaction(transaction) {
+                        pageIndex = pageIndexForDay(viewModel.selectedDay)
+                    }
                 }
                 #if canImport(UIKit)
                 .sheet(item: $safariURL) { url in
