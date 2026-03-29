@@ -3,11 +3,15 @@ import PhotosUI
 
 struct WallpaperPickerView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var wallpaperType: WallpaperType = WallpaperManager.wallpaperType
-    @State private var selectedColor: String = WallpaperManager.wallpaperColor
+    @Binding var preview: WallpaperPreviewSnapshot
+    @Binding var previewActive: Bool
+    @State private var wallpaperType: WallpaperType = .none
+    @State private var selectedColor: String = "blue"
     @State private var selectedPhotoItem: PhotosPickerItem?
-    @State private var previewImageData: Data? = WallpaperManager.loadImage()
-    @State private var customColor: Color = Color(hex: WallpaperManager.customColorHex)
+    @State private var previewImageData: Data?
+    @State private var customColor: Color = .blue
+    @State private var initialSnapshot = WallpaperPreviewSnapshot()
+    @State private var didLoad = false
 
     private let presetColors: [(name: String, color: Color)] = [
         ("blue", .blue),
@@ -73,17 +77,14 @@ struct WallpaperPickerView: View {
                                 .foregroundStyle(Color.accentColor)
                         }
                     }
-                    .onChange(of: customColor) { _, newColor in
-                        wallpaperType = .color
-                        selectedColor = "custom"
-                        WallpaperManager.customColorHex = newColor.toHex()
+                    .onChange(of: customColor) { _, _ in
+                        guard didLoad, wallpaperType == .color, selectedColor == "custom" else { return }
                         apply()
                     }
 
                     Button {
                         wallpaperType = .color
                         selectedColor = "custom"
-                        WallpaperManager.customColorHex = customColor.toHex()
                         apply()
                     } label: {
                         HStack {
@@ -96,7 +97,7 @@ struct WallpaperPickerView: View {
                             if wallpaperType == .color && selectedColor == "custom" {
                                 Image(systemName: "checkmark")
                                     .foregroundStyle(Color.accentColor)
-                                }
+                            }
                         }
                     }
                 }
@@ -119,7 +120,6 @@ struct WallpaperPickerView: View {
                     if wallpaperType == .image {
                         Button(role: .destructive) {
                             wallpaperType = .none
-                            WallpaperManager.removeImage()
                             previewImageData = nil
                             apply()
                         } label: {
@@ -133,9 +133,29 @@ struct WallpaperPickerView: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("閉じる") { dismiss() }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("キャンセル") {
+                        preview = initialSnapshot
+                        previewActive = false
+                        dismiss()
+                    }
                 }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完了") {
+                        preview.commit()
+                        previewActive = false
+                        dismiss()
+                    }
+                }
+            }
+            .task {
+                initialSnapshot = .capture()
+                wallpaperType = initialSnapshot.wallpaperType
+                selectedColor = initialSnapshot.colorName
+                customColor = Color(hex: initialSnapshot.customColorHex)
+                previewImageData = initialSnapshot.imageData
+                try? await Task.sleep(for: .milliseconds(100))
+                didLoad = true
             }
             .onChange(of: selectedPhotoItem) { _, newItem in
                 Task {
@@ -146,7 +166,6 @@ struct WallpaperPickerView: View {
                             await MainActor.run {
                             CropPresenter.present(imageData: jpeg, maxDimension: 1200, lockToScreenRatio: true) { croppedData in
                                 previewImageData = croppedData
-                                WallpaperManager.saveImage(croppedData)
                                 wallpaperType = .image
                                 apply()
                             } onCancel: {
@@ -155,7 +174,6 @@ struct WallpaperPickerView: View {
                             }
                             #else
                             previewImageData = jpeg
-                            WallpaperManager.saveImage(jpeg)
                             wallpaperType = .image
                             apply()
                             #endif
@@ -167,8 +185,11 @@ struct WallpaperPickerView: View {
     }
 
     private func apply() {
-        WallpaperManager.wallpaperType = wallpaperType
-        WallpaperManager.wallpaperColor = selectedColor
+        preview.wallpaperType = wallpaperType
+        preview.colorName = selectedColor
+        preview.customColorHex = customColor.toHex()
+        preview.imageData = previewImageData
+        previewActive = true
     }
 }
 
