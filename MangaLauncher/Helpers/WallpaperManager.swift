@@ -47,3 +47,28 @@ enum WallpaperManager {
             .appendingPathComponent(imageFileName)
     }
 }
+
+struct WallpaperPreviewSnapshot {
+    var wallpaperType: WallpaperType = .none
+    var colorName: String = "blue"
+    var customColorHex: String = "007AFF"
+    var imageData: Data?
+
+    static func capture() -> WallpaperPreviewSnapshot {
+        WallpaperPreviewSnapshot(
+            wallpaperType: WallpaperManager.wallpaperType,
+            colorName: WallpaperManager.wallpaperColor,
+            customColorHex: WallpaperManager.customColorHex,
+            imageData: WallpaperManager.loadImage()
+        )
+    }
+
+    func commit() {
+        WallpaperManager.wallpaperType = wallpaperType
+        WallpaperManager.wallpaperColor = colorName
+        WallpaperManager.customColorHex = customColorHex
+        if wallpaperType == .image, let data = imageData {
+            WallpaperManager.saveImage(data)
+        }
+    }
+}

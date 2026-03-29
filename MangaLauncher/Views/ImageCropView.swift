@@ -100,11 +100,13 @@ enum CropPresenter {
 
         let cropVC = Mantis.cropViewController(image: uiImage, config: config)
         let coordinator = CropCoordinator(maxDimension: maxDimension, onCropped: { data in
-            topVC.dismiss(animated: true)
-            onCropped(data)
+            topVC.dismiss(animated: true) {
+                onCropped(data)
+            }
         }, onCancel: {
-            topVC.dismiss(animated: true)
-            onCancel()
+            topVC.dismiss(animated: true) {
+                onCancel()
+            }
         })
         cropVC.delegate = coordinator
         // Store coordinator to keep it alive

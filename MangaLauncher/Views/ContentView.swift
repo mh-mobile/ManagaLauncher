@@ -24,6 +24,8 @@ struct ContentView: View {
     @State private var showingWallpaperPicker = false
     @State private var wallpaperRefresh = false
     @State private var cachedWallpaperImage: Image?
+    @State private var wallpaperPreviewActive = false
+    @State private var wallpaperPreviewSnapshot = WallpaperPreviewSnapshot()
     @State private var headerHeight: CGFloat = 50
     @State private var isAnimatingPageChange = false
     @State private var draggingEntryID: UUID?
@@ -167,10 +169,14 @@ struct ContentView: View {
                 }
                 .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
                 .sheet(isPresented: $showingWallpaperPicker, onDismiss: {
+                    wallpaperPreviewActive = false
                     loadWallpaperImage()
                     wallpaperRefresh.toggle()
                 }) {
-                    WallpaperPickerView()
+                    WallpaperPickerView(preview: $wallpaperPreviewSnapshot, previewActive: $wallpaperPreviewActive)
+                        .presentationDetents([.medium])
+                        .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+                        .interactiveDismissDisabled()
                 }
                 .sheet(isPresented: $showingAddSheet) {
                     EditEntryView(viewModel: viewModel, day: viewModel.selectedDay)
@@ -795,20 +801,39 @@ struct ContentView: View {
     private var wallpaperBackground: some View {
         let _ = wallpaperRefresh
         GeometryReader { geo in
-            switch WallpaperManager.wallpaperType {
-            case .color:
-                wallpaperColor(WallpaperManager.wallpaperColor)
-                    .frame(width: geo.size.width, height: geo.size.height)
-            case .image:
-                if let image = cachedWallpaperImage {
-                    image
-                        .resizable()
-                        .scaledToFill()
+            if wallpaperPreviewActive {
+                switch wallpaperPreviewSnapshot.wallpaperType {
+                case .color:
+                    wallpaperColor(wallpaperPreviewSnapshot.colorName, customHex: wallpaperPreviewSnapshot.customColorHex)
                         .frame(width: geo.size.width, height: geo.size.height)
-                        .clipped()
+                case .image:
+                    if let data = wallpaperPreviewSnapshot.imageData,
+                       let image = data.toSwiftUIImage() {
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: geo.size.width, height: geo.size.height)
+                            .clipped()
+                    }
+                case .none:
+                    EmptyView()
                 }
-            case .none:
-                EmptyView()
+            } else {
+                switch WallpaperManager.wallpaperType {
+                case .color:
+                    wallpaperColor(WallpaperManager.wallpaperColor)
+                        .frame(width: geo.size.width, height: geo.size.height)
+                case .image:
+                    if let image = cachedWallpaperImage {
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: geo.size.width, height: geo.size.height)
+                            .clipped()
+                    }
+                case .none:
+                    EmptyView()
+                }
             }
         }
         .ignoresSafeArea()
@@ -824,7 +849,7 @@ struct ContentView: View {
         }
     }
 
-    private func wallpaperColor(_ name: String) -> Color {
+    private func wallpaperColor(_ name: String, customHex: String? = nil) -> Color {
         switch name {
         case "blue": .blue
         case "purple": .purple
@@ -836,7 +861,7 @@ struct ContentView: View {
         case "teal": .teal
         case "gray": .gray
         case "black": .black
-        case "custom": Color(hex: WallpaperManager.customColorHex)
+        case "custom": Color(hex: customHex ?? WallpaperManager.customColorHex)
         default: .blue
         }
     }
