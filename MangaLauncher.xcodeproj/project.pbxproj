@@ -23,6 +23,7 @@
 		45F5A38A61E6E779064A1E6F /* PlatformHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDD9A4D8748B9496E85A2A67 /* PlatformHelpers.swift */; };
 		4913D9B7564F39C42E8E5207 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39DE3D6D992FBD1015ED0769 /* ShareViewController.swift */; };
 		4975296B405867976ADBBA9F /* SharedModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C7FA9735199D021E15CEED8 /* SharedModelContainer.swift */; };
+		60DB116AD0EA3EC76240020F /* WallpaperCropView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 306C79EF0528B0F2C7D9A0AF /* WallpaperCropView.swift */; };
 		63696DAFAE55A61EC72070CA /* MangaEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000002 /* MangaEntry.swift */; };
 		8EB2571B46FB5E9E702EAC1B /* MangaShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 40221490621705DE4B77F085 /* MangaShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9DE770763D908488F176AF20 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 68E247987CED890FF8E2D6A1 /* SwiftUI.framework */; };
@@ -92,6 +93,7 @@
 		0CDE508C489E5FAA3881A522 /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		1CF568E5CBBFA07B55373C73 /* DataMigration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DataMigration.swift; sourceTree = "<group>"; };
 		23E67B082915C8518CC0A973 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		306C79EF0528B0F2C7D9A0AF /* WallpaperCropView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WallpaperCropView.swift; sourceTree = "<group>"; };
 		358605C94F78CC23682FF911 /* ShareExtensionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShareExtensionView.swift; sourceTree = "<group>"; };
 		39DE3D6D992FBD1015ED0769 /* ShareViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		3AFF912AECB7C6B219DD1600 /* BackupData.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackupData.swift; sourceTree = "<group>"; };
@@ -284,6 +286,7 @@
 				0CDE508C489E5FAA3881A522 /* SettingsView.swift */,
 				96C7D9E283FFCADD60181726 /* MasonryLayout.swift */,
 				EEC07D90615785B81C2E71C8 /* ImageCropView.swift */,
+				306C79EF0528B0F2C7D9A0AF /* WallpaperCropView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -409,7 +412,7 @@
 			);
 			mainGroup = A5000001;
 			packageReferences = (
-				ECA66F792F6EAEE10096B6E5 /* XCRemoteSwiftPackageReference "Mantis" */,
+				ECA66F792F6EAEE10096B6E5 /* XCRemoteSwiftPackageReference "Mantis.git" */,
 			);
 			productRefGroup = A5000006 /* Products */;
 			projectDirPath = "";
@@ -502,6 +505,7 @@
 				1299E093C31E1C940DD2CAC4 /* ImageCropView.swift in Sources */,
 				EC04B7D12F71384C00AEE45F /* BadgeManager.swift in Sources */,
 				EC04B7DC2F75301D00AEE45F /* OnboardingView.swift in Sources */,
+				60DB116AD0EA3EC76240020F /* WallpaperCropView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1035,7 +1039,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		ECA66F792F6EAEE10096B6E5 /* XCRemoteSwiftPackageReference "Mantis" */ = {
+		ECA66F792F6EAEE10096B6E5 /* XCRemoteSwiftPackageReference "Mantis.git" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/guoyingtao/Mantis.git";
 			requirement = {
@@ -1048,7 +1052,7 @@
 /* Begin XCSwiftPackageProductDependency section */
 		ECA66F7A2F6EAEE10096B6E5 /* Mantis */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = ECA66F792F6EAEE10096B6E5 /* XCRemoteSwiftPackageReference "Mantis" */;
+			package = ECA66F792F6EAEE10096B6E5 /* XCRemoteSwiftPackageReference "Mantis.git" */;
 			productName = Mantis;
 		};
 /* End XCSwiftPackageProductDependency section */
