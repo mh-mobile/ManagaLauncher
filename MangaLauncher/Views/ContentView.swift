@@ -94,7 +94,7 @@ struct ContentView: View {
                         }
                     }
 
-                    if isGridEditMode {
+                    if isGridEditMode || listEditMode == .active {
                         editModeButtons
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
@@ -106,9 +106,11 @@ struct ContentView: View {
                 }
                 .animation(.easeInOut(duration: 0.3), value: viewModel.pendingDeleteEntries.isEmpty)
                 .animation(.easeInOut(duration: 0.2), value: isGridEditMode)
+                .animation(.easeInOut(duration: 0.2), value: listEditMode)
                 .toolbar {
                     ToolbarItem(placement: .navigation) {
                         let unreadCount = viewModel.unreadCount(for: viewModel.selectedDay)
+                        let isEditMode = isGridEditMode || listEditMode == .active
                         Button {
                             showingCatchUp = true
                         } label: {
@@ -120,15 +122,16 @@ struct ContentView: View {
                                         .foregroundStyle(.white)
                                         .padding(.horizontal, 5)
                                         .padding(.vertical, 2)
-                                        .background(.red, in: Capsule())
+                                        .background(.red.opacity(isEditMode ? 0.3 : 1), in: Capsule())
                                 }
                             }
                         }
-                        .disabled(unreadCount == 0 || isGridEditMode)
+                        .disabled(unreadCount == 0 || isEditMode)
                     }
                     ToolbarItem(placement: .automatic) {
                         Button {
                             withAnimation {
+                                isGridEditMode = false
                                 #if os(iOS) || os(visionOS)
                                 listEditMode = .inactive
                                 #endif
@@ -137,26 +140,15 @@ struct ContentView: View {
                         } label: {
                             Image(systemName: displayMode == .list ? "square.grid.2x2" : "list.bullet")
                         }
-                        .disabled(isGridEditMode)
+                        .disabled(showingWallpaperPicker)
                     }
-                    #if os(iOS) || os(visionOS)
-                    if displayMode == .list && !viewModel.fetchEntries(for: viewModel.selectedDay).isEmpty {
-                        ToolbarItem(placement: .automatic) {
-                            Button(listEditMode == .active ? "完了" : "編集") {
-                                withAnimation {
-                                    listEditMode = listEditMode == .active ? .inactive : .active
-                                }
-                            }
-                        }
-                    }
-                    #endif
                     ToolbarItem(placement: .automatic) {
                         Button {
                             showingAddSheet = true
                         } label: {
                             Image(systemName: "plus")
                         }
-                        .disabled(isGridEditMode)
+                        .disabled(isGridEditMode || listEditMode == .active)
                     }
                     ToolbarItem(placement: .automatic) {
                         Button {
@@ -164,7 +156,7 @@ struct ContentView: View {
                         } label: {
                             Image(systemName: "gearshape")
                         }
-                        .disabled(isGridEditMode)
+                        .disabled(isGridEditMode || listEditMode == .active)
                     }
                 }
                 .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
@@ -175,7 +167,7 @@ struct ContentView: View {
                 }) {
                     WallpaperPickerView(preview: $wallpaperPreviewSnapshot, previewActive: $wallpaperPreviewActive)
                         .presentationDetents([.medium])
-                        .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+                        .presentationBackgroundInteraction(.disabled)
                         .interactiveDismissDisabled()
                 }
                 .sheet(isPresented: $showingAddSheet) {
@@ -500,6 +492,14 @@ struct ContentView: View {
         .listStyle(.plain)
         .contentMargins(.top, headerHeight, for: .scrollContent)
         .scrollContentBackground(hasWallpaper ? .hidden : .automatic)
+        .simultaneousGesture(
+            LongPressGesture(minimumDuration: 0.5)
+                .onEnded { _ in
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        listEditMode = .active
+                    }
+                }
+        )
         #if os(iOS) || os(visionOS)
         .environment(\.editMode, $listEditMode)
         #endif
@@ -721,6 +721,13 @@ struct ContentView: View {
             } label: {
                 Label("編集", systemImage: "pencil")
             }
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    listEditMode = .active
+                }
+            } label: {
+                Label("並び替え", systemImage: "arrow.up.arrow.down")
+            }
             Button(role: .destructive) {
                 if let viewModel { viewModel.queueDelete(entry) }
             } label: {
@@ -765,6 +772,7 @@ struct ContentView: View {
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) {
                     isGridEditMode = false
+                    listEditMode = .inactive
                 }
             } label: {
                 Text("完了")
