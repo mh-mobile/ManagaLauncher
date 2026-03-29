@@ -24,6 +24,7 @@ struct ContentView: View {
     @State private var showingWallpaperPicker = false
     @State private var wallpaperRefresh = false
     @State private var cachedWallpaperImage: Image?
+    @State private var headerHeight: CGFloat = 50
     @State private var draggingEntryID: UUID?
     @State private var isGridEditMode = false
     #if os(iOS) || os(visionOS)
@@ -57,24 +58,38 @@ struct ContentView: View {
         NavigationStack {
             if let viewModel {
                 ZStack(alignment: .bottom) {
-                    wallpaperBackground
+                    ZStack(alignment: .top) {
+                        wallpaperBackground
 
-                    dayPager(viewModel: viewModel)
-                        .safeAreaInset(edge: .top, spacing: 0) {
-                            VStack(spacing: 0) {
-                                dayTabBar(viewModel: viewModel)
-                                let publishers = viewModel.publishers(for: viewModel.selectedDay)
-                                if !publishers.isEmpty {
-                                    publisherFilter(publishers: publishers)
-                                }
-                            }
-                            .background {
-                                Rectangle().fill(hasWallpaper
-                                    ? (reduceTransparency ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(.ultraThinMaterial))
-                                    : AnyShapeStyle(.regularMaterial))
-                                .ignoresSafeArea(edges: .top)
+                        dayPager(viewModel: viewModel)
+                            .contentMargins(.top, headerHeight, for: .scrollContent)
+
+                        VStack(spacing: 0) {
+                            dayTabBar(viewModel: viewModel)
+                            let publishers = viewModel.publishers(for: viewModel.selectedDay)
+                            if !publishers.isEmpty {
+                                publisherFilter(publishers: publishers)
                             }
                         }
+                        .background {
+                            #if canImport(UIKit)
+                            VisualEffectBlur(style: hasWallpaper
+                                ? (reduceTransparency ? .systemThinMaterial : .systemUltraThinMaterial)
+                                : .systemMaterial)
+                            .ignoresSafeArea(edges: .top)
+                            #else
+                            Rectangle().fill(hasWallpaper
+                                ? (reduceTransparency ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(.ultraThinMaterial))
+                                : AnyShapeStyle(.regularMaterial))
+                            .ignoresSafeArea(edges: .top)
+                            #endif
+                        }
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { newHeight in
+                            if abs(newHeight - headerHeight) > 2 {
+                                headerHeight = newHeight
+                            }
+                        }
+                    }
 
                     if isGridEditMode {
                         editModeButtons
@@ -251,15 +266,36 @@ struct ContentView: View {
                 .onDrop(of: [.text], isTargeted: Binding(
                     get: { dropTargetDay == day },
                     set: { dropTargetDay = $0 ? day : nil }
-                )) { _ in
-                    guard let draggingID = draggingEntryID,
-                          let entry = viewModel.findEntry(by: draggingID),
-                          entry.dayOfWeek != day else { return false }
-                    viewModel.moveEntryToDay(entry, to: day)
-                    draggingEntryID = nil
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        viewModel.selectedDay = day
-                        pageIndex = pageIndexForDay(day)
+                )) { providers in
+                    dropTargetDay = nil
+                    // Try @State first, then fall back to NSItemProvider
+                    if let draggingID = draggingEntryID,
+                       let entry = viewModel.findEntry(by: draggingID),
+                       entry.dayOfWeek != day {
+                        viewModel.moveEntryToDay(entry, to: day)
+                        draggingEntryID = nil
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            viewModel.selectedDay = day
+                            pageIndex = pageIndexForDay(day)
+                        }
+                        return true
+                    }
+                    // Fallback: read UUID from NSItemProvider
+                    guard let provider = providers.first else { return false }
+                    provider.loadObject(ofClass: NSString.self) { string, _ in
+                        DispatchQueue.main.async {
+                            if let uuidString = string as? String,
+                               let uuid = UUID(uuidString: uuidString),
+                               let entry = viewModel.findEntry(by: uuid),
+                               entry.dayOfWeek != day {
+                                viewModel.moveEntryToDay(entry, to: day)
+                                draggingEntryID = nil
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    viewModel.selectedDay = day
+                                    pageIndex = pageIndexForDay(day)
+                                }
+                            }
+                        }
                     }
                     return true
                 }
@@ -624,13 +660,16 @@ struct ContentView: View {
         if hasWallpaper {
             content()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.top, headerHeight)
                 .background {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
                         .padding()
+                        .padding(.top, headerHeight)
                 }
         } else {
             content()
+                .padding(.top, headerHeight)
         }
     }
 
