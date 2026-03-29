@@ -14,6 +14,7 @@ struct SettingsView: View {
     @State private var badgeEnabled = BadgeManager.isEnabled
     @State private var updateStatus: UpdateStatus = .idle
     @State private var showingOnboarding = false
+    @State private var showingSyncError = false
 
     private enum UpdateStatus {
         case idle, checking, available(String), upToDate, error
@@ -103,6 +104,12 @@ struct SettingsView: View {
                             Text(date, style: .time)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if case .failed = syncMonitor.syncStatus {
+                            showingSyncError = true
                         }
                     }
                 }
@@ -265,6 +272,13 @@ struct SettingsView: View {
             .fullScreenCover(isPresented: $showingOnboarding) {
                 OnboardingView()
             }
+            .alert("同期エラー", isPresented: $showingSyncError) {
+                Button("OK") {}
+            } message: {
+                if case .failed(let message) = syncMonitor.syncStatus {
+                    Text(message)
+                }
+            }
         }
     }
 
@@ -294,7 +308,7 @@ struct SettingsView: View {
             Text("同期済み")
         case .syncing:
             Text("同期中...")
-        case .failed(let message):
+        case .failed:
             Text("同期エラー")
                 .foregroundStyle(.red)
         case .notAvailable:

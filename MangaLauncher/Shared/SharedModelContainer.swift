@@ -4,6 +4,8 @@ import SwiftData
 enum SharedModelContainer {
     #if DEBUG
     static let appGroupIdentifier = "group.com.mh-mobile.MangaYoubi.dev"
+    #elseif ADHOC
+    static let appGroupIdentifier = "group.com.mh-mobile.MangaYoubi.adhoc"
     #else
     static let appGroupIdentifier = "group.com.mh-mobile.MangaYoubi"
     #endif
