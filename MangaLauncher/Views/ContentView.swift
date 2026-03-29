@@ -35,6 +35,7 @@ struct ContentView: View {
     // Monday-start paging: 0=sun(fake), 1=mon, 2=tue, ..., 7=sun, 8=mon(fake) → 9 pages for looping
     @State private var pageIndex: Int = 0
 
+    @Namespace private var tabUnderline
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     private var hasWallpaper: Bool { WallpaperManager.wallpaperType != .none }
     private let orderedDays = DayOfWeek.orderedCases // [mon, tue, wed, thu, fri, sat, sun]
@@ -257,9 +258,15 @@ struct ContentView: View {
                         Circle()
                             .fill(hasUnread ? Color.accentColor : .clear)
                             .frame(width: 5, height: 5)
-                        Rectangle()
-                            .fill(viewModel.selectedDay == day ? Color.accentColor : .clear)
-                            .frame(height: 2)
+                        if dayForPageIndex(pageIndex) == day {
+                            Rectangle()
+                                .fill(Color.accentColor)
+                                .frame(height: 2)
+                                .matchedGeometryEffect(id: "tabUnderline", in: tabUnderline)
+                        } else {
+                            Color.clear
+                                .frame(height: 2)
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -306,6 +313,7 @@ struct ContentView: View {
         }
         .padding(.horizontal, 8)
         .padding(.top, 4)
+        .animation(.easeInOut(duration: 0.25), value: pageIndex)
     }
 
     @ViewBuilder
