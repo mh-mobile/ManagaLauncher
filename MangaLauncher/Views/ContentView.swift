@@ -161,9 +161,9 @@ struct ContentView: View {
                 }
                 .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
                 .sheet(isPresented: $showingWallpaperPicker, onDismiss: {
-                    wallpaperPreviewActive = false
                     loadWallpaperImage()
                     wallpaperRefresh.toggle()
+                    wallpaperPreviewActive = false
                 }) {
                     WallpaperPickerView(preview: $wallpaperPreviewSnapshot, previewActive: $wallpaperPreviewActive)
                         .presentationDetents([.medium])

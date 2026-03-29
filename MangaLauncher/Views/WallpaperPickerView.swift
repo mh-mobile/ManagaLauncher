@@ -35,14 +35,12 @@ struct WallpaperPickerView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("キャンセル") {
                         preview = initialSnapshot
-                        previewActive = false
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("完了") {
                         preview.commit()
-                        previewActive = false
                         dismiss()
                     }
                 }
@@ -52,6 +50,12 @@ struct WallpaperPickerView: View {
                 wallpaperType = initialSnapshot.wallpaperType
                 selectedColor = initialSnapshot.colorName
                 customColor = Color(hex: initialSnapshot.customColorHex)
+                // preview全フィールドを初期化（previewActiveはfalseのまま）
+                preview.wallpaperType = initialSnapshot.wallpaperType
+                preview.colorName = initialSnapshot.colorName
+                preview.customColorHex = initialSnapshot.customColorHex
+                preview.imageData = initialSnapshot.imageData
+                preview.pendingOriginalData = WallpaperManager.loadOriginalImage()
                 try? await Task.sleep(for: .milliseconds(100))
                 didLoad = true
             }
