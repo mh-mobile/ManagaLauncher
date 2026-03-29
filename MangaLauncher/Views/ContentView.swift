@@ -59,25 +59,22 @@ struct ContentView: View {
                 ZStack(alignment: .bottom) {
                     wallpaperBackground
 
-                    VStack(spacing: 0) {
-                        dayTabBar(viewModel: viewModel)
+                    dayPager(viewModel: viewModel)
+                        .safeAreaInset(edge: .top, spacing: 0) {
+                            VStack(spacing: 0) {
+                                dayTabBar(viewModel: viewModel)
+                                let publishers = viewModel.publishers(for: viewModel.selectedDay)
+                                if !publishers.isEmpty {
+                                    publisherFilter(publishers: publishers)
+                                }
+                            }
                             .background {
                                 Rectangle().fill(hasWallpaper
                                     ? (reduceTransparency ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(.ultraThinMaterial))
                                     : AnyShapeStyle(.regularMaterial))
                                 .ignoresSafeArea(edges: .top)
                             }
-                        let publishers = viewModel.publishers(for: viewModel.selectedDay)
-                        if !publishers.isEmpty {
-                            publisherFilter(publishers: publishers)
-                                .background {
-                                    Rectangle().fill(hasWallpaper
-                                        ? (reduceTransparency ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(.ultraThinMaterial))
-                                        : AnyShapeStyle(.regularMaterial))
-                                }
                         }
-                        dayPager(viewModel: viewModel)
-                    }
 
                     if isGridEditMode {
                         editModeButtons
