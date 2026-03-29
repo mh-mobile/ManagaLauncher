@@ -96,7 +96,7 @@ struct WallpaperPickerView: View {
                             if wallpaperType == .color && selectedColor == "custom" {
                                 Image(systemName: "checkmark")
                                     .foregroundStyle(Color.accentColor)
-                            }
+                                }
                         }
                     }
                 }
@@ -106,10 +106,9 @@ struct WallpaperPickerView: View {
                        let image = previewImageData.toSwiftUIImage() {
                         image
                             .resizable()
-                            .scaledToFill()
+                            .scaledToFit()
                             .frame(maxWidth: .infinity)
-                            .frame(height: 150)
-                            .clipped()
+                            .frame(maxHeight: 200)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
 
@@ -142,10 +141,24 @@ struct WallpaperPickerView: View {
                 Task {
                     if let data = try? await newItem?.loadTransferable(type: Data.self) {
                         if let jpeg = downsizedJPEGData(data, maxDimension: 1200) {
+                            #if canImport(UIKit)
+                            try? await Task.sleep(for: .milliseconds(600))
+                            await MainActor.run {
+                            CropPresenter.present(imageData: jpeg, maxDimension: 1200, lockToScreenRatio: true) { croppedData in
+                                previewImageData = croppedData
+                                WallpaperManager.saveImage(croppedData)
+                                wallpaperType = .image
+                                apply()
+                            } onCancel: {
+                                // do nothing
+                            }
+                            }
+                            #else
                             previewImageData = jpeg
                             WallpaperManager.saveImage(jpeg)
                             wallpaperType = .image
                             apply()
+                            #endif
                         }
                     }
                 }
