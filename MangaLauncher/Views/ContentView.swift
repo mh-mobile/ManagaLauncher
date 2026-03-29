@@ -58,11 +58,23 @@ struct ContentView: View {
             if let viewModel {
                 ZStack(alignment: .bottom) {
                     wallpaperBackground
+
                     VStack(spacing: 0) {
                         dayTabBar(viewModel: viewModel)
+                            .background {
+                                Rectangle().fill(hasWallpaper
+                                    ? (reduceTransparency ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(.ultraThinMaterial))
+                                    : AnyShapeStyle(.regularMaterial))
+                                .ignoresSafeArea(edges: .top)
+                            }
                         let publishers = viewModel.publishers(for: viewModel.selectedDay)
                         if !publishers.isEmpty {
                             publisherFilter(publishers: publishers)
+                                .background {
+                                    Rectangle().fill(hasWallpaper
+                                        ? (reduceTransparency ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(.ultraThinMaterial))
+                                        : AnyShapeStyle(.regularMaterial))
+                                }
                         }
                         dayPager(viewModel: viewModel)
                     }
@@ -258,15 +270,6 @@ struct ContentView: View {
         }
         .padding(.horizontal, 8)
         .padding(.top, 4)
-        .background {
-            if hasWallpaper {
-                Rectangle().fill(reduceTransparency ? .thinMaterial : .ultraThinMaterial)
-                    .ignoresSafeArea(edges: .top)
-            } else {
-                Rectangle().fill(.regularMaterial)
-                    .ignoresSafeArea(edges: .top)
-            }
-        }
     }
 
     @ViewBuilder
@@ -368,13 +371,6 @@ struct ContentView: View {
             }
             .padding(.horizontal)
             .padding(.vertical, 6)
-        }
-        .background {
-            if hasWallpaper {
-                Rectangle().fill(reduceTransparency ? .thinMaterial : .ultraThinMaterial)
-            } else {
-                Rectangle().fill(.regularMaterial)
-            }
         }
     }
 
