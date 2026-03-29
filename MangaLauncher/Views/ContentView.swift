@@ -367,24 +367,28 @@ struct ContentView: View {
             GeometryReader { geo in
                 ScrollView {
                     if allEntries.isEmpty {
-                        ContentUnavailableView {
-                            Label("エントリなし", systemImage: "book.closed")
-                        } description: {
-                            Text("\(day.displayName)に登録された漫画はありません")
-                        } actions: {
-                            Button("追加する") {
-                                showingAddSheet = true
+                        emptyStateView {
+                            ContentUnavailableView {
+                                Label("エントリなし", systemImage: "book.closed")
+                            } description: {
+                                Text("\(day.displayName)に登録された漫画はありません")
+                            } actions: {
+                                Button("追加する") {
+                                    showingAddSheet = true
+                                }
                             }
                         }
                         .frame(height: geo.size.height - headerHeight)
                     } else if entries.isEmpty {
-                        ContentUnavailableView {
-                            Label("該当なし", systemImage: "line.3.horizontal.decrease.circle")
-                        } description: {
-                            Text("この掲載誌の漫画はありません")
-                        } actions: {
-                            Button("フィルター解除") {
-                                selectedPublisher = nil
+                        emptyStateView {
+                            ContentUnavailableView {
+                                Label("該当なし", systemImage: "line.3.horizontal.decrease.circle")
+                            } description: {
+                                Text("この掲載誌の漫画はありません")
+                            } actions: {
+                                Button("フィルター解除") {
+                                    selectedPublisher = nil
+                                }
                             }
                         }
                         .frame(height: geo.size.height - headerHeight)
