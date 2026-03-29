@@ -8,25 +8,34 @@
 
 [![App Store](https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/ja-jp)](https://apps.apple.com/jp/app/%E3%83%9E%E3%83%B3%E3%82%AC%E6%9B%9C%E6%97%A5/id6760709060)
 
-## 機能
+## 主要機能
 
-- 曜日ごとにマンガのURLを登録・管理
-- ワンタップでマンガサイトやアプリを起動
-- リスト表示 / Pinterest風グリッド表示（Masonryレイアウト）
+- **曜日管理** - 曜日ごとにマンガのURLを登録・ワンタップで起動
+- **キャッチアップ** - Tinder風カードスワイプで未読マンガを一括チェック
+- **壁紙** - プリセットカラー / カスタムカラー / 写真から好みの背景を設定
+- **更新スケジュール** - 毎週 / 隔週 / 月1回 / カスタム間隔で更新頻度を管理
+- **グリッド表示** - Pinterest風Masonryレイアウト、画面幅に応じて2〜4列の可変レスポンシブ
+- **ウィジェット** - ホーム画面・ロック画面に対応（Small / Medium / Large）
+- **iCloud同期** - iPhone / iPad / Mac / Apple Vision Pro 間でデータを同期
+
+## その他の機能
+
+- リスト表示 / グリッド表示の切り替え
 - 未読・既読管理（曜日ごとに自動リセット）
-- キャッチアップUI（Tinder風カードスワイプで未読マンガをチェック）
-- ホーム画面・ロック画面ウィジェット（Small / Medium / Large、曜日切り替え・未読ドット付き）
 - アプリアイコンバッジに本日の未読数を表示
 - 更新通知（マンガ登録がある曜日の指定時間にリマインド）
-- iCloud同期（iPhone / iPad / Mac / Apple Vision Pro）
-- Share Extension（他アプリやX投稿から共有してマンガを登録、OGP画像・掲載誌を自動取得）
+- Share Extension（他アプリから共有してマンガを登録、OGP画像・掲載誌を自動取得）
 - Apple Intelligence Foundation Modelによるマンガタイトル自動抽出
 - iOSショートカット連携（AppIntent）
-- 削除Undo（5秒間の取り消し猶予）
-- バックアップ・インポート（JSON形式）
+- ドラッグ&ドロップで並び替え・曜日間の移動
+- グリッド編集モード（ブルブルアニメーション）
 - 掲載誌フィルタリング
-- ドラッグ&ドロップで並び替え
+- アプリ内ブラウザ / デフォルトブラウザの選択
+- 削除Undo（取り消し猶予）
+- バックアップ・インポート（JSON形式）
 - 画像クロップ機能
+- オンボーディング / キャッチアップチュートリアル
+- iPadレイアウト最適化
 
 ## 対応プラットフォーム
 
@@ -47,7 +56,11 @@
 ## ビルド
 
 ```bash
+# 開発ビルド
 xcodebuild -project MangaLauncher.xcodeproj -scheme MangaLauncher -destination 'generic/platform=iOS' build
+
+# Adhoc OTA配布（Tailscale HTTPS経由）
+./scripts/ota-distribute.sh
 ```
 
 ## ライセンス
