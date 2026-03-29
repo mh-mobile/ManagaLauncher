@@ -61,8 +61,8 @@ final class MangaEntry {
     var publisher: String = ""
     @Attribute(.externalStorage) var imageData: Data?
     var lastReadDate: Date?
-    var updateIntervalWeeks: Int = 1
-    var nextExpectedUpdate: Date?
+    @Transient var updateIntervalWeeks: Int = 1
+    @Transient var nextExpectedUpdate: Date?
 
     @Transient
     var dayOfWeek: DayOfWeek {
