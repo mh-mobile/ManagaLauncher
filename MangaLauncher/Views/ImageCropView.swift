@@ -94,10 +94,8 @@ enum CropPresenter {
 
         var config = Mantis.Config()
         if lockToScreenRatio {
-            let screen = windowScene.screen.bounds
-            let longSide = max(screen.width, screen.height)
-            let shortSide = min(screen.width, screen.height)
-            config.presetFixedRatioType = .canUseMultiplePresetFixedRatio(defaultRatio: shortSide / longSide)
+            let viewSize = rootVC.view.bounds.size
+            config.presetFixedRatioType = .canUseMultiplePresetFixedRatio(defaultRatio: viewSize.width / viewSize.height)
         }
 
         let cropVC = Mantis.cropViewController(image: uiImage, config: config)
