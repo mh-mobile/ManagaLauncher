@@ -20,19 +20,11 @@ final class MangaViewModel {
 
     func fetchEntries(for day: DayOfWeek) -> [MangaEntry] {
         let _ = refreshCounter
-        let descriptor: FetchDescriptor<MangaEntry>
-        if day.isHiatus {
-            descriptor = FetchDescriptor<MangaEntry>(
-                predicate: #Predicate { $0.isOnHiatus },
-                sortBy: [SortDescriptor(\.sortOrder)]
-            )
-        } else {
-            let dayRawValue = day.rawValue
-            descriptor = FetchDescriptor<MangaEntry>(
-                predicate: #Predicate { $0.dayOfWeekRawValue == dayRawValue && !$0.isOnHiatus },
-                sortBy: [SortDescriptor(\.sortOrder)]
-            )
-        }
+        let dayRawValue = day.rawValue
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.dayOfWeekRawValue == dayRawValue },
+            sortBy: [SortDescriptor(\.sortOrder)]
+        )
         let results = (try? modelContext.fetch(descriptor)) ?? []
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
         var seenIDs = Set<UUID>()
