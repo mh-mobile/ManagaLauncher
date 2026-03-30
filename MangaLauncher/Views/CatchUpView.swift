@@ -7,6 +7,7 @@ struct CatchUpView: View {
 
     var viewModel: MangaViewModel
     let day: DayOfWeek
+    var publisher: String? = nil
 
     @State private var unreadItems: [MangaEntry] = []
     @State private var currentIndex: Int = 0
@@ -36,7 +37,19 @@ struct CatchUpView: View {
                     cardStackView
                 }
             }
-            .navigationTitle("\(day.displayName)のキャッチアップ")
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    VStack(spacing: 2) {
+                        Text("\(day.displayName)のキャッチアップ")
+                            .font(.headline)
+                        if let publisher {
+                            Text(publisher)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
             #if os(iOS) || os(visionOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -57,7 +70,7 @@ struct CatchUpView: View {
         }
         .onAppear {
             if unreadItems.isEmpty {
-                unreadItems = viewModel.unreadEntries(for: day)
+                unreadItems = filteredUnreadEntries()
             }
             if !hasSeenTutorial && !unreadItems.isEmpty {
                 showTutorial = true
@@ -292,9 +305,17 @@ struct CatchUpView: View {
         currentIndex += 1
     }
 
+    private func filteredUnreadEntries() -> [MangaEntry] {
+        let entries = viewModel.unreadEntries(for: day)
+        if let publisher {
+            return entries.filter { $0.publisher == publisher }
+        }
+        return entries
+    }
+
     private func reloadEntries() {
         let processedIDs = Set(undoStack.filter { $0.action == .read }.map { $0.entry.id })
-        let allUnread = viewModel.unreadEntries(for: day)
+        let allUnread = filteredUnreadEntries()
         var newItems: [MangaEntry] = []
 
         // Keep already-processed entries in order
@@ -332,7 +353,7 @@ struct CatchUpView: View {
     // MARK: - Completed View
 
     private func completedView(message: String) -> some View {
-        let remainingUnread = viewModel.unreadCount(for: day)
+        let remainingUnread = filteredUnreadEntries().count
         return VStack(spacing: 16) {
             Spacer()
             Image(systemName: "checkmark.seal.fill")
@@ -346,7 +367,7 @@ struct CatchUpView: View {
             if remainingUnread > 0 {
                 Button {
                     completionAnimated = false
-                    unreadItems = viewModel.unreadEntries(for: day)
+                    unreadItems = filteredUnreadEntries()
                     currentIndex = 0
                     undoStack = []
                 } label: {
