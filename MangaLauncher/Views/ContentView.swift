@@ -386,7 +386,7 @@ struct ContentView: View {
                             ContentUnavailableView {
                                 Label("エントリなし", systemImage: "book.closed")
                             } description: {
-                                Text("\(day.displayName)に登録された漫画はありません")
+                                Text("\(day.displayName)に登録されたマンガはありません")
                             } actions: {
                                 Button("追加する") {
                                     showingAddSheet = true
@@ -400,7 +400,7 @@ struct ContentView: View {
                             ContentUnavailableView {
                                 Label("該当なし", systemImage: "line.3.horizontal.decrease.circle")
                             } description: {
-                                Text("この掲載誌の漫画はありません")
+                                Text("この掲載誌のマンガはありません")
                             } actions: {
                                 Button("フィルター解除") {
                                     selectedPublisher = nil
