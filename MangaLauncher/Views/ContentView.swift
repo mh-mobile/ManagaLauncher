@@ -109,7 +109,12 @@ struct ContentView: View {
                 .animation(.easeInOut(duration: 0.2), value: listEditMode)
                 .toolbar {
                     ToolbarItem(placement: .navigation) {
-                        let unreadCount = viewModel.unreadCount(for: viewModel.selectedDay)
+                        let allUnread = viewModel.unreadEntries(for: viewModel.selectedDay)
+                        let unreadCount = if let selectedPublisher {
+                            allUnread.filter { $0.publisher == selectedPublisher }.count
+                        } else {
+                            allUnread.count
+                        }
                         let isEditMode = isGridEditMode || listEditMode == .active
                         Button {
                             showingCatchUp = true
@@ -182,7 +187,7 @@ struct ContentView: View {
                 .fullScreenCover(isPresented: $showingCatchUp, onDismiss: {
                     viewModel.notifyChange()
                 }) {
-                    CatchUpView(viewModel: viewModel, day: viewModel.selectedDay)
+                    CatchUpView(viewModel: viewModel, day: viewModel.selectedDay, publisher: selectedPublisher)
                 }
                 .onAppear {
                     var transaction = Transaction()
