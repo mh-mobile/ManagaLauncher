@@ -41,6 +41,7 @@ struct ContentView: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     private var hasWallpaper: Bool { WallpaperManager.wallpaperType != .none }
     private let orderedDays = DayOfWeek.orderedCases // [mon, tue, wed, thu, fri, sat, sun]
+    @State private var isShowingHiatus = false
 
     private func dayForPageIndex(_ index: Int) -> DayOfWeek {
         // page 0 = fake sunday, 1=monday, ..., 7=sunday, 8=fake monday
@@ -65,13 +66,24 @@ struct ContentView: View {
                     ZStack(alignment: .top) {
                         wallpaperBackground
 
-                        dayPager(viewModel: viewModel)
+                        if isShowingHiatus {
+                            hiatusPage(viewModel: viewModel)
+                        } else {
+                            dayPager(viewModel: viewModel)
+                        }
 
                         VStack(spacing: 0) {
                             dayTabBar(viewModel: viewModel)
-                            let publishers = viewModel.publishers(for: viewModel.selectedDay)
-                            if !publishers.isEmpty {
-                                publisherFilter(publishers: publishers)
+                            if isShowingHiatus {
+                                let publishers = Set(viewModel.fetchHiatusEntries().map(\.publisher)).filter { !$0.isEmpty }.sorted()
+                                if !publishers.isEmpty {
+                                    publisherFilter(publishers: publishers)
+                                }
+                            } else {
+                                let publishers = viewModel.publishers(for: viewModel.selectedDay)
+                                if !publishers.isEmpty {
+                                    publisherFilter(publishers: publishers)
+                                }
                             }
                         }
                         .background {
@@ -153,7 +165,7 @@ struct ContentView: View {
                         } label: {
                             Image(systemName: "plus")
                         }
-                        .disabled(isGridEditMode || listEditMode == .active)
+                        .disabled(isGridEditMode || listEditMode == .active || isShowingHiatus)
                     }
                     ToolbarItem(placement: .automatic) {
                         Button {
@@ -225,12 +237,14 @@ struct ContentView: View {
     }
 
     @State private var dropTargetDay: DayOfWeek?
+    @State private var dropTargetHiatus = false
 
     @ViewBuilder
     private func dayTabBar(viewModel: MangaViewModel) -> some View {
         HStack(spacing: 0) {
             ForEach(DayOfWeek.orderedCases) { day in
                 Button {
+                    isShowingHiatus = false
                     isAnimatingPageChange = true
                     withAnimation(.easeInOut(duration: 0.3)) {
                         pageIndex = pageIndexForDay(day)
@@ -246,18 +260,20 @@ struct ContentView: View {
                         Text(day.shortName)
                             .font(.headline)
                             .foregroundStyle(
-                                day == .today || (hasWallpaper && viewModel.selectedDay == day)
+                                day == .today
                                     ? .white
-                                    : viewModel.selectedDay == day
-                                        ? Color.accentColor
-                                        : .primary
+                                    : (!isShowingHiatus && hasWallpaper && viewModel.selectedDay == day)
+                                        ? .white
+                                        : (!isShowingHiatus && viewModel.selectedDay == day)
+                                            ? Color.accentColor
+                                            : .primary
                             )
                             .frame(width: 32, height: 32)
                             .background {
                                 if day == .today {
                                     Circle()
                                         .fill(Color.accentColor)
-                                } else if hasWallpaper && viewModel.selectedDay == day {
+                                } else if !isShowingHiatus && hasWallpaper && viewModel.selectedDay == day {
                                     Circle()
                                         .fill(Color.black.opacity(0.3))
                                 }
@@ -265,7 +281,7 @@ struct ContentView: View {
                         Circle()
                             .fill(hasUnread ? Color.accentColor : .clear)
                             .frame(width: 5, height: 5)
-                        if dayForPageIndex(pageIndex) == day {
+                        if !isShowingHiatus && dayForPageIndex(pageIndex) == day {
                             Rectangle()
                                 .fill(Color.accentColor)
                                 .frame(height: 2)
@@ -289,10 +305,11 @@ struct ContentView: View {
                     dropTargetDay = nil
                     // Try @State first, then fall back to NSItemProvider
                     if let draggingID = draggingEntryID,
-                       let entry = viewModel.findEntry(by: draggingID),
-                       entry.dayOfWeek != day {
+                       let entry = viewModel.findEntry(by: draggingID) {
+                        if entry.isOnHiatus { entry.isOnHiatus = false }
                         viewModel.moveEntryToDay(entry, to: day)
                         draggingEntryID = nil
+                        isShowingHiatus = false
                         withAnimation(.easeInOut(duration: 0.3)) {
                             pageIndex = pageIndexForDay(day)
                         }
@@ -304,10 +321,11 @@ struct ContentView: View {
                         DispatchQueue.main.async {
                             if let uuidString = string as? String,
                                let uuid = UUID(uuidString: uuidString),
-                               let entry = viewModel.findEntry(by: uuid),
-                               entry.dayOfWeek != day {
+                               let entry = viewModel.findEntry(by: uuid) {
+                                if entry.isOnHiatus { entry.isOnHiatus = false }
                                 viewModel.moveEntryToDay(entry, to: day)
                                 draggingEntryID = nil
+                                isShowingHiatus = false
                                 withAnimation(.easeInOut(duration: 0.3)) {
                                     pageIndex = pageIndexForDay(day)
                                 }
@@ -317,10 +335,85 @@ struct ContentView: View {
                     return true
                 }
             }
+
+            // 休載タブ
+            Button {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    isShowingHiatus = true
+                    selectedPublisher = nil
+                }
+            } label: {
+                VStack(spacing: 4) {
+                    Text("休")
+                        .font(.headline)
+                        .foregroundStyle(
+                            isShowingHiatus
+                                ? (hasWallpaper ? .white : Color.accentColor)
+                                : .secondary
+                        )
+                        .frame(width: 32, height: 32)
+                        .background {
+                            if hasWallpaper && isShowingHiatus {
+                                Circle()
+                                    .fill(Color.black.opacity(0.3))
+                            }
+                        }
+                    Color.clear
+                        .frame(width: 5, height: 5)
+                    if isShowingHiatus {
+                        Rectangle()
+                            .fill(Color.accentColor)
+                            .frame(height: 2)
+                            .matchedGeometryEffect(id: "tabUnderline", in: tabUnderline)
+                    } else {
+                        Color.clear
+                            .frame(height: 2)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(dropTargetHiatus ? Color.accentColor.opacity(0.3) : .clear)
+                    .padding(.horizontal, 2)
+            )
+            .onDrop(of: [.text], isTargeted: Binding(
+                get: { dropTargetHiatus },
+                set: { dropTargetHiatus = $0 }
+            )) { providers in
+                dropTargetHiatus = false
+                if let draggingID = draggingEntryID,
+                   let entry = viewModel.findEntry(by: draggingID),
+                   !entry.isOnHiatus {
+                    viewModel.toggleHiatus(entry)
+                    draggingEntryID = nil
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        isShowingHiatus = true
+                    }
+                    return true
+                }
+                guard let provider = providers.first else { return false }
+                provider.loadObject(ofClass: NSString.self) { string, _ in
+                    DispatchQueue.main.async {
+                        if let uuidString = string as? String,
+                           let uuid = UUID(uuidString: uuidString),
+                           let entry = viewModel.findEntry(by: uuid),
+                           !entry.isOnHiatus {
+                            viewModel.toggleHiatus(entry)
+                            draggingEntryID = nil
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                isShowingHiatus = true
+                            }
+                        }
+                    }
+                }
+                return true
+            }
         }
         .padding(.horizontal, 8)
         .padding(.top, 4)
         .animation(.easeInOut(duration: 0.25), value: pageIndex)
+        .animation(.easeInOut(duration: 0.25), value: isShowingHiatus)
     }
 
     @ViewBuilder
@@ -653,6 +746,12 @@ struct ContentView: View {
             } label: {
                 Label("並び替え", systemImage: "arrow.up.arrow.down")
             }
+            Button {
+                viewModel.toggleHiatus(entry)
+            } label: {
+                Label(entry.isOnHiatus ? "連載に戻す" : "休載中にする",
+                      systemImage: entry.isOnHiatus ? "arrow.uturn.left" : "moon.zzz")
+            }
             Button(role: .destructive) {
                 viewModel.queueDelete(entry)
             } label: {
@@ -737,6 +836,12 @@ struct ContentView: View {
             } label: {
                 Label("並び替え", systemImage: "arrow.up.arrow.down")
             }
+            Button {
+                if let viewModel { viewModel.toggleHiatus(entry) }
+            } label: {
+                Label(entry.isOnHiatus ? "連載に戻す" : "休載中にする",
+                      systemImage: entry.isOnHiatus ? "arrow.uturn.left" : "moon.zzz")
+            }
             Button(role: .destructive) {
                 if let viewModel { viewModel.queueDelete(entry) }
             } label: {
@@ -744,6 +849,93 @@ struct ContentView: View {
             }
         }
         }
+    }
+
+    @ViewBuilder
+    private func hiatusPage(viewModel: MangaViewModel) -> some View {
+        let _ = viewModel.refreshCounter
+        let allEntries = viewModel.fetchHiatusEntries()
+        let entries = if let selectedPublisher {
+            allEntries.filter { $0.publisher == selectedPublisher }
+        } else {
+            allEntries
+        }
+
+        if displayMode == .list && !entries.isEmpty {
+            hiatusListView(entries: entries, viewModel: viewModel)
+        } else {
+            GeometryReader { geo in
+                ScrollView {
+                    if entries.isEmpty {
+                        emptyStateView {
+                            ContentUnavailableView {
+                                Label("休載中のマンガはありません", systemImage: "moon.zzz")
+                            } description: {
+                                Text("コンテキストメニューや編集画面から\n「休載中にする」でここに移動できます")
+                            }
+                        }
+                        .frame(maxWidth: 600)
+                        .frame(maxWidth: .infinity, minHeight: geo.size.height - headerHeight)
+                    } else {
+                        MasonryLayout(entries: entries, availableWidth: geo.size.width - 32) { entry in
+                            gridCell(entry: entry, viewModel: viewModel)
+                                .overlay(alignment: .topLeading) {
+                                    if isGridEditMode {
+                                        Button {
+                                            viewModel.queueDelete(entry)
+                                        } label: {
+                                            Image(systemName: "xmark.circle.fill")
+                                                .font(.title3)
+                                                .symbolRenderingMode(.palette)
+                                                .foregroundStyle(.white, .gray)
+                                                .frame(width: 36, height: 36)
+                                                .contentShape(Rectangle())
+                                        }
+                                        .offset(x: -6, y: -6)
+                                    }
+                                }
+                                .onDrag {
+                                    draggingEntryID = entry.id
+                                    return NSItemProvider(object: entry.id.uuidString as NSString)
+                                }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                    }
+                }
+                .contentMargins(.top, headerHeight, for: .scrollContent)
+                .scrollContentBackground(.hidden)
+                .contentShape(Rectangle())
+                .onLongPressGesture {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isGridEditMode = true
+                    }
+                }
+            }
+        }
+    }
+
+    private func hiatusListView(entries: [MangaEntry], viewModel: MangaViewModel) -> some View {
+        List {
+            ForEach(entries, id: \.id) { entry in
+                entryRow(entry: entry)
+            }
+            .listRowSeparator(hasWallpaper ? .hidden : .automatic)
+        }
+        .listStyle(.plain)
+        .contentMargins(.top, headerHeight, for: .scrollContent)
+        .scrollContentBackground(hasWallpaper ? .hidden : .automatic)
+        .simultaneousGesture(
+            LongPressGesture(minimumDuration: 0.5)
+                .onEnded { _ in
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        listEditMode = .active
+                    }
+                }
+        )
+        #if os(iOS) || os(visionOS)
+        .environment(\.editMode, $listEditMode)
+        #endif
     }
 
     @ViewBuilder

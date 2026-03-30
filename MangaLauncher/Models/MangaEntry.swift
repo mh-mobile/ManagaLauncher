@@ -63,6 +63,7 @@ final class MangaEntry {
     var lastReadDate: Date?
     var updateIntervalWeeks: Int = 1
     var nextExpectedUpdate: Date?
+    var isOnHiatus: Bool = false
 
     @Transient
     var dayOfWeek: DayOfWeek {

@@ -22,7 +22,7 @@ final class MangaViewModel {
         let _ = refreshCounter
         let dayRawValue = day.rawValue
         let descriptor = FetchDescriptor<MangaEntry>(
-            predicate: #Predicate { $0.dayOfWeekRawValue == dayRawValue },
+            predicate: #Predicate { $0.dayOfWeekRawValue == dayRawValue && !$0.isOnHiatus },
             sortBy: [SortDescriptor(\.sortOrder)]
         )
         let results = (try? modelContext.fetch(descriptor)) ?? []
@@ -33,6 +33,26 @@ final class MangaViewModel {
             guard !pendingIDs.contains(entry.id) else { return false }
             return seenIDs.insert(entry.id).inserted
         }
+    }
+
+    func fetchHiatusEntries() -> [MangaEntry] {
+        let _ = refreshCounter
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.isOnHiatus },
+            sortBy: [SortDescriptor(\.sortOrder)]
+        )
+        let results = (try? modelContext.fetch(descriptor)) ?? []
+        let pendingIDs = Set(pendingDeleteEntries.map(\.id))
+        var seenIDs = Set<UUID>()
+        return results.filter { entry in
+            guard !pendingIDs.contains(entry.id) else { return false }
+            return seenIDs.insert(entry.id).inserted
+        }
+    }
+
+    func toggleHiatus(_ entry: MangaEntry) {
+        entry.isOnHiatus.toggle()
+        save()
     }
 
     func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil) {
@@ -202,6 +222,7 @@ final class MangaViewModel {
             )
             entry.lastReadDate = backupEntry.lastReadDate
             entry.nextExpectedUpdate = backupEntry.nextExpectedUpdate
+            entry.isOnHiatus = backupEntry.isOnHiatus ?? false
             modelContext.insert(entry)
             importedCount += 1
         }
