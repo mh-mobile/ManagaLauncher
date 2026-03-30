@@ -20,27 +20,19 @@ final class MangaViewModel {
 
     func fetchEntries(for day: DayOfWeek) -> [MangaEntry] {
         let _ = refreshCounter
-        let dayRawValue = day.rawValue
-        let descriptor = FetchDescriptor<MangaEntry>(
-            predicate: #Predicate { $0.dayOfWeekRawValue == dayRawValue && !$0.isOnHiatus },
-            sortBy: [SortDescriptor(\.sortOrder)]
-        )
-        let results = (try? modelContext.fetch(descriptor)) ?? []
-        let pendingIDs = Set(pendingDeleteEntries.map(\.id))
-        // Deduplicate by ID (CloudKit sync can cause temporary duplicates)
-        var seenIDs = Set<UUID>()
-        return results.filter { entry in
-            guard !pendingIDs.contains(entry.id) else { return false }
-            return seenIDs.insert(entry.id).inserted
+        let descriptor: FetchDescriptor<MangaEntry>
+        if day.isHiatus {
+            descriptor = FetchDescriptor<MangaEntry>(
+                predicate: #Predicate { $0.isOnHiatus },
+                sortBy: [SortDescriptor(\.sortOrder)]
+            )
+        } else {
+            let dayRawValue = day.rawValue
+            descriptor = FetchDescriptor<MangaEntry>(
+                predicate: #Predicate { $0.dayOfWeekRawValue == dayRawValue && !$0.isOnHiatus },
+                sortBy: [SortDescriptor(\.sortOrder)]
+            )
         }
-    }
-
-    func fetchHiatusEntries() -> [MangaEntry] {
-        let _ = refreshCounter
-        let descriptor = FetchDescriptor<MangaEntry>(
-            predicate: #Predicate { $0.isOnHiatus },
-            sortBy: [SortDescriptor(\.sortOrder)]
-        )
         let results = (try? modelContext.fetch(descriptor)) ?? []
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
         var seenIDs = Set<UUID>()
@@ -89,8 +81,7 @@ final class MangaViewModel {
 
     func publishers(for day: DayOfWeek) -> [String] {
         let entries = fetchEntries(for: day)
-        let publishers = Set(entries.map(\.publisher)).filter { !$0.isEmpty }
-        return publishers.sorted()
+        return Set(entries.map(\.publisher)).filter { !$0.isEmpty }.sorted()
     }
 
     func allPublishers() -> [String] {
@@ -138,8 +129,13 @@ final class MangaViewModel {
     }
 
     func moveEntryToDay(_ entry: MangaEntry, to newDay: DayOfWeek, at targetEntry: MangaEntry? = nil) {
-        entry.dayOfWeek = newDay
-        entry.resetNextUpdate()
+        if newDay.isHiatus {
+            entry.isOnHiatus = true
+        } else {
+            entry.isOnHiatus = false
+            entry.dayOfWeek = newDay
+            entry.resetNextUpdate()
+        }
         var entries = fetchEntries(for: newDay)
         if !entries.contains(where: { $0.id == entry.id }) {
             if let targetEntry, let targetIndex = entries.firstIndex(where: { $0.id == targetEntry.id }) {
@@ -258,7 +254,7 @@ final class MangaViewModel {
 
     func rescheduleNotifications() {
         var counts: [DayOfWeek: Int] = [:]
-        for day in DayOfWeek.allCases {
+        for day in DayOfWeek.orderedDays {
             counts[day] = fetchEntries(for: day).count
         }
         NotificationManager.scheduleNotifications(entryCounts: counts)
