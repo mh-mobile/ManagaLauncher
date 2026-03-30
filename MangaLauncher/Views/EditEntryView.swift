@@ -208,7 +208,7 @@ struct EditEntryView: View {
 
                 Section("曜日") {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
-                        ForEach(DayOfWeek.orderedCases) { day in
+                        ForEach(DayOfWeek.orderedDays) { day in
                             Text(day.shortName)
                                 .font(.subheadline.bold())
                                 .frame(width: 36, height: 36)
