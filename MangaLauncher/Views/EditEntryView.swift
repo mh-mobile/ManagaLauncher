@@ -185,11 +185,11 @@ struct EditEntryView: View {
                             Button {
                                 fetchOGPImage()
                             } label: {
-                                Label("URLからOGP画像を取得", systemImage: "link")
+                                Label("URLからサムネイル画像を取得", systemImage: "link")
                             }
                         }
                         if ogpFetchFailed {
-                            Text("OGP画像を取得できませんでした")
+                            Text("サムネイル画像を取得できませんでした")
                                 .font(.caption)
                                 .foregroundStyle(.red)
                         }

@@ -90,7 +90,7 @@ struct ShareExtensionView: View {
                                 }
                             }
                         } else {
-                            Text("OGP画像が取得できませんでした")
+                            Text("サムネイル画像を取得できませんでした")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
