@@ -2,9 +2,11 @@ import Foundation
 import SwiftData
 
 enum DayOfWeek: Int, Codable, CaseIterable, Identifiable {
-    case sunday = 0, monday, tuesday, wednesday, thursday, friday, saturday
+    case sunday = 0, monday, tuesday, wednesday, thursday, friday, saturday, hiatus
 
     var id: Int { rawValue }
+
+    var isHiatus: Bool { self == .hiatus }
 
     var shortName: String {
         switch self {
@@ -15,6 +17,7 @@ enum DayOfWeek: Int, Codable, CaseIterable, Identifiable {
         case .thursday: "木"
         case .friday: "金"
         case .saturday: "土"
+        case .hiatus: "休"
         }
     }
 
@@ -27,6 +30,7 @@ enum DayOfWeek: Int, Codable, CaseIterable, Identifiable {
         case .thursday: "木曜日"
         case .friday: "金曜日"
         case .saturday: "土曜日"
+        case .hiatus: "休載中"
         }
     }
 
@@ -38,8 +42,13 @@ enum DayOfWeek: Int, Codable, CaseIterable, Identifiable {
         DayOfWeek(rawValue: (rawValue + 6) % 7)!
     }
 
-    /// Monday-start order for display
+    /// Monday-start order for display (hiatus at the end)
     static var orderedCases: [DayOfWeek] {
+        [.monday, .tuesday, .wednesday, .thursday, .friday, .saturday, .sunday, .hiatus]
+    }
+
+    /// Days only (excludes hiatus)
+    static var orderedDays: [DayOfWeek] {
         [.monday, .tuesday, .wednesday, .thursday, .friday, .saturday, .sunday]
     }
 
@@ -63,6 +72,7 @@ final class MangaEntry {
     var lastReadDate: Date?
     var updateIntervalWeeks: Int = 1
     var nextExpectedUpdate: Date?
+    var isOnHiatus: Bool = false
 
     @Transient
     var dayOfWeek: DayOfWeek {
@@ -72,6 +82,7 @@ final class MangaEntry {
 
     @Transient
     var isRead: Bool {
+        if isOnHiatus { return true }
         guard let lastReadDate else { return false }
         // If next expected update is in the future, stay read
         if let nextUpdate = nextExpectedUpdate, nextUpdate > Date.now {

@@ -25,6 +25,7 @@ struct EditEntryView: View {
     @State private var ogpFetchFailed = false
     @State private var showingCropView = false
     @State private var didLoadEntry = false
+    @State private var isOnHiatus = false
 
     private let colorOptions: [(name: String, color: Color)] = [
         ("red", .red),
@@ -207,7 +208,7 @@ struct EditEntryView: View {
 
                 Section("曜日") {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
-                        ForEach(DayOfWeek.orderedCases) { day in
+                        ForEach(DayOfWeek.orderedDays) { day in
                             Text(day.shortName)
                                 .font(.subheadline.bold())
                                 .frame(width: 36, height: 36)
@@ -235,6 +236,10 @@ struct EditEntryView: View {
                         }
                     }
                     .padding(.vertical, 4)
+                }
+
+                Section {
+                    Toggle("休載中", isOn: $isOnHiatus)
                 }
 
                 Section("更新頻度") {
@@ -331,6 +336,7 @@ struct EditEntryView: View {
                     } else {
                         nextUpdateDate = candidates.first ?? nextOccurrence(of: entry.dayOfWeek)
                     }
+                    isOnHiatus = entry.isOnHiatus
                     didLoadEntry = true
                 }
             }
@@ -373,6 +379,7 @@ struct EditEntryView: View {
         let interval = actualIntervalWeeks
         if let entry {
             viewModel.updateEntry(entry, name: name, url: url, dayOfWeek: selectedDay, iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval, nextExpectedUpdate: interval >= 2 ? nextUpdateDate : nil)
+            entry.isOnHiatus = isOnHiatus
         } else {
             viewModel.addEntry(name: name, url: url, days: [selectedDay], iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval, nextExpectedUpdate: interval >= 2 ? nextUpdateDate : nil)
         }

@@ -46,7 +46,7 @@ struct MangaTimelineProvider: TimelineProvider {
         let dayRaw = selectedDay.rawValue
         let context = ModelContext(container)
         let descriptor = FetchDescriptor<MangaEntry>(
-            predicate: #Predicate { $0.dayOfWeekRawValue == dayRaw },
+            predicate: #Predicate { $0.dayOfWeekRawValue == dayRaw && !$0.isOnHiatus },
             sortBy: [SortDescriptor(\.sortOrder)]
         )
         let results = (try? context.fetch(descriptor)) ?? []

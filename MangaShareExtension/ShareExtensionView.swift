@@ -14,6 +14,7 @@ struct ShareExtensionView: View {
     @State private var selectedColor = "blue"
     @State private var imageData: Data?
     @State private var saveError: String?
+    @State private var isOnHiatus = false
 
     private let colorOptions: [(name: String, color: Color)] = [
         ("red", .red),
@@ -98,7 +99,7 @@ struct ShareExtensionView: View {
 
                     Section("曜日") {
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
-                            ForEach(DayOfWeek.orderedCases) { day in
+                            ForEach(DayOfWeek.orderedDays) { day in
                                 Text(day.shortName)
                                     .font(.subheadline.bold())
                                     .frame(width: 36, height: 36)
@@ -117,6 +118,10 @@ struct ShareExtensionView: View {
                             }
                         }
                         .padding(.vertical, 4)
+                    }
+
+                    Section {
+                        Toggle("休載中", isOn: $isOnHiatus)
                     }
 
                     Section("アイコンカラー") {
@@ -320,6 +325,7 @@ struct ShareExtensionView: View {
                 publisher: publisher,
                 imageData: imageData
             )
+            entry.isOnHiatus = isOnHiatus
             context.insert(entry)
             try context.save()
 
