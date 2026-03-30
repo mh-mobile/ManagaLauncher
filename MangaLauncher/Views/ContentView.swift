@@ -133,7 +133,7 @@ struct ContentView: View {
                                 }
                             }
                         }
-                        .disabled(unreadCount == 0 || isEditMode)
+                        .disabled(unreadCount == 0 || isEditMode || viewModel.selectedDay.isHiatus)
                     }
                     ToolbarItem(placement: .automatic) {
                         Button {
@@ -155,7 +155,7 @@ struct ContentView: View {
                         } label: {
                             Image(systemName: "plus")
                         }
-                        .disabled(isGridEditMode || listEditMode == .active)
+                        .disabled(isGridEditMode || listEditMode == .active || viewModel.selectedDay.isHiatus)
                     }
                     ToolbarItem(placement: .automatic) {
                         Button {
@@ -230,36 +230,50 @@ struct ContentView: View {
 
     @ViewBuilder
     private func dayTabBar(viewModel: MangaViewModel) -> some View {
+        let currentDay = dayForPageIndex(pageIndex)
         HStack(spacing: 0) {
             ForEach(DayOfWeek.orderedCases) { day in
                 Button {
-                    isAnimatingPageChange = true
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        pageIndex = pageIndexForDay(day)
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                        viewModel.selectedDay = day
-                        selectedPublisher = nil
-                        isAnimatingPageChange = false
+                    if day.isHiatus || viewModel.selectedDay.isHiatus {
+                        var transaction = Transaction()
+                        transaction.disablesAnimations = true
+                        withTransaction(transaction) {
+                            pageIndex = pageIndexForDay(day)
+                            viewModel.selectedDay = day
+                            selectedPublisher = nil
+                        }
+                    } else {
+                        isAnimatingPageChange = true
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            pageIndex = pageIndexForDay(day)
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                            viewModel.selectedDay = day
+                            selectedPublisher = nil
+                            isAnimatingPageChange = false
+                        }
                     }
                 } label: {
-                    let hasUnread = viewModel.unreadCount(for: day) > 0
+                    let isSelected = currentDay == day
+                    let hasUnread = !day.isHiatus && viewModel.unreadCount(for: day) > 0
                     VStack(spacing: 4) {
                         Text(day.shortName)
                             .font(.headline)
                             .foregroundStyle(
-                                day == .today || (hasWallpaper && viewModel.selectedDay == day)
+                                !day.isHiatus && day == .today
                                     ? .white
-                                    : viewModel.selectedDay == day
-                                        ? Color.accentColor
-                                        : .primary
+                                    : (hasWallpaper && isSelected)
+                                        ? .white
+                                        : isSelected
+                                            ? Color.accentColor
+                                            : day.isHiatus ? .secondary : .primary
                             )
                             .frame(width: 32, height: 32)
                             .background {
-                                if day == .today {
+                                if !day.isHiatus && day == .today {
                                     Circle()
                                         .fill(Color.accentColor)
-                                } else if hasWallpaper && viewModel.selectedDay == day {
+                                } else if hasWallpaper && isSelected {
                                     Circle()
                                         .fill(Color.black.opacity(0.3))
                                 }
@@ -267,7 +281,7 @@ struct ContentView: View {
                         Circle()
                             .fill(hasUnread ? Color.accentColor : .clear)
                             .frame(width: 5, height: 5)
-                        if dayForPageIndex(pageIndex) == day {
+                        if isSelected {
                             Rectangle()
                                 .fill(Color.accentColor)
                                 .frame(height: 2)
@@ -655,6 +669,12 @@ struct ContentView: View {
             } label: {
                 Label("並び替え", systemImage: "arrow.up.arrow.down")
             }
+            Button {
+                viewModel.toggleHiatus(entry)
+            } label: {
+                Label(entry.isOnHiatus ? "連載に戻す" : "休載中にする",
+                      systemImage: entry.isOnHiatus ? "arrow.uturn.left" : "moon.zzz")
+            }
             Button(role: .destructive) {
                 viewModel.queueDelete(entry)
             } label: {
@@ -738,6 +758,12 @@ struct ContentView: View {
                 }
             } label: {
                 Label("並び替え", systemImage: "arrow.up.arrow.down")
+            }
+            Button {
+                if let viewModel { viewModel.toggleHiatus(entry) }
+            } label: {
+                Label(entry.isOnHiatus ? "連載に戻す" : "休載中にする",
+                      systemImage: entry.isOnHiatus ? "arrow.uturn.left" : "moon.zzz")
             }
             Button(role: .destructive) {
                 if let viewModel { viewModel.queueDelete(entry) }
