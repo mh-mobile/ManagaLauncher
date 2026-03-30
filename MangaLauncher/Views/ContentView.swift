@@ -70,8 +70,7 @@ struct ContentView: View {
 
                         VStack(spacing: 0) {
                             dayTabBar(viewModel: viewModel)
-                            let currentDay = dayForPageIndex(pageIndex)
-                            let publishers = viewModel.publishers(for: currentDay)
+                            let publishers = viewModel.publishers(for: viewModel.selectedDay)
                             if !publishers.isEmpty {
                                 publisherFilter(publishers: publishers)
                             }
