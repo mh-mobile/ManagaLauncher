@@ -1,7 +1,7 @@
 import SwiftUI
 import PhotosUI
 
-struct WallpaperPickerView: View {
+public struct WallpaperPickerView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var preview: WallpaperPreviewSnapshot
     @Binding var previewActive: Bool
@@ -19,7 +19,12 @@ struct WallpaperPickerView: View {
         ("green", .green), ("teal", .teal), ("gray", .gray), ("black", .black),
     ]
 
-    var body: some View {
+    public init(preview: Binding<WallpaperPreviewSnapshot>, previewActive: Binding<Bool>) {
+        self._preview = preview
+        self._previewActive = previewActive
+    }
+
+    public var body: some View {
         NavigationStack {
             List {
                 noneSection
@@ -50,7 +55,6 @@ struct WallpaperPickerView: View {
                 wallpaperType = initialSnapshot.wallpaperType
                 selectedColor = initialSnapshot.colorName
                 customColor = Color(hex: initialSnapshot.customColorHex)
-                // preview全フィールドを初期化（previewActiveはfalseのまま）
                 preview.wallpaperType = initialSnapshot.wallpaperType
                 preview.colorName = initialSnapshot.colorName
                 preview.customColorHex = initialSnapshot.customColorHex
@@ -194,28 +198,23 @@ struct WallpaperPickerView: View {
     // MARK: - Crop
 
     #if canImport(UIKit)
-    /// 新規写真選択後のクロップ
     private func presentNewPhotoCrop(originalJpeg: Data) {
         WallpaperCropPresenter.present(
             imageData: originalJpeg,
             initialScale: 1.0,
             initialOffset: .zero
         ) { croppedData in
-            // Done: @Binding経由で保存（UIKit後も有効）
-            preview.pendingOriginalData = originalJpeg  // クロージャがキャプチャした値
+            preview.pendingOriginalData = originalJpeg
             preview.imageData = croppedData
             wallpaperType = .image
             apply()
         } onCancel: {
-            // Cancel: preview.pendingOriginalDataは触らない → 前の値のまま
             wallpaperType = preview.wallpaperType
             selectedColor = preview.colorName
         }
     }
 
-    /// 位置を調整
     private func presentPositionAdjust() {
-        // 元画像: pending(@Binding) → ファイル → クロップ済みの順
         guard let data = preview.pendingOriginalData
                 ?? WallpaperManager.loadOriginalImage()
                 ?? preview.imageData else { return }
@@ -242,36 +241,5 @@ struct WallpaperPickerView: View {
         preview.colorName = selectedColor
         preview.customColorHex = customColor.toHex()
         previewActive = true
-    }
-}
-
-// MARK: - Color ↔ Hex
-
-extension Color {
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet(charactersIn: "#"))
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let r = Double((int >> 16) & 0xFF) / 255.0
-        let g = Double((int >> 8) & 0xFF) / 255.0
-        let b = Double(int & 0xFF) / 255.0
-        self.init(red: r, green: g, blue: b)
-    }
-
-    func toHex() -> String {
-        #if canImport(UIKit)
-        guard let components = UIColor(self).cgColor.components, components.count >= 3 else {
-            return "007AFF"
-        }
-        #elseif canImport(AppKit)
-        guard let converted = NSColor(self).usingColorSpace(.sRGB),
-              let components = converted.cgColor.components, components.count >= 3 else {
-            return "007AFF"
-        }
-        #endif
-        let r = Int(components[0] * 255)
-        let g = Int(components[1] * 255)
-        let b = Int(components[2] * 255)
-        return String(format: "%02X%02X%02X", r, g, b)
     }
 }

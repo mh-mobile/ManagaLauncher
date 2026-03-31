@@ -8,7 +8,7 @@ xcuserdata/
 # Swift Package Manager
 .build/
 .swiftpm/
-Packages/
+!Packages/WallpaperKit/
 
 # CocoaPods
 Pods/

@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import WallpaperKit
 
 enum DisplayMode: String {
     case list, grid
