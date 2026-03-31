@@ -1,5 +1,6 @@
 import AppIntents
 import SwiftData
+import PlatformKit
 
 enum DayOfWeekAppEnum: String, AppEnum {
     case sunday, monday, tuesday, wednesday, thursday, friday, saturday

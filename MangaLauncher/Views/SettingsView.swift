@@ -1,5 +1,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import NotificationKit
+import CloudSyncKit
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss

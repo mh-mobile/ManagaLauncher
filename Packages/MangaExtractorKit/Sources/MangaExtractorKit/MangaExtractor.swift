@@ -2,26 +2,33 @@ import Foundation
 import FoundationModels
 
 @Generable
-struct ExtractedMangaInfo {
+public struct ExtractedMangaInfo {
     @Guide(description: "メインの固有名詞。サービス名とは異なるもの。")
-    var title: String
+    public var title: String
 
     @Guide(description: "URL")
-    var url: String
+    public var url: String
 
     @Guide(description: "サービス名やプラットフォーム名")
-    var publisher: String
+    public var publisher: String
 }
 
-enum MangaExtractor {
-    struct ExtractionResult {
-        var title: String
-        var url: String
-        var publisher: String
-        var method: String
+public enum MangaExtractor {
+    public struct ExtractionResult {
+        public var title: String
+        public var url: String
+        public var publisher: String
+        public var method: String
+
+        public init(title: String, url: String, publisher: String, method: String) {
+            self.title = title
+            self.url = url
+            self.publisher = publisher
+            self.method = method
+        }
     }
 
-    static func extract(sharedText: String, sharedURL: String) async -> ExtractionResult {
+    public static func extract(sharedText: String, sharedURL: String) async -> ExtractionResult {
         let model = SystemLanguageModel.default
 
         guard model.isAvailable else {

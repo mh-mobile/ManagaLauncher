@@ -3,15 +3,15 @@
 import PackageDescription
 
 let package = Package(
-    name: "WallpaperKit",
+    name: "OGPKit",
     platforms: [.iOS(.v17)],
     products: [
-        .library(name: "WallpaperKit", targets: ["WallpaperKit"]),
+        .library(name: "OGPKit", targets: ["OGPKit"]),
     ],
     dependencies: [
         .package(path: "../PlatformKit"),
     ],
     targets: [
-        .target(name: "WallpaperKit", dependencies: ["PlatformKit"]),
+        .target(name: "OGPKit", dependencies: ["PlatformKit"]),
     ]
 )

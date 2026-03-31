@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 // MARK: - Cross-platform Image from Data
 
 extension Data {
-    func toSwiftUIImage() -> Image? {
+    public func toSwiftUIImage() -> Image? {
         #if canImport(UIKit)
         guard let uiImage = UIImage(data: self) else { return nil }
         return Image(uiImage: uiImage)
@@ -18,7 +18,7 @@ extension Data {
 
 // MARK: - Cross-platform Image Resize
 
-func downsizedJPEGData(_ data: Data, maxDimension: CGFloat, compressionQuality: CGFloat = 0.7) -> Data? {
+public func downsizedJPEGData(_ data: Data, maxDimension: CGFloat, compressionQuality: CGFloat = 0.7) -> Data? {
     #if canImport(UIKit)
     guard let uiImage = UIImage(data: data) else { return nil }
     let width = uiImage.size.width
@@ -66,60 +66,4 @@ func downsizedJPEGData(_ data: Data, maxDimension: CGFloat, compressionQuality: 
 
     return mutableData as Data
     #endif
-}
-
-// MARK: - PasteButton Image Support
-
-#if canImport(UIKit)
-struct PasteImage: Transferable {
-    let data: Data
-
-    static var transferRepresentation: some TransferRepresentation {
-        DataRepresentation(importedContentType: .png) { data in
-            PasteImage(data: data)
-        }
-        DataRepresentation(importedContentType: .jpeg) { data in
-            PasteImage(data: data)
-        }
-        DataRepresentation(importedContentType: .tiff) { data in
-            PasteImage(data: data)
-        }
-    }
-}
-#endif
-
-// MARK: - Live Blur Background (UIKit)
-
-#if canImport(UIKit)
-struct VisualEffectBlur: UIViewRepresentable {
-    var style: UIBlurEffect.Style
-
-    func makeUIView(context: Context) -> UIVisualEffectView {
-        UIVisualEffectView(effect: UIBlurEffect(style: style))
-    }
-
-    func updateUIView(_ uiView: UIVisualEffectView, context: Context) {
-        uiView.effect = UIBlurEffect(style: style)
-    }
-}
-#endif
-
-// MARK: - Cross-platform Colors
-
-extension Color {
-    static var platformBackground: Color {
-        #if canImport(UIKit)
-        Color(.systemBackground)
-        #else
-        Color(nsColor: .windowBackgroundColor)
-        #endif
-    }
-
-    static var platformGray5: Color {
-        #if canImport(UIKit)
-        Color(.systemGray5)
-        #else
-        Color(nsColor: .separatorColor)
-        #endif
-    }
 }

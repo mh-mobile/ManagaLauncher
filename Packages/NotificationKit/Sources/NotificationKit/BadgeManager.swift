@@ -1,15 +1,15 @@
 import Foundation
 import UserNotifications
 
-enum BadgeManager {
+public enum BadgeManager {
     private static let enabledKey = "badgeEnabled"
 
-    static var isEnabled: Bool {
+    public static var isEnabled: Bool {
         get { UserDefaults.standard.bool(forKey: enabledKey) }
         set { UserDefaults.standard.set(newValue, forKey: enabledKey) }
     }
 
-    static func requestPermissionAndEnable() async -> Bool {
+    public static func requestPermissionAndEnable() async -> Bool {
         let center = UNUserNotificationCenter.current()
         do {
             let granted = try await center.requestAuthorization(options: [.badge])
@@ -22,7 +22,7 @@ enum BadgeManager {
         }
     }
 
-    static func updateBadge(unreadCount: Int) {
+    public static func updateBadge(unreadCount: Int) {
         guard isEnabled else {
             clearBadge()
             return
@@ -31,7 +31,7 @@ enum BadgeManager {
         center.setBadgeCount(unreadCount)
     }
 
-    static func clearBadge() {
+    public static func clearBadge() {
         let center = UNUserNotificationCenter.current()
         center.setBadgeCount(0)
     }

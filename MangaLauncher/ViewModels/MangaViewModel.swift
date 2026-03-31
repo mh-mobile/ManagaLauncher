@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import SwiftData
+import NotificationKit
 #if canImport(WidgetKit)
 import WidgetKit
 #endif
@@ -171,7 +172,7 @@ final class MangaViewModel {
         WidgetCenter.shared.reloadAllTimelines()
         #endif
         BadgeManager.updateBadge(unreadCount: 0)
-        NotificationManager.scheduleNotifications(entryCounts: [:])
+        NotificationManager.scheduleNotifications(entryCounts: [:], dayDisplayNames: [:])
     }
 
     func totalEntryCount() -> Int {
@@ -253,11 +254,13 @@ final class MangaViewModel {
     }
 
     func rescheduleNotifications() {
-        var counts: [DayOfWeek: Int] = [:]
+        var counts: [Int: Int] = [:]
+        var displayNames: [Int: String] = [:]
         for day in DayOfWeek.orderedDays {
-            counts[day] = fetchEntries(for: day).count
+            counts[day.rawValue] = fetchEntries(for: day).count
+            displayNames[day.rawValue] = day.displayName
         }
-        NotificationManager.scheduleNotifications(entryCounts: counts)
+        NotificationManager.scheduleNotifications(entryCounts: counts, dayDisplayNames: displayNames)
     }
 
     func notifyChange() {

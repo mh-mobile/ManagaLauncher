@@ -1,13 +1,20 @@
 import Foundation
+import PlatformKit
 
-struct OGPResult {
-    var imageData: Data?
-    var siteName: String?
-    var title: String?
+public struct OGPResult {
+    public var imageData: Data?
+    public var siteName: String?
+    public var title: String?
+
+    public init(imageData: Data? = nil, siteName: String? = nil, title: String? = nil) {
+        self.imageData = imageData
+        self.siteName = siteName
+        self.title = title
+    }
 }
 
-enum URLResolver {
-    static func resolveAll(_ urlString: String) async -> String {
+public enum URLResolver {
+    public static func resolveAll(_ urlString: String) async -> String {
         guard let url = URL(string: urlString) else { return urlString }
 
         let shortDomains = ["t.co", "bit.ly", "tinyurl.com", "ow.ly", "is.gd"]
@@ -29,8 +36,8 @@ enum URLResolver {
     }
 }
 
-enum OGPFetcher {
-    static func fetch(from urlString: String) async -> OGPResult {
+public enum OGPFetcher {
+    public static func fetch(from urlString: String) async -> OGPResult {
         guard let url = URL(string: urlString) else { return OGPResult() }
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
