@@ -1,7 +1,7 @@
 #if canImport(UIKit)
 import SwiftUI
 
-struct WallpaperCropView: View {
+public struct WallpaperCropView: View {
     let imageData: Data
     var initialScale: CGFloat = 1.0
     var initialOffset: CGSize = .zero
@@ -14,7 +14,15 @@ struct WallpaperCropView: View {
     @State private var lastOffset: CGSize = .zero
     @State private var showHint = true
 
-    var body: some View {
+    public init(imageData: Data, initialScale: CGFloat = 1.0, initialOffset: CGSize = .zero, onDone: @escaping (Data, CGFloat, CGSize) -> Void, onCancel: @escaping () -> Void) {
+        self.imageData = imageData
+        self.initialScale = initialScale
+        self.initialOffset = initialOffset
+        self.onDone = onDone
+        self.onCancel = onCancel
+    }
+
+    public var body: some View {
         GeometryReader { geo in
             let screenSize = geo.size
             ZStack {
@@ -140,11 +148,9 @@ struct WallpaperCropView: View {
         let displayWidth = image.size.width * fillScale * scale
         let displayHeight = image.size.height * fillScale * scale
 
-        // Image origin in screen coordinates
         let imageOriginX = (screenSize.width - displayWidth) / 2 + offset.width
         let imageOriginY = (screenSize.height - displayHeight) / 2 + offset.height
 
-        // Visible rect in image pixel coordinates
         let pixelScale = image.size.width / (displayWidth)
         let cropRect = CGRect(
             x: -imageOriginX * pixelScale,
@@ -160,8 +166,8 @@ struct WallpaperCropView: View {
     }
 }
 
-enum WallpaperCropPresenter {
-    static func present(imageData: Data, initialScale: CGFloat = 1.0, initialOffset: CGSize = .zero, onDone: @escaping (Data) -> Void, onCancel: @escaping () -> Void) {
+public enum WallpaperCropPresenter {
+    public static func present(imageData: Data, initialScale: CGFloat = 1.0, initialOffset: CGSize = .zero, onDone: @escaping (Data) -> Void, onCancel: @escaping () -> Void) {
         guard let windowScene = UIApplication.shared.connectedScenes
                 .compactMap({ $0 as? UIWindowScene }).first,
               let rootVC = windowScene.windows.first(where: { $0.isKeyWindow })?.rootViewController
