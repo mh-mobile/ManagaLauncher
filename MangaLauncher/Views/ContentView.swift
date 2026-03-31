@@ -35,18 +35,18 @@ struct ContentView: View {
     @State private var listEditMode: EditMode = .inactive
     #endif
     @State private var selectedPublisher: String?
-    // Paging: 0=hiatus(fake), 1=mon, 2=tue, 3=wed, 4=thu, 5=fri, 6=sat, 7=sun, 8=hiatus, 9=mon(fake) → 10 pages
+    // Paging: 0=hiatus(fake), 1=completed, 2=mon, 3=tue, 4=wed, 5=thu, 6=fri, 7=sat, 8=sun, 9=hiatus, 10=completed(fake) → 11 pages
     @State private var pageIndex: Int = 0
 
     @Namespace private var tabUnderline
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     private var hasWallpaper: Bool { WallpaperManager.wallpaperType != .none }
-    private let orderedDays = DayOfWeek.orderedCases // [mon, tue, wed, thu, fri, sat, sun, hiatus]
+    private let orderedDays = DayOfWeek.orderedCases // [completed, mon, tue, wed, thu, fri, sat, sun, hiatus]
 
-    // orderedDays: [mon=0, tue=1, wed=2, thu=3, fri=4, sat=5, sun=6, hiatus=7]
-    // pageIndex:   [fake=0, mon=1, tue=2, wed=3, thu=4, fri=5, sat=6, sun=7, hiatus=8, fake=9]
+    // orderedDays: [completed=0, mon=1, tue=2, wed=3, thu=4, fri=5, sat=6, sun=7, hiatus=8]
+    // pageIndex:   [hiatus(fake)=0, completed=1, mon=2, tue=3, wed=4, thu=5, fri=6, sat=7, sun=8, hiatus=9, completed(fake)=10]
     private func dayForPageIndex(_ index: Int) -> DayOfWeek {
-        let clamped = ((index - 1) % 8 + 8) % 8  // 0..7
+        let clamped = ((index - 1) % 9 + 9) % 9  // 0..8
         return orderedDays[clamped]
     }
 
@@ -133,7 +133,7 @@ struct ContentView: View {
                                 }
                             }
                         }
-                        .disabled(unreadCount == 0 || isEditMode || dayForPageIndex(pageIndex).isHiatus)
+                        .disabled(unreadCount == 0 || isEditMode || dayForPageIndex(pageIndex).isHiatus || dayForPageIndex(pageIndex).isCompleted)
                     }
                     ToolbarItem(placement: .automatic) {
                         Button {
@@ -155,7 +155,7 @@ struct ContentView: View {
                         } label: {
                             Image(systemName: "plus")
                         }
-                        .disabled(isGridEditMode || listEditMode == .active || dayForPageIndex(pageIndex).isHiatus)
+                        .disabled(isGridEditMode || listEditMode == .active || dayForPageIndex(pageIndex).isHiatus || dayForPageIndex(pageIndex).isCompleted)
                     }
                     ToolbarItem(placement: .automatic) {
                         Button {
@@ -244,22 +244,22 @@ struct ContentView: View {
                     }
                 } label: {
                     let isSelected = currentDay == day
-                    let hasUnread = !day.isHiatus && viewModel.unreadCount(for: day) > 0
+                    let hasUnread = !day.isHiatus && !day.isCompleted && viewModel.unreadCount(for: day) > 0
                     VStack(spacing: 4) {
                         Text(day.shortName)
                             .font(.headline)
                             .foregroundStyle(
-                                !day.isHiatus && day == .today
+                                !day.isHiatus && !day.isCompleted && day == .today
                                     ? .white
                                     : (hasWallpaper && isSelected)
                                         ? .white
                                         : isSelected
                                             ? Color.accentColor
-                                            : day.isHiatus ? .secondary : .primary
+                                            : (day.isHiatus || day.isCompleted) ? .secondary : .primary
                             )
                             .frame(width: 32, height: 32)
                             .background {
-                                if !day.isHiatus && day == .today {
+                                if !day.isHiatus && !day.isCompleted && day == .today {
                                     Circle()
                                         .fill(Color.accentColor)
                                 } else if hasWallpaper && isSelected {
@@ -327,9 +327,9 @@ struct ContentView: View {
     @ViewBuilder
     private func dayPager(viewModel: MangaViewModel) -> some View {
         #if os(iOS) || os(visionOS)
-        // 10 pages: [sun(fake), mon, tue, wed, thu, fri, sat, sun, hiatus, mon(fake)]
+        // 11 pages: [hiatus(fake), completed, mon, tue, wed, thu, fri, sat, sun, hiatus, completed(fake)]
         TabView(selection: $pageIndex) {
-            ForEach(0..<10, id: \.self) { index in
+            ForEach(0..<11, id: \.self) { index in
                 dayPage(day: dayForPageIndex(index), viewModel: viewModel)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .tag(index)
@@ -347,14 +347,14 @@ struct ContentView: View {
 
             // Loop: if landed on fake page, jump to real page
             if newValue == 0 {
-                // fake hiatus → real hiatus (index 8)
+                // fake hiatus → real hiatus (index 9)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     withAnimation(.none) {
-                        pageIndex = 8
+                        pageIndex = 9
                     }
                 }
-            } else if newValue == 9 {
-                // fake monday → real monday (index 1)
+            } else if newValue == 10 {
+                // fake completed → real completed (index 1)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     withAnimation(.none) {
                         pageIndex = 1
@@ -384,7 +384,13 @@ struct ContentView: View {
                 ScrollView {
                     if allEntries.isEmpty {
                         emptyStateView {
-                            if day.isHiatus {
+                            if day.isCompleted {
+                                ContentUnavailableView {
+                                    Label("完結したマンガはありません", systemImage: "checkmark.seal")
+                                } description: {
+                                    Text("コンテキストメニューや編集画面から\n「完結にする」でここに移動できます")
+                                }
+                            } else if day.isHiatus {
                                 ContentUnavailableView {
                                     Label("休載中のマンガはありません", systemImage: "moon.zzz")
                                 } description: {
@@ -670,6 +676,12 @@ struct ContentView: View {
                 Label(entry.isOnHiatus ? "連載に戻す" : "休載中にする",
                       systemImage: entry.isOnHiatus ? "arrow.uturn.left" : "moon.zzz")
             }
+            Button {
+                viewModel.toggleCompleted(entry)
+            } label: {
+                Label(entry.isCompleted ? "連載に戻す" : "完結にする",
+                      systemImage: entry.isCompleted ? "arrow.uturn.left" : "checkmark.seal")
+            }
             Button(role: .destructive) {
                 viewModel.queueDelete(entry)
             } label: {
@@ -761,6 +773,12 @@ struct ContentView: View {
             } label: {
                 Label(entry.isOnHiatus ? "連載に戻す" : "休載中にする",
                       systemImage: entry.isOnHiatus ? "arrow.uturn.left" : "moon.zzz")
+            }
+            Button {
+                if let viewModel { viewModel.toggleCompleted(entry) }
+            } label: {
+                Label(entry.isCompleted ? "連載に戻す" : "完結にする",
+                      systemImage: entry.isCompleted ? "arrow.uturn.left" : "checkmark.seal")
             }
             Button(role: .destructive) {
                 if let viewModel { viewModel.queueDelete(entry) }

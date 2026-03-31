@@ -20,8 +20,9 @@ struct BackupData: Codable {
         let updateIntervalWeeks: Int
         let nextExpectedUpdate: Date?
         let isOnHiatus: Bool?
+        let isCompleted: Bool?
 
-        init(id: UUID, name: String, url: String, dayOfWeekRawValue: Int, sortOrder: Int, iconColor: String, publisher: String, imageData: Data?, lastReadDate: Date? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, isOnHiatus: Bool = false) {
+        init(id: UUID, name: String, url: String, dayOfWeekRawValue: Int, sortOrder: Int, iconColor: String, publisher: String, imageData: Data?, lastReadDate: Date? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, isOnHiatus: Bool = false, isCompleted: Bool = false) {
             self.id = id
             self.name = name
             self.url = url
@@ -34,6 +35,7 @@ struct BackupData: Codable {
             self.updateIntervalWeeks = updateIntervalWeeks
             self.nextExpectedUpdate = nextExpectedUpdate
             self.isOnHiatus = isOnHiatus
+            self.isCompleted = isCompleted
         }
 
         init(from decoder: Decoder) throws {
@@ -50,12 +52,13 @@ struct BackupData: Codable {
             updateIntervalWeeks = try container.decodeIfPresent(Int.self, forKey: .updateIntervalWeeks) ?? 1
             nextExpectedUpdate = try container.decodeIfPresent(Date.self, forKey: .nextExpectedUpdate)
             isOnHiatus = try container.decodeIfPresent(Bool.self, forKey: .isOnHiatus)
+            isCompleted = try container.decodeIfPresent(Bool.self, forKey: .isCompleted)
         }
     }
 
     static func from(_ entries: [MangaEntry]) -> BackupData {
         BackupData(
-            version: 3,
+            version: 4,
             exportDate: Date(),
             entries: entries.map {
                 BackupEntry(
@@ -70,7 +73,8 @@ struct BackupData: Codable {
                     lastReadDate: $0.lastReadDate,
                     updateIntervalWeeks: $0.updateIntervalWeeks,
                     nextExpectedUpdate: $0.nextExpectedUpdate,
-                    isOnHiatus: $0.isOnHiatus
+                    isOnHiatus: $0.isOnHiatus,
+                    isCompleted: $0.isCompleted
                 )
             }
         )

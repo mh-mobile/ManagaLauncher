@@ -2,11 +2,12 @@ import Foundation
 import SwiftData
 
 enum DayOfWeek: Int, Codable, CaseIterable, Identifiable {
-    case sunday = 0, monday, tuesday, wednesday, thursday, friday, saturday, hiatus
+    case sunday = 0, monday, tuesday, wednesday, thursday, friday, saturday, hiatus, completed
 
     var id: Int { rawValue }
 
     var isHiatus: Bool { self == .hiatus }
+    var isCompleted: Bool { self == .completed }
 
     var shortName: String {
         switch self {
@@ -18,6 +19,7 @@ enum DayOfWeek: Int, Codable, CaseIterable, Identifiable {
         case .friday: "金"
         case .saturday: "土"
         case .hiatus: "休"
+        case .completed: "完"
         }
     }
 
@@ -31,6 +33,7 @@ enum DayOfWeek: Int, Codable, CaseIterable, Identifiable {
         case .friday: "金曜日"
         case .saturday: "土曜日"
         case .hiatus: "休載中"
+        case .completed: "完結"
         }
     }
 
@@ -42,9 +45,9 @@ enum DayOfWeek: Int, Codable, CaseIterable, Identifiable {
         DayOfWeek(rawValue: (rawValue + 6) % 7)!
     }
 
-    /// Monday-start order for display (hiatus at the end)
+    /// Display order: completed first, then weekdays, hiatus last
     static var orderedCases: [DayOfWeek] {
-        [.monday, .tuesday, .wednesday, .thursday, .friday, .saturday, .sunday, .hiatus]
+        [.completed, .monday, .tuesday, .wednesday, .thursday, .friday, .saturday, .sunday, .hiatus]
     }
 
     /// Days only (excludes hiatus)
@@ -73,6 +76,7 @@ final class MangaEntry {
     var updateIntervalWeeks: Int = 1
     var nextExpectedUpdate: Date?
     var isOnHiatus: Bool = false
+    var isCompleted: Bool = false
 
     @Transient
     var dayOfWeek: DayOfWeek {
@@ -82,7 +86,7 @@ final class MangaEntry {
 
     @Transient
     var isRead: Bool {
-        if isOnHiatus { return true }
+        if isOnHiatus || isCompleted { return true }
         guard let lastReadDate else { return false }
         // If next expected update is in the future, stay read
         if let nextUpdate = nextExpectedUpdate, nextUpdate > Date.now {

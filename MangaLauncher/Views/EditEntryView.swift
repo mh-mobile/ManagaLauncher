@@ -28,6 +28,7 @@ struct EditEntryView: View {
     @State private var showingCropView = false
     @State private var didLoadEntry = false
     @State private var isOnHiatus = false
+    @State private var isCompleted = false
 
     private let colorOptions: [(name: String, color: Color)] = [
         ("red", .red),
@@ -242,6 +243,15 @@ struct EditEntryView: View {
 
                 Section {
                     Toggle("休載中", isOn: $isOnHiatus)
+                        .onChange(of: isOnHiatus) { _, newValue in
+                            if newValue { isCompleted = false }
+                        }
+                    if entry != nil {
+                        Toggle("完結", isOn: $isCompleted)
+                            .onChange(of: isCompleted) { _, newValue in
+                                if newValue { isOnHiatus = false }
+                            }
+                    }
                 }
 
                 Section("更新頻度") {
@@ -339,6 +349,7 @@ struct EditEntryView: View {
                         nextUpdateDate = candidates.first ?? nextOccurrence(of: entry.dayOfWeek)
                     }
                     isOnHiatus = entry.isOnHiatus
+                    isCompleted = entry.isCompleted
                     didLoadEntry = true
                 }
             }
@@ -382,6 +393,7 @@ struct EditEntryView: View {
         if let entry {
             viewModel.updateEntry(entry, name: name, url: url, dayOfWeek: selectedDay, iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval, nextExpectedUpdate: interval >= 2 ? nextUpdateDate : nil)
             entry.isOnHiatus = isOnHiatus
+            entry.isCompleted = isCompleted
         } else {
             viewModel.addEntry(name: name, url: url, days: [selectedDay], iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval, nextExpectedUpdate: interval >= 2 ? nextUpdateDate : nil)
         }
