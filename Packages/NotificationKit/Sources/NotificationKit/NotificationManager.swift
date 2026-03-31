@@ -1,18 +1,18 @@
 import Foundation
 import UserNotifications
 
-enum NotificationManager {
+public enum NotificationManager {
     private static let enabledKey = "notificationEnabled"
     private static let hourKey = "notificationHour"
     private static let minuteKey = "notificationMinute"
     private static let identifierPrefix = "manga_reminder_"
 
-    static var isEnabled: Bool {
+    public static var isEnabled: Bool {
         get { UserDefaults.standard.bool(forKey: enabledKey) }
         set { UserDefaults.standard.set(newValue, forKey: enabledKey) }
     }
 
-    static var notificationHour: Int {
+    public static var notificationHour: Int {
         get {
             let val = UserDefaults.standard.object(forKey: hourKey) as? Int
             return val ?? 9
@@ -20,7 +20,7 @@ enum NotificationManager {
         set { UserDefaults.standard.set(newValue, forKey: hourKey) }
     }
 
-    static var notificationMinute: Int {
+    public static var notificationMinute: Int {
         get {
             let val = UserDefaults.standard.object(forKey: minuteKey) as? Int
             return val ?? 0
@@ -28,20 +28,19 @@ enum NotificationManager {
         set { UserDefaults.standard.set(newValue, forKey: minuteKey) }
     }
 
-    static var notificationTime: DateComponents {
+    public static var notificationTime: DateComponents {
         var components = DateComponents()
         components.hour = notificationHour
         components.minute = notificationMinute
         return components
     }
 
-    static func requestPermissionAndEnable() async -> Bool {
+    public static func requestPermissionAndEnable() async -> Bool {
         let center = UNUserNotificationCenter.current()
         do {
             let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
             if granted {
                 isEnabled = true
-                // Also enable badge since we now have permission
                 BadgeManager.isEnabled = true
             }
             return granted
@@ -50,31 +49,34 @@ enum NotificationManager {
         }
     }
 
-    static func scheduleNotifications(entryCounts: [DayOfWeek: Int]) {
+    /// Schedule weekly notifications for days that have entries.
+    /// - Parameter entryCounts: Dictionary mapping day rawValue (0=Sunday..6=Saturday) to entry count.
+    /// - Parameter dayDisplayNames: Dictionary mapping day rawValue to display name (e.g. "月曜日").
+    public static func scheduleNotifications(entryCounts: [Int: Int], dayDisplayNames: [Int: String]) {
         let center = UNUserNotificationCenter.current()
 
-        // Remove existing reminders
-        let identifiers = DayOfWeek.allCases.map { "\(identifierPrefix)\($0.rawValue)" }
+        let allDayRawValues = Array(0...7)
+        let identifiers = allDayRawValues.map { "\(identifierPrefix)\($0)" }
         center.removePendingNotificationRequests(withIdentifiers: identifiers)
 
         guard isEnabled else { return }
 
-        for day in DayOfWeek.allCases {
-            let count = entryCounts[day] ?? 0
+        for (dayRawValue, count) in entryCounts {
             guard count > 0 else { continue }
 
             let content = UNMutableNotificationContent()
             content.title = "マンガ曜日"
-            content.body = "\(day.displayName)のマンガをチェックしましょう"
+            let displayName = dayDisplayNames[dayRawValue] ?? ""
+            content.body = "\(displayName)のマンガをチェックしましょう"
             content.sound = .default
 
             var dateComponents = notificationTime
             // Calendar.weekday: 1=Sunday, 2=Monday, ...
-            dateComponents.weekday = day.rawValue + 1
+            dateComponents.weekday = dayRawValue + 1
 
             let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
             let request = UNNotificationRequest(
-                identifier: "\(identifierPrefix)\(day.rawValue)",
+                identifier: "\(identifierPrefix)\(dayRawValue)",
                 content: content,
                 trigger: trigger
             )
@@ -82,9 +84,10 @@ enum NotificationManager {
         }
     }
 
-    static func cancelAllNotifications() {
+    public static func cancelAllNotifications() {
         let center = UNUserNotificationCenter.current()
-        let identifiers = DayOfWeek.allCases.map { "\(identifierPrefix)\($0.rawValue)" }
+        let allDayRawValues = Array(0...7)
+        let identifiers = allDayRawValues.map { "\(identifierPrefix)\($0)" }
         center.removePendingNotificationRequests(withIdentifiers: identifiers)
     }
 }

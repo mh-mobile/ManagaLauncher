@@ -1,10 +1,11 @@
 import SwiftUI
 import SwiftData
-
 import UserNotifications
+import NotificationKit
+import CloudSyncKit
 
 extension Notification.Name {
-    static let mangaDataDidChange = Notification.Name("mangaDataDidChange")
+    static let mangaDataDidChange = CloudSyncMonitor.dataDidChangeNotification
     static let switchToDay = Notification.Name("switchToDay")
 }
 

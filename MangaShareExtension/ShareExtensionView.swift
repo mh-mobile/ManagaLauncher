@@ -1,6 +1,9 @@
 import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
+import PlatformKit
+import OGPKit
+import MangaExtractorKit
 
 struct ShareExtensionView: View {
     let extensionContext: NSExtensionContext?

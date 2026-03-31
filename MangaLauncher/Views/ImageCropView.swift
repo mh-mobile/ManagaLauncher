@@ -1,6 +1,7 @@
 #if canImport(UIKit)
 import SwiftUI
 import Mantis
+import PlatformKit
 
 struct ImageCropView: UIViewControllerRepresentable {
     let imageData: Data

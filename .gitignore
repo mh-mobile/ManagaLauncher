@@ -9,6 +9,11 @@ xcuserdata/
 .build/
 .swiftpm/
 !Packages/WallpaperKit/
+!Packages/PlatformKit/
+!Packages/OGPKit/
+!Packages/MangaExtractorKit/
+!Packages/NotificationKit/
+!Packages/CloudSyncKit/
 
 # CocoaPods
 Pods/

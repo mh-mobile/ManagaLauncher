@@ -2,13 +2,13 @@ import Foundation
 import CoreData
 import Observation
 
-enum CloudSyncStatus: Equatable {
+public enum CloudSyncStatus: Equatable {
     case idle
     case syncing
     case failed(String)
     case notAvailable
 
-    static func == (lhs: CloudSyncStatus, rhs: CloudSyncStatus) -> Bool {
+    public static func == (lhs: CloudSyncStatus, rhs: CloudSyncStatus) -> Bool {
         switch (lhs, rhs) {
         case (.idle, .idle), (.syncing, .syncing), (.notAvailable, .notAvailable):
             return true
@@ -21,11 +21,14 @@ enum CloudSyncStatus: Equatable {
 }
 
 @Observable
-final class CloudSyncMonitor {
-    private(set) var syncStatus: CloudSyncStatus = .idle
-    private(set) var lastSyncDate: Date?
+public final class CloudSyncMonitor {
+    public private(set) var syncStatus: CloudSyncStatus = .idle
+    public private(set) var lastSyncDate: Date?
 
-    init() {
+    /// Notification name posted when CloudKit import completes.
+    public static let dataDidChangeNotification = Notification.Name("mangaDataDidChange")
+
+    public init() {
         startMonitoring()
         checkAccountStatus()
     }
@@ -55,7 +58,7 @@ final class CloudSyncMonitor {
             // import(type=1)完了時にデータ変更を通知
             let eventType = (event.value(forKey: "type") as? Int) ?? 0
             if eventType == 1 {
-                NotificationCenter.default.post(name: .mangaDataDidChange, object: nil)
+                NotificationCenter.default.post(name: Self.dataDidChangeNotification, object: nil)
             }
         } else if let error {
             let eventType = (event.value(forKey: "type") as? Int).map { String($0) } ?? "?"
