@@ -53,6 +53,29 @@
 - FoundationModels（Apple Intelligence）
 - UserNotifications
 
+## モジュール構成
+
+機能ごとにローカルSPMパッケージに分離しています。
+
+| パッケージ | 概要 | 依存 |
+|---|---|---|
+| **PlatformKit** | 画像変換・リサイズ、VisualEffectBlur、Color拡張 | - |
+| **WallpaperKit** | 壁紙管理・選択UI・クロップ | PlatformKit |
+| **OGPKit** | OGPメタデータ取得・URL解決 | PlatformKit |
+| **MangaExtractorKit** | Foundation ModelsによるAI抽出 | - |
+| **NotificationKit** | 通知スケジュール・バッジ管理 | - |
+| **CloudSyncKit** | iCloud同期監視 | - |
+
+```
+MangaLauncher (メインアプリ)
+├── PlatformKit          ← 基盤（画像・UI共通）
+├── WallpaperKit         ← 壁紙機能（→PlatformKit）
+├── OGPKit               ← OGP取得（→PlatformKit）
+├── MangaExtractorKit    ← AI抽出
+├── NotificationKit      ← 通知・バッジ
+└── CloudSyncKit         ← iCloud同期
+```
+
 ## ビルド
 
 ```bash
