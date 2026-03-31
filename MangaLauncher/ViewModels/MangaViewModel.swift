@@ -22,15 +22,20 @@ final class MangaViewModel {
     func fetchEntries(for day: DayOfWeek) -> [MangaEntry] {
         let _ = refreshCounter
         let descriptor: FetchDescriptor<MangaEntry>
-        if day.isHiatus {
+        if day.isCompleted {
             descriptor = FetchDescriptor<MangaEntry>(
-                predicate: #Predicate { $0.isOnHiatus },
+                predicate: #Predicate { $0.isCompleted },
+                sortBy: [SortDescriptor(\.sortOrder)]
+            )
+        } else if day.isHiatus {
+            descriptor = FetchDescriptor<MangaEntry>(
+                predicate: #Predicate { $0.isOnHiatus && !$0.isCompleted },
                 sortBy: [SortDescriptor(\.sortOrder)]
             )
         } else {
             let dayRawValue = day.rawValue
             descriptor = FetchDescriptor<MangaEntry>(
-                predicate: #Predicate { $0.dayOfWeekRawValue == dayRawValue && !$0.isOnHiatus },
+                predicate: #Predicate { $0.dayOfWeekRawValue == dayRawValue && !$0.isOnHiatus && !$0.isCompleted },
                 sortBy: [SortDescriptor(\.sortOrder)]
             )
         }
@@ -45,6 +50,13 @@ final class MangaViewModel {
 
     func toggleHiatus(_ entry: MangaEntry) {
         entry.isOnHiatus.toggle()
+        if entry.isOnHiatus { entry.isCompleted = false }
+        save()
+    }
+
+    func toggleCompleted(_ entry: MangaEntry) {
+        entry.isCompleted.toggle()
+        if entry.isCompleted { entry.isOnHiatus = false }
         save()
     }
 
@@ -130,10 +142,15 @@ final class MangaViewModel {
     }
 
     func moveEntryToDay(_ entry: MangaEntry, to newDay: DayOfWeek, at targetEntry: MangaEntry? = nil) {
-        if newDay.isHiatus {
+        if newDay.isCompleted {
+            entry.isCompleted = true
+            entry.isOnHiatus = false
+        } else if newDay.isHiatus {
             entry.isOnHiatus = true
+            entry.isCompleted = false
         } else {
             entry.isOnHiatus = false
+            entry.isCompleted = false
             entry.dayOfWeek = newDay
             entry.resetNextUpdate()
         }
@@ -220,6 +237,7 @@ final class MangaViewModel {
             entry.lastReadDate = backupEntry.lastReadDate
             entry.nextExpectedUpdate = backupEntry.nextExpectedUpdate
             entry.isOnHiatus = backupEntry.isOnHiatus ?? false
+            entry.isCompleted = backupEntry.isCompleted ?? false
             modelContext.insert(entry)
             importedCount += 1
         }
