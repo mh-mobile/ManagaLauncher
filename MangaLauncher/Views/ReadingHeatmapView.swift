@@ -41,10 +41,10 @@ struct ReadingHeatmapView: View {
             HStack(spacing: 16) {
                 statCard(title: "連続", value: "\(viewModel.currentStreak())", unit: "日")
                 statCard(title: "最長", value: "\(viewModel.longestStreak())", unit: "日")
-                statCard(title: "累計", value: "\(viewModel.totalReadCount())", unit: "冊")
+                statCard(title: "累計", value: "\(viewModel.totalReadCount())", unit: "話")
             }
             HStack(spacing: 16) {
-                statCard(title: "今週", value: "\(viewModel.thisWeekReadCount())", unit: "冊")
+                statCard(title: "今週", value: "\(viewModel.thisWeekReadCount())", unit: "話")
                 statCard(title: "よく読む曜日", value: viewModel.mostActiveDay() ?? "-", unit: "")
             }
         }
