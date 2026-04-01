@@ -375,6 +375,32 @@ final class MangaViewModel {
         return (try? modelContext.fetchCount(descriptor)) ?? 0
     }
 
+    func thisWeekReadCount() -> Int {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let weekday = calendar.component(.weekday, from: today)
+        let daysFromMonday = (weekday + 5) % 7
+        let monday = calendar.date(byAdding: .day, value: -daysFromMonday, to: today)!
+        let descriptor = FetchDescriptor<ReadingActivity>(
+            predicate: #Predicate { $0.date >= monday }
+        )
+        return (try? modelContext.fetchCount(descriptor)) ?? 0
+    }
+
+    func mostActiveDay() -> String? {
+        let counts = fetchActivityCounts(days: 365)
+        guard !counts.isEmpty else { return nil }
+        let calendar = Calendar.current
+        let dayLabels = ["日", "月", "火", "水", "木", "金", "土"]
+        var weekdayCounts: [Int: Int] = [:]
+        for (date, count) in counts {
+            let weekday = calendar.component(.weekday, from: date) // 1=Sun
+            weekdayCounts[weekday, default: 0] += count
+        }
+        guard let best = weekdayCounts.max(by: { $0.value < $1.value }) else { return nil }
+        return dayLabels[best.key - 1]
+    }
+
     func rescheduleNotifications() {
         var counts: [Int: Int] = [:]
         var displayNames: [Int: String] = [:]

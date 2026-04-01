@@ -37,10 +37,16 @@ struct ReadingHeatmapView: View {
     // MARK: - Stats
 
     private var statsSection: some View {
-        HStack(spacing: 16) {
-            statCard(title: "連続", value: "\(viewModel.currentStreak())", unit: "日")
-            statCard(title: "最長", value: "\(viewModel.longestStreak())", unit: "日")
-            statCard(title: "累計", value: "\(viewModel.totalReadCount())", unit: "冊")
+        VStack(spacing: 12) {
+            HStack(spacing: 16) {
+                statCard(title: "連続", value: "\(viewModel.currentStreak())", unit: "日")
+                statCard(title: "最長", value: "\(viewModel.longestStreak())", unit: "日")
+                statCard(title: "累計", value: "\(viewModel.totalReadCount())", unit: "冊")
+            }
+            HStack(spacing: 16) {
+                statCard(title: "今週", value: "\(viewModel.thisWeekReadCount())", unit: "冊")
+                statCard(title: "よく読む曜日", value: viewModel.mostActiveDay() ?? "-", unit: "")
+            }
         }
     }
 
@@ -77,15 +83,10 @@ struct ReadingHeatmapView: View {
                     .font(.caption2)
                     .frame(height: 14)
                 ForEach(0..<7, id: \.self) { dayIndex in
-                    if dayIndex % 2 == 0 {
-                        Text(dayLabels[dayIndex])
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .frame(width: 20, height: cellSize)
-                    } else {
-                        Text("")
-                            .frame(width: 20, height: cellSize)
-                    }
+                    Text(dayLabels[dayIndex])
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 20, height: cellSize)
                 }
             }
 
@@ -101,6 +102,7 @@ struct ReadingHeatmapView: View {
                                     Text(monthLabel(for: date))
                                         .font(.caption2)
                                         .foregroundStyle(.secondary)
+                                        .fixedSize()
                                         .frame(width: cellSize, alignment: .leading)
                                 } else {
                                     Text("")
@@ -274,6 +276,7 @@ private struct DayActivitySheet: View {
                                 .foregroundStyle(.primary)
                         }
                     }
+                    .tint(.primary)
                     .disabled(entry == nil)
                 }
             }
