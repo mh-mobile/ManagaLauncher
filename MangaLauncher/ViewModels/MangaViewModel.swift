@@ -183,6 +183,12 @@ final class MangaViewModel {
         for entry in entries {
             modelContext.delete(entry)
         }
+        let activityDescriptor = FetchDescriptor<ReadingActivity>()
+        if let activities = try? modelContext.fetch(activityDescriptor) {
+            for activity in activities {
+                modelContext.delete(activity)
+            }
+        }
         try? modelContext.save()
         refreshCounter += 1
         #if canImport(WidgetKit)
@@ -207,7 +213,9 @@ final class MangaViewModel {
     func exportBackupData() -> Data? {
         let descriptor = FetchDescriptor<MangaEntry>(sortBy: [SortDescriptor(\.dayOfWeekRawValue), SortDescriptor(\.sortOrder)])
         guard let entries = try? modelContext.fetch(descriptor) else { return nil }
-        let backup = BackupData.from(entries)
+        let activityDescriptor = FetchDescriptor<ReadingActivity>(sortBy: [SortDescriptor(\.date)])
+        let activities = (try? modelContext.fetch(activityDescriptor)) ?? []
+        let backup = BackupData.from(entries, activities: activities)
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         return try? encoder.encode(backup)
@@ -241,6 +249,20 @@ final class MangaViewModel {
             modelContext.insert(entry)
             importedCount += 1
         }
+        if let backupActivities = backup.activities {
+            let existingActivityIDs = Set((try? modelContext.fetch(FetchDescriptor<ReadingActivity>()))?.map(\.id) ?? [])
+            for backupActivity in backupActivities {
+                guard !existingActivityIDs.contains(backupActivity.id) else { continue }
+                let activity = ReadingActivity(
+                    date: backupActivity.date,
+                    mangaName: backupActivity.mangaName,
+                    mangaEntryID: backupActivity.mangaEntryID
+                )
+                activity.id = backupActivity.id
+                modelContext.insert(activity)
+                importedCount += 1
+            }
+        }
         if importedCount > 0 { save() }
         return importedCount
     }
@@ -255,11 +277,26 @@ final class MangaViewModel {
     func markAsRead(_ entry: MangaEntry) {
         entry.lastReadDate = Date()
         entry.advanceToNextUpdate()
+        let activity = ReadingActivity(
+            date: Date(),
+            mangaName: entry.name,
+            mangaEntryID: entry.id
+        )
+        modelContext.insert(activity)
         save()
     }
 
     func markAsUnread(_ entry: MangaEntry) {
         entry.lastReadDate = nil
+        let today = Calendar.current.startOfDay(for: Date())
+        let entryID = entry.id
+        let descriptor = FetchDescriptor<ReadingActivity>(
+            predicate: #Predicate { $0.date == today && $0.mangaEntryID == entryID },
+            sortBy: [SortDescriptor(\.date, order: .reverse)]
+        )
+        if let activity = try? modelContext.fetch(descriptor).first {
+            modelContext.delete(activity)
+        }
         save()
     }
 
@@ -269,6 +306,99 @@ final class MangaViewModel {
 
     func unreadCount(for day: DayOfWeek) -> Int {
         unreadEntries(for: day).count
+    }
+
+    func fetchActivityCounts(days: Int = 84) -> [Date: Int] {
+        let startDate = Calendar.current.startOfDay(
+            for: Calendar.current.date(byAdding: .day, value: -days, to: Date())!
+        )
+        let descriptor = FetchDescriptor<ReadingActivity>(
+            predicate: #Predicate { $0.date >= startDate },
+            sortBy: [SortDescriptor(\.date)]
+        )
+        let activities = (try? modelContext.fetch(descriptor)) ?? []
+        var counts: [Date: Int] = [:]
+        for activity in activities {
+            counts[activity.date, default: 0] += 1
+        }
+        return counts
+    }
+
+    func fetchActivities(for date: Date) -> [ReadingActivity] {
+        let targetDate = Calendar.current.startOfDay(for: date)
+        let descriptor = FetchDescriptor<ReadingActivity>(
+            predicate: #Predicate { $0.date == targetDate },
+            sortBy: [SortDescriptor(\.date)]
+        )
+        return (try? modelContext.fetch(descriptor)) ?? []
+    }
+
+    func currentStreak() -> Int {
+        let counts = fetchActivityCounts(days: 365)
+        let calendar = Calendar.current
+        var streak = 0
+        var checkDate = calendar.startOfDay(for: Date())
+
+        if counts[checkDate] == nil {
+            checkDate = calendar.date(byAdding: .day, value: -1, to: checkDate)!
+        }
+
+        while counts[checkDate] != nil {
+            streak += 1
+            checkDate = calendar.date(byAdding: .day, value: -1, to: checkDate)!
+        }
+        return streak
+    }
+
+    func longestStreak() -> Int {
+        let counts = fetchActivityCounts(days: 365)
+        let sortedDates = counts.keys.sorted()
+        guard !sortedDates.isEmpty else { return 0 }
+
+        let calendar = Calendar.current
+        var longest = 1
+        var current = 1
+
+        for i in 1..<sortedDates.count {
+            if calendar.date(byAdding: .day, value: 1, to: sortedDates[i - 1]) == sortedDates[i] {
+                current += 1
+                longest = max(longest, current)
+            } else {
+                current = 1
+            }
+        }
+        return longest
+    }
+
+    func totalReadCount() -> Int {
+        let descriptor = FetchDescriptor<ReadingActivity>()
+        return (try? modelContext.fetchCount(descriptor)) ?? 0
+    }
+
+    func thisWeekReadCount() -> Int {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let weekday = calendar.component(.weekday, from: today)
+        let daysFromMonday = (weekday + 5) % 7
+        let monday = calendar.date(byAdding: .day, value: -daysFromMonday, to: today)!
+        let descriptor = FetchDescriptor<ReadingActivity>(
+            predicate: #Predicate { $0.date >= monday }
+        )
+        return (try? modelContext.fetchCount(descriptor)) ?? 0
+    }
+
+    func mostActiveDay() -> String? {
+        let counts = fetchActivityCounts(days: 365)
+        guard !counts.isEmpty else { return nil }
+        let calendar = Calendar.current
+        let dayLabels = ["日", "月", "火", "水", "木", "金", "土"]
+        var weekdayCounts: [Int: Int] = [:]
+        for (date, count) in counts {
+            let weekday = calendar.component(.weekday, from: date) // 1=Sun
+            weekdayCounts[weekday, default: 0] += count
+        }
+        guard let best = weekdayCounts.max(by: { $0.value < $1.value }) else { return nil }
+        return dayLabels[best.key - 1]
     }
 
     func rescheduleNotifications() {

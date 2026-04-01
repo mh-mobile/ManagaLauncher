@@ -6,6 +6,14 @@ struct BackupData: Codable {
     let version: Int
     let exportDate: Date
     let entries: [BackupEntry]
+    let activities: [BackupActivity]?
+
+    struct BackupActivity: Codable {
+        let id: UUID
+        let date: Date
+        let mangaName: String
+        let mangaEntryID: UUID
+    }
 
     struct BackupEntry: Codable {
         let id: UUID
@@ -56,9 +64,9 @@ struct BackupData: Codable {
         }
     }
 
-    static func from(_ entries: [MangaEntry]) -> BackupData {
+    static func from(_ entries: [MangaEntry], activities: [ReadingActivity] = []) -> BackupData {
         BackupData(
-            version: 4,
+            version: 5,
             exportDate: Date(),
             entries: entries.map {
                 BackupEntry(
@@ -75,6 +83,14 @@ struct BackupData: Codable {
                     nextExpectedUpdate: $0.nextExpectedUpdate,
                     isOnHiatus: $0.isOnHiatus,
                     isCompleted: $0.isCompleted
+                )
+            },
+            activities: activities.map {
+                BackupActivity(
+                    id: $0.id,
+                    date: $0.date,
+                    mangaName: $0.mangaName,
+                    mangaEntryID: $0.mangaEntryID
                 )
             }
         )

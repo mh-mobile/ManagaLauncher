@@ -97,6 +97,17 @@ struct SettingsView: View {
                     }
                 }
 
+                Section {
+                    NavigationLink {
+                        ReadingHeatmapView(viewModel: viewModel)
+                    } label: {
+                        HStack {
+                            Image(systemName: "chart.bar.fill")
+                            Text("読書アクティビティ")
+                        }
+                    }
+                }
+
                 Section("iCloud同期") {
                     HStack {
                         syncStatusIcon

@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA000001 /* ReadingActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000010 /* ReadingActivity.swift */; };
+		AA000002 /* ReadingActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000010 /* ReadingActivity.swift */; };
+		AA000003 /* ReadingActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000010 /* ReadingActivity.swift */; };
+		AA000004 /* ReadingHeatmapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000011 /* ReadingHeatmapView.swift */; };
 		0F66A6093327A5A5BD16B10F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E7D977DE254FB1F216740BE6 /* Foundation.framework */; };
 		125D8CEEBC201DD7B9C5BCE3 /* ShareExtensionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 358605C94F78CC23682FF911 /* ShareExtensionView.swift */; };
 		1299E093C31E1C940DD2CAC4 /* ImageCropView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC07D90615785B81C2E71C8 /* ImageCropView.swift */; };
@@ -86,6 +90,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AA000010 /* ReadingActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingActivity.swift; sourceTree = "<group>"; };
+		AA000011 /* ReadingHeatmapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingHeatmapView.swift; sourceTree = "<group>"; };
 		0557E9481117CB9F8B903947 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0CDE508C489E5FAA3881A522 /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		1CF568E5CBBFA07B55373C73 /* DataMigration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DataMigration.swift; sourceTree = "<group>"; };
@@ -244,6 +250,7 @@
 			children = (
 				A2000002 /* MangaEntry.swift */,
 				3AFF912AECB7C6B219DD1600 /* BackupData.swift */,
+				AA000010 /* ReadingActivity.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -260,6 +267,7 @@
 				0CDE508C489E5FAA3881A522 /* SettingsView.swift */,
 				96C7D9E283FFCADD60181726 /* MasonryLayout.swift */,
 				EEC07D90615785B81C2E71C8 /* ImageCropView.swift */,
+				AA000011 /* ReadingHeatmapView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -438,6 +446,7 @@
 				431F2DADE5A1315BB2611590 /* MangaEntry.swift in Sources */,
 				E79C1EBA2299356887386C0C /* SharedModelContainer.swift in Sources */,
 				3650352634B47DCA879C45C1 /* ChangeDayIntent.swift in Sources */,
+				AA000001 /* ReadingActivity.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -449,6 +458,7 @@
 				125D8CEEBC201DD7B9C5BCE3 /* ShareExtensionView.swift in Sources */,
 				63696DAFAE55A61EC72070CA /* MangaEntry.swift in Sources */,
 				B26E164ECFAC0FC6A4B39CC6 /* SharedModelContainer.swift in Sources */,
+				AA000002 /* ReadingActivity.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -472,6 +482,8 @@
 				B31B9EA2FE243CD2D6209258 /* AddMangaIntent.swift in Sources */,
 				1299E093C31E1C940DD2CAC4 /* ImageCropView.swift in Sources */,
 				EC04B7DC2F75301D00AEE45F /* OnboardingView.swift in Sources */,
+				AA000003 /* ReadingActivity.swift in Sources */,
+				AA000004 /* ReadingHeatmapView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
