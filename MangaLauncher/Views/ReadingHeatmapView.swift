@@ -5,7 +5,7 @@ import PlatformKit
 struct ReadingHeatmapView: View {
     var viewModel: MangaViewModel
 
-    private let weeks = 12
+    private let weeks = 52
     private let cellSize: CGFloat = 14
     private let cellSpacing: CGFloat = 3
     private let dayLabels = ["月", "火", "水", "木", "金", "土", "日"]
@@ -69,67 +69,76 @@ struct ReadingHeatmapView: View {
         let grid = buildGrid()
         let maxCount = activityCounts.values.max() ?? 1
 
-        return VStack(alignment: .leading, spacing: 4) {
-            // Month labels
-            HStack(spacing: 0) {
+        return HStack(alignment: .top, spacing: 4) {
+            // Day labels (fixed)
+            VStack(spacing: cellSpacing) {
+                // Spacer for month label row
                 Text("")
-                    .frame(width: 20)
-                HStack(spacing: cellSpacing) {
-                    ForEach(0..<weeks, id: \.self) { weekIndex in
-                        let date = grid[weekIndex][0]
-                        if let date, isFirstWeekOfMonth(date: date, weekIndex: weekIndex, grid: grid) {
-                            Text(monthLabel(for: date))
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                                .frame(width: cellSize, alignment: .leading)
-                        } else {
-                            Text("")
-                                .frame(width: cellSize)
-                        }
+                    .font(.caption2)
+                    .frame(height: 14)
+                ForEach(0..<7, id: \.self) { dayIndex in
+                    if dayIndex % 2 == 0 {
+                        Text(dayLabels[dayIndex])
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .frame(width: 20, height: cellSize)
+                    } else {
+                        Text("")
+                            .frame(width: 20, height: cellSize)
                     }
                 }
             }
 
-            // Grid
-            HStack(alignment: .top, spacing: 4) {
-                // Day labels
-                VStack(spacing: cellSpacing) {
-                    ForEach(0..<7, id: \.self) { dayIndex in
-                        if dayIndex % 2 == 0 {
-                            Text(dayLabels[dayIndex])
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                                .frame(width: 20, height: cellSize)
-                        } else {
-                            Text("")
-                                .frame(width: 20, height: cellSize)
-                        }
-                    }
-                }
-
-                // Cells
-                HStack(spacing: cellSpacing) {
-                    ForEach(0..<weeks, id: \.self) { weekIndex in
-                        VStack(spacing: cellSpacing) {
-                            ForEach(0..<7, id: \.self) { dayIndex in
-                                if let date = grid[weekIndex][dayIndex] {
-                                    let count = activityCounts[date] ?? 0
-                                    RoundedRectangle(cornerRadius: 3)
-                                        .fill(cellColor(count: count, maxCount: maxCount))
-                                        .frame(width: cellSize, height: cellSize)
-                                        .onTapGesture {
-                                            if count > 0 {
-                                                selectedDate = date
-                                            }
-                                        }
+            // Scrollable grid
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        // Month labels
+                        HStack(spacing: cellSpacing) {
+                            ForEach(0..<weeks, id: \.self) { weekIndex in
+                                let date = grid[weekIndex][0]
+                                if let date, isFirstWeekOfMonth(date: date, weekIndex: weekIndex, grid: grid) {
+                                    Text(monthLabel(for: date))
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                        .frame(width: cellSize, alignment: .leading)
                                 } else {
-                                    RoundedRectangle(cornerRadius: 3)
-                                        .fill(.clear)
-                                        .frame(width: cellSize, height: cellSize)
+                                    Text("")
+                                        .frame(width: cellSize)
                                 }
                             }
                         }
+                        .frame(height: 14)
+
+                        // Cells
+                        HStack(spacing: cellSpacing) {
+                            ForEach(0..<weeks, id: \.self) { weekIndex in
+                                VStack(spacing: cellSpacing) {
+                                    ForEach(0..<7, id: \.self) { dayIndex in
+                                        if let date = grid[weekIndex][dayIndex] {
+                                            let count = activityCounts[date] ?? 0
+                                            RoundedRectangle(cornerRadius: 3)
+                                                .fill(cellColor(count: count, maxCount: maxCount))
+                                                .frame(width: cellSize, height: cellSize)
+                                                .onTapGesture {
+                                                    if count > 0 {
+                                                        selectedDate = date
+                                                    }
+                                                }
+                                        } else {
+                                            RoundedRectangle(cornerRadius: 3)
+                                                .fill(.clear)
+                                                .frame(width: cellSize, height: cellSize)
+                                        }
+                                    }
+                                }
+                                .id(weekIndex)
+                            }
+                        }
                     }
+                }
+                .onAppear {
+                    proxy.scrollTo(weeks - 1, anchor: .trailing)
                 }
             }
         }
@@ -229,6 +238,9 @@ private struct DayActivitySheet: View {
     let date: Date
     var viewModel: MangaViewModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
+    @AppStorage("browserMode") private var browserMode: String = "external"
+    @State private var safariURL: URL?
 
     var body: some View {
         NavigationStack {
@@ -236,25 +248,33 @@ private struct DayActivitySheet: View {
                 let activities = viewModel.fetchActivities(for: date)
                 ForEach(activities, id: \.id) { activity in
                     let entry = viewModel.findEntry(by: activity.mangaEntryID)
-                    HStack(spacing: 12) {
-                        if let entry, let imageData = entry.imageData,
-                           let image = imageData.toSwiftUIImage() {
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 40, height: 40)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                        } else {
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(.fill.tertiary)
-                                .frame(width: 40, height: 40)
-                                .overlay {
-                                    Image(systemName: "book.closed")
-                                        .foregroundStyle(.secondary)
-                                }
+                    Button {
+                        if let entry {
+                            openMangaURL(entry.url)
                         }
-                        Text(activity.mangaName)
+                    } label: {
+                        HStack(spacing: 12) {
+                            if let entry, let imageData = entry.imageData,
+                               let image = imageData.toSwiftUIImage() {
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 40, height: 40)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                            } else {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(.fill.tertiary)
+                                    .frame(width: 40, height: 40)
+                                    .overlay {
+                                        Image(systemName: "book.closed")
+                                            .foregroundStyle(.secondary)
+                                    }
+                            }
+                            Text(activity.mangaName)
+                                .foregroundStyle(.primary)
+                        }
                     }
+                    .disabled(entry == nil)
                 }
             }
             .navigationTitle(dateTitle)
@@ -266,8 +286,26 @@ private struct DayActivitySheet: View {
                     Button("閉じる") { dismiss() }
                 }
             }
+            #if canImport(UIKit)
+            .sheet(item: $safariURL) { url in
+                SafariView(url: url)
+            }
+            #endif
         }
         .presentationDetents([.medium])
+    }
+
+    private func openMangaURL(_ urlString: String) {
+        guard let url = URL(string: urlString) else { return }
+        #if canImport(UIKit)
+        if browserMode == "inApp" {
+            safariURL = url
+        } else {
+            openURL(url)
+        }
+        #else
+        openURL(url)
+        #endif
     }
 
     private var dateTitle: String {
