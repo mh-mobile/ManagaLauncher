@@ -334,12 +334,18 @@ struct CatchUpView: View {
     private func reloadEntries() {
         let processedIDs = Set(undoStack.filter { $0.action == .read }.map { $0.entry.id })
         let allUnread = filteredUnreadEntries()
+
+        // Batch fetch all needed entries
+        var neededIDs = Set(unreadItems.prefix(currentIndex).map(\.id))
+        neededIDs.formUnion(undoStack.map(\.entry.id))
+        let freshEntries = viewModel.findEntries(by: neededIDs)
+
         var newItems: [MangaEntry] = []
 
         // Keep already-processed entries in order
         for i in 0..<currentIndex where i < unreadItems.count {
             let oldEntry = unreadItems[i]
-            if let fresh = viewModel.findEntry(by: oldEntry.id) {
+            if let fresh = freshEntries[oldEntry.id] {
                 newItems.append(fresh)
             }
         }
@@ -352,7 +358,7 @@ struct CatchUpView: View {
         unreadItems = newItems
         // Rebuild undo stack with fresh references
         undoStack = undoStack.compactMap { item in
-            guard let fresh = viewModel.findEntry(by: item.entry.id) else { return nil }
+            guard let fresh = freshEntries[item.entry.id] else { return nil }
             return (entry: fresh, action: item.action)
         }
     }

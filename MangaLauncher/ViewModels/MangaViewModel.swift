@@ -277,6 +277,16 @@ final class MangaViewModel {
         return try? modelContext.fetch(descriptor).first
     }
 
+    func findEntries(by ids: Set<UUID>) -> [UUID: MangaEntry] {
+        let descriptor = FetchDescriptor<MangaEntry>()
+        guard let entries = try? modelContext.fetch(descriptor) else { return [:] }
+        var result: [UUID: MangaEntry] = [:]
+        for entry in entries where ids.contains(entry.id) {
+            result[entry.id] = entry
+        }
+        return result
+    }
+
     func markAsRead(_ entry: MangaEntry) {
         entry.lastReadDate = Date()
         entry.advanceToNextUpdate()
