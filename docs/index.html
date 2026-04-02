@@ -90,27 +90,31 @@
         }
 
         .sub-features {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 12px;
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
         }
 
         .sub-feature-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: #f0f4f8;
-            border-radius: 20px;
-            padding: 8px 16px;
-            font-size: 0.9em;
-            color: #555;
+            background: white;
+            border: 1px solid #e0e6ed;
+            border-radius: 10px;
+            padding: 12px 16px;
         }
 
-        .sub-feature-icon {
-            font-size: 1em;
+        .sub-feature-name {
+            display: block;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 2px;
+        }
+
+        .sub-feature-desc {
+            font-size: 0.8em;
+            color: #999;
         }
 
         .platforms {
@@ -231,10 +235,6 @@
                 <p>未読マンガをカードをスワイプしてサクサク消化。既読・あとでをすばやく振り分け。</p>
             </div>
             <div class="feature-card">
-                <h3>更新頻度の設定</h3>
-                <p>毎週・隔週・月1回など、作品ごとの更新頻度に対応。次の更新日も管理できます。</p>
-            </div>
-            <div class="feature-card">
                 <h3>ウィジェット対応</h3>
                 <p>ホーム画面やロック画面から今日のマンガを確認・起動できます。</p>
             </div>
@@ -247,24 +247,36 @@
         <h2 class="sub-features-title">その他の機能</h2>
         <div class="sub-features">
             <div class="sub-feature-item">
-                <span class="sub-feature-icon">📅</span>
-                <span>休載・完結対応</span>
+                <span class="sub-feature-name">更新頻度の設定</span>
+                <span class="sub-feature-desc">毎週・隔週・月1回など作品ごとに対応</span>
             </div>
             <div class="sub-feature-item">
-                <span class="sub-feature-icon">📊</span>
-                <span>読書ヒートマップ</span>
+                <span class="sub-feature-name">休載・完結対応</span>
+                <span class="sub-feature-desc">専用タブで管理、連載再開もスムーズ</span>
             </div>
             <div class="sub-feature-item">
-                <span class="sub-feature-icon">🔄</span>
-                <span>2つの表示モード</span>
+                <span class="sub-feature-name">読書ヒートマップ</span>
+                <span class="sub-feature-desc">GitHub風の記録で読書量を可視化</span>
             </div>
             <div class="sub-feature-item">
-                <span class="sub-feature-icon">💾</span>
-                <span>バックアップ</span>
+                <span class="sub-feature-name">2つの表示モード</span>
+                <span class="sub-feature-desc">リスト表示とグリッド表示を切り替え</span>
             </div>
             <div class="sub-feature-item">
-                <span class="sub-feature-icon">🗣️</span>
-                <span>Siriショートカット</span>
+                <span class="sub-feature-name">バックアップ</span>
+                <span class="sub-feature-desc">JSON形式でエクスポート・インポート</span>
+            </div>
+            <div class="sub-feature-item">
+                <span class="sub-feature-name">Siriショートカット</span>
+                <span class="sub-feature-desc">共有メニューからマンガを素早く登録</span>
+            </div>
+            <div class="sub-feature-item">
+                <span class="sub-feature-name">壁紙設定</span>
+                <span class="sub-feature-desc">お気に入りの画像で背景をカスタマイズ</span>
+            </div>
+            <div class="sub-feature-item">
+                <span class="sub-feature-name">更新通知</span>
+                <span class="sub-feature-desc">指定時間に未読マンガをリマインド</span>
             </div>
         </div>
     </section>
