@@ -79,6 +79,9 @@ final class MangaEntry {
     var isCompleted: Bool = false
 
     @Transient
+    var cachedImageAspectRatio: CGFloat?
+
+    @Transient
     var dayOfWeek: DayOfWeek {
         get { DayOfWeek(rawValue: dayOfWeekRawValue) ?? .sunday }
         set { dayOfWeekRawValue = newValue.rawValue }

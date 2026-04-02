@@ -52,6 +52,9 @@ struct MasonryLayout<Content: View>: View {
     }
 
     private func imageAspectRatio(for entry: MangaEntry) -> CGFloat {
+        if let cached = entry.cachedImageAspectRatio {
+            return cached
+        }
         guard entry.modelContext != nil,
               let data = entry.imageData,
               let source = CGImageSourceCreateWithData(data as CFData, nil),
@@ -59,8 +62,12 @@ struct MasonryLayout<Content: View>: View {
               let width = properties[kCGImagePropertyPixelWidth] as? CGFloat,
               let height = properties[kCGImagePropertyPixelHeight] as? CGFloat,
               height > 0 else {
-            return 3.0 / 4.0 // default for no-image cells
+            let defaultRatio: CGFloat = 3.0 / 4.0
+            entry.cachedImageAspectRatio = defaultRatio
+            return defaultRatio
         }
-        return width / height
+        let ratio = width / height
+        entry.cachedImageAspectRatio = ratio
+        return ratio
     }
 }
