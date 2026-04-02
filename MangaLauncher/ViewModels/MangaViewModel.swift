@@ -60,7 +60,7 @@ final class MangaViewModel {
         save()
     }
 
-    func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil) {
+    func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, isOnHiatus: Bool = false) {
         for day in days {
             let existingEntries = fetchEntries(for: day)
             let maxOrder = existingEntries.map(\.sortOrder).max() ?? -1
@@ -75,6 +75,7 @@ final class MangaViewModel {
                 updateIntervalWeeks: updateIntervalWeeks
             )
             entry.nextExpectedUpdate = nextExpectedUpdate
+            entry.isOnHiatus = isOnHiatus
             modelContext.insert(entry)
         }
         save()
