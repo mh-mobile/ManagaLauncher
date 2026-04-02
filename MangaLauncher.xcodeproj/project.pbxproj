@@ -282,7 +282,6 @@
 				96C7D9E283FFCADD60181726 /* MasonryLayout.swift */,
 				EEC07D90615785B81C2E71C8 /* ImageCropView.swift */,
 				AA000011 /* ReadingHeatmapView.swift */,
-				ECFEA8242F7E916C00CE4DC0 /* Components 2 */,
 				ECFEA8252F7E918E00CE4DC0 /* DeleteToastView.swift */,
 				ECFEA8272F7E919A00CE4DC0 /* MangaContextMenu.swift */,
 				ECFEA8292F7E91A800CE4DC0 /* MangaGridCell.swift */,
@@ -319,13 +318,6 @@
 				4117777580B33705902FA67A /* ChangeDayIntent.swift */,
 			);
 			path = MangaWidget;
-			sourceTree = "<group>";
-		};
-		ECFEA8242F7E916C00CE4DC0 /* Components 2 */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = "Components 2";
 			sourceTree = "<group>";
 		};
 		F40871AEA45509078C83A570 /* Shared */ = {
