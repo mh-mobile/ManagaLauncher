@@ -12,6 +12,7 @@ struct EditEntryView: View {
 
     var viewModel: MangaViewModel
     var entry: MangaEntry?
+    var showsDeleteButton: Bool = true
 
     @State private var name: String = ""
     @State private var url: String = ""
@@ -93,9 +94,10 @@ struct EditEntryView: View {
         return url.scheme != nil && !url.scheme!.isEmpty
     }
 
-    init(viewModel: MangaViewModel, entry: MangaEntry) {
+    init(viewModel: MangaViewModel, entry: MangaEntry, showsDeleteButton: Bool = true) {
         self.viewModel = viewModel
         self.entry = entry
+        self.showsDeleteButton = showsDeleteButton
     }
 
     init(viewModel: MangaViewModel, day: DayOfWeek) {
@@ -297,11 +299,11 @@ struct EditEntryView: View {
                     .padding(.vertical, 4)
                 }
 
-                if isEditing {
+                if isEditing && showsDeleteButton {
                     Section {
                         Button(role: .destructive) {
                             if let entry {
-                                viewModel.deleteEntry(entry)
+                                viewModel.queueDelete(entry)
                             }
                             dismiss()
                         } label: {
