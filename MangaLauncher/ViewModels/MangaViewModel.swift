@@ -190,6 +190,8 @@ final class MangaViewModel {
                 modelContext.delete(activity)
             }
         }
+        UserDefaults.standard.removeObject(forKey: "lastStreakShownDate")
+        UserDefaults.standard.removeObject(forKey: "shownMilestones")
         try? modelContext.save()
         refreshCounter += 1
         #if canImport(WidgetKit)
