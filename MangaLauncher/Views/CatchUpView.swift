@@ -18,6 +18,7 @@ struct CatchUpView: View {
     @State private var safariURL: URL?
     @AppStorage("hasSeenCatchUpTutorial") private var hasSeenTutorial = false
     @State private var showTutorial = false
+    @State private var editingEntry: MangaEntry?
 
     private enum SwipeAction {
         case read, skip
@@ -84,6 +85,12 @@ struct CatchUpView: View {
             if showTutorial {
                 catchUpTutorialOverlay
             }
+        }
+        .sheet(item: $editingEntry, onDismiss: {
+            editingEntry = nil
+            reloadEntries()
+        }) { entry in
+            EditEntryView(viewModel: viewModel, entry: entry)
         }
         #if canImport(UIKit)
         .sheet(item: $safariURL) { url in
@@ -222,6 +229,9 @@ struct CatchUpView: View {
         .contentShape(Rectangle())
         .onTapGesture {
             openMangaURL(entry.url)
+        }
+        .onLongPressGesture {
+            editingEntry = entry
         }
     }
 
