@@ -53,7 +53,7 @@ struct MangaRowCell: View {
                 Group {
                     if hasWallpaper {
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
+                            .fill(Color(.systemBackground).opacity(reduceTransparency ? 0.9 : 0.7))
                             .padding(.horizontal, 4)
                             .padding(.vertical, 2)
                     } else {
