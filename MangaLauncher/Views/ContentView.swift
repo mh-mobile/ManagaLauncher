@@ -102,7 +102,7 @@ struct ContentView: View {
                     }
 
                     if !viewModel.pendingDeleteEntries.isEmpty {
-                        deleteToast(viewModel: viewModel)
+                        DeleteToastView(viewModel: viewModel)
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
@@ -426,7 +426,7 @@ struct ContentView: View {
                         .frame(maxWidth: .infinity, minHeight: geo.size.height - headerHeight)
                     } else {
                         MasonryLayout(entries: entries, availableWidth: geo.size.width - 32) { entry in
-                            gridCell(entry: entry, viewModel: viewModel)
+                            MangaGridCell(entry: entry, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, isGridEditMode: $isGridEditMode, editingEntry: $editingEntry, onOpenURL: openMangaURL)
                                 .overlay(alignment: .topLeading) {
                                     if isGridEditMode {
                                         Button {
@@ -447,7 +447,7 @@ struct ContentView: View {
                                     draggingEntryID = entry.id
                                     return NSItemProvider(object: entry.id.uuidString as NSString)
                                 } preview: {
-                                    gridCell(entry: entry, viewModel: viewModel)
+                                    MangaGridCell(entry: entry, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, isGridEditMode: $isGridEditMode, editingEntry: $editingEntry, onOpenURL: openMangaURL)
                                         .frame(width: 120)
                                 }
                                 .onDrop(of: [.text], delegate: GridDropDelegate(
@@ -500,7 +500,7 @@ struct ContentView: View {
     private func listView(entries: [MangaEntry], day: DayOfWeek, viewModel: MangaViewModel) -> some View {
         List {
             ForEach(entries, id: \.id) { entry in
-                entryRow(entry: entry)
+                MangaRowCell(entry: entry, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, editingEntry: $editingEntry, listEditMode: $listEditMode, onOpenURL: openMangaURL)
             }
             .onDelete { indexSet in
                 let entriesToDelete = indexSet.map { entries[$0] }
@@ -534,7 +534,7 @@ struct ContentView: View {
         GeometryReader { geo in
         ScrollView {
             MasonryLayout(entries: entries, availableWidth: geo.size.width - 32) { entry in
-                gridCell(entry: entry, viewModel: viewModel)
+                MangaGridCell(entry: entry, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, isGridEditMode: $isGridEditMode, editingEntry: $editingEntry, onOpenURL: openMangaURL)
                     .overlay(alignment: .topLeading) {
                         if isGridEditMode {
                             Button {
@@ -553,7 +553,7 @@ struct ContentView: View {
                         draggingEntryID = entry.id
                         return NSItemProvider(object: entry.id.uuidString as NSString)
                     } preview: {
-                        gridCell(entry: entry, viewModel: viewModel)
+                        MangaGridCell(entry: entry, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, isGridEditMode: $isGridEditMode, editingEntry: $editingEntry, onOpenURL: openMangaURL)
                             .frame(width: 120)
                     }
                     .onDrop(of: [.text], delegate: GridDropDelegate(
@@ -582,212 +582,9 @@ struct ContentView: View {
         }
     }
 
-    @ViewBuilder
-    private func gridCell(entry: MangaEntry, viewModel: MangaViewModel) -> some View {
-        if entry.isDeleted || entry.modelContext == nil {
-            EmptyView()
-        } else {
-        VStack(alignment: .leading, spacing: 6) {
-            if let imageData = entry.imageData, let image = imageData.toSwiftUIImage() {
-                image
-                    .resizable()
-                    .scaledToFit()
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-            } else {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.fromName(entry.iconColor))
-                    .aspectRatio(3/4, contentMode: .fit)
-                    .overlay {
-                        Text(entry.name)
-                            .font(.title2.bold())
-                            .foregroundStyle(.white)
-                            .multilineTextAlignment(.center)
-                            .padding(8)
-                    }
-            }
 
-            HStack(alignment: .top, spacing: 4) {
-                if !entry.isRead {
-                    Circle()
-                        .fill(Color.accentColor)
-                        .frame(width: 6, height: 6)
-                        .padding(.top, 4)
-                }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(entry.name)
-                        .font(.caption)
-                        .foregroundStyle(.primary)
-                        .lineLimit(2)
-                    if !entry.publisher.isEmpty {
-                        Text(entry.publisher)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, hasWallpaper ? 8 : 0)
-            .padding(.vertical, hasWallpaper ? 6 : 0)
-            .background {
-                if hasWallpaper {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
-                }
-            }
-        }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            if isGridEditMode {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isGridEditMode = false
-                }
-            } else {
-                openMangaURL(entry.url)
-            }
-        }
-        .contextMenu {
-            if !entry.isOnHiatus {
-                Button {
-                    if entry.isRead {
-                        viewModel.markAsUnread(entry)
-                    } else {
-                        viewModel.markAsRead(entry)
-                    }
-                } label: {
-                    Label(entry.isRead ? "未読にする" : "既読にする",
-                          systemImage: entry.isRead ? "envelope.badge" : "envelope.open")
-                }
-            }
-            Button {
-                editingEntry = entry
-            } label: {
-                Label("編集", systemImage: "pencil")
-            }
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isGridEditMode = true
-                }
-            } label: {
-                Label("並び替え", systemImage: "arrow.up.arrow.down")
-            }
-            Button {
-                viewModel.toggleHiatus(entry)
-            } label: {
-                Label(entry.isOnHiatus ? "連載に戻す" : "休載中にする",
-                      systemImage: entry.isOnHiatus ? "arrow.uturn.left" : "moon.zzz")
-            }
-            Button {
-                viewModel.toggleCompleted(entry)
-            } label: {
-                Label(entry.isCompleted ? "連載に戻す" : "完結にする",
-                      systemImage: entry.isCompleted ? "arrow.uturn.left" : "checkmark.seal")
-            }
-            Button(role: .destructive) {
-                viewModel.queueDelete(entry)
-            } label: {
-                Label("削除", systemImage: "trash")
-            }
-        }
-        }
-    }
 
-    @ViewBuilder
-    private func entryRow(entry: MangaEntry) -> some View {
-        if entry.isDeleted || entry.modelContext == nil {
-            EmptyView()
-        } else {
-        HStack(spacing: 12) {
-            if !entry.isRead {
-                Circle()
-                    .fill(Color.accentColor)
-                    .frame(width: 8, height: 8)
-            } else {
-                Color.clear
-                    .frame(width: 8, height: 8)
-            }
 
-            entryIcon(for: entry, size: 36)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(entry.name)
-                    .font(.body)
-                if !entry.publisher.isEmpty {
-                    Text(entry.publisher)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-        }
-        .padding(.vertical, hasWallpaper ? 4 : 0)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            openMangaURL(entry.url)
-        }
-        .listRowBackground(
-            Group {
-                if hasWallpaper {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 2)
-                } else {
-                    Color.platformBackground
-                }
-            }
-        )
-        .contextMenu {
-            if !entry.isOnHiatus {
-                Button {
-                    if let viewModel {
-                        if entry.isRead {
-                            viewModel.markAsUnread(entry)
-                        } else {
-                            viewModel.markAsRead(entry)
-                        }
-                    }
-                } label: {
-                    Label(entry.isRead ? "未読にする" : "既読にする",
-                          systemImage: entry.isRead ? "envelope.badge" : "envelope.open")
-                }
-            }
-            Button {
-                editingEntry = entry
-            } label: {
-                Label("編集", systemImage: "pencil")
-            }
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    listEditMode = .active
-                }
-            } label: {
-                Label("並び替え", systemImage: "arrow.up.arrow.down")
-            }
-            Button {
-                if let viewModel { viewModel.toggleHiatus(entry) }
-            } label: {
-                Label(entry.isOnHiatus ? "連載に戻す" : "休載中にする",
-                      systemImage: entry.isOnHiatus ? "arrow.uturn.left" : "moon.zzz")
-            }
-            Button {
-                if let viewModel { viewModel.toggleCompleted(entry) }
-            } label: {
-                Label(entry.isCompleted ? "連載に戻す" : "完結にする",
-                      systemImage: entry.isCompleted ? "arrow.uturn.left" : "checkmark.seal")
-            }
-            Button(role: .destructive) {
-                if let viewModel { viewModel.queueDelete(entry) }
-            } label: {
-                Label("削除", systemImage: "trash")
-            }
-        }
-        }
-    }
 
     @ViewBuilder
     private func emptyStateView<Content: View>(@ViewBuilder content: () -> Content) -> some View {
@@ -839,25 +636,7 @@ struct ContentView: View {
         .padding(.bottom, 16)
     }
 
-    @ViewBuilder
-    private func entryIcon(for entry: MangaEntry, size: CGFloat) -> some View {
-        if let imageData = entry.imageData, let image = imageData.toSwiftUIImage() {
-            image
-                .resizable()
-                .scaledToFill()
-                .frame(width: size, height: size)
-                .clipShape(RoundedRectangle(cornerRadius: size > 40 ? 8 : 6))
-        } else {
-            Circle()
-                .fill(Color.fromName(entry.iconColor))
-                .frame(width: size, height: size)
-                .overlay {
-                    Text(String(entry.name.prefix(1)))
-                        .font(size > 40 ? .title : .headline)
-                        .foregroundStyle(.white)
-                }
-        }
-    }
+
 
     @ViewBuilder
     private var wallpaperBackground: some View {
@@ -941,31 +720,7 @@ struct ContentView: View {
         #endif
     }
 
-    @ViewBuilder
-    private func deleteToast(viewModel: MangaViewModel) -> some View {
-        let count = viewModel.pendingDeleteEntries.count
-        HStack {
-            Text("\(count)件削除しました")
-                .font(.subheadline)
-                .foregroundStyle(.white)
-            Spacer()
-            Button {
-                viewModel.undoPendingDeletes()
-            } label: {
-                Text("元に戻す")
-                    .font(.subheadline.bold())
-                    .foregroundStyle(.yellow)
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.darkGray))
-        )
-        .padding(.horizontal)
-        .padding(.bottom, 8)
-    }
+
 
 }
 
