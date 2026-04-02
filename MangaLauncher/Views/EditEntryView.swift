@@ -398,7 +398,7 @@ struct EditEntryView: View {
             entry.isOnHiatus = isOnHiatus
             entry.isCompleted = isCompleted
         } else {
-            viewModel.addEntry(name: name, url: url, days: [selectedDay], iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval, nextExpectedUpdate: nextUpdateDate)
+            viewModel.addEntry(name: name, url: url, days: [selectedDay], iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval, nextExpectedUpdate: nextUpdateDate, isOnHiatus: isOnHiatus)
         }
     }
 }
