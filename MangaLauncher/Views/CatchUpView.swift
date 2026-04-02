@@ -90,7 +90,7 @@ struct CatchUpView: View {
             editingEntry = nil
             reloadEntries()
         }) { entry in
-            EditEntryView(viewModel: viewModel, entry: entry)
+            EditEntryView(viewModel: viewModel, entry: entry, showsDeleteButton: false)
         }
         #if canImport(UIKit)
         .sheet(item: $safariURL) { url in
