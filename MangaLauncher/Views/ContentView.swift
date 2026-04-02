@@ -594,7 +594,7 @@ struct ContentView: View {
                 .padding(.top, headerHeight)
                 .background {
                     RoundedRectangle(cornerRadius: 16)
-                        .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
+                        .fill(Color(.secondarySystemBackground).opacity(reduceTransparency ? 0.6 : 0.3))
                         .padding()
                         .padding(.top, headerHeight)
                 }
