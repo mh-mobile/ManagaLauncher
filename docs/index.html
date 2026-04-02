@@ -81,6 +81,42 @@
             color: #666;
         }
 
+        .sub-features-title {
+            font-size: 1.4em;
+            margin-top: 48px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .sub-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .sub-feature-item {
+            background: white;
+            border: 1px solid #e0e6ed;
+            border-radius: 10px;
+            padding: 12px 16px;
+        }
+
+        .sub-feature-name {
+            display: block;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 2px;
+        }
+
+        .sub-feature-desc {
+            font-size: 0.8em;
+            color: #999;
+        }
+
         .platforms {
             text-align: center;
             background: #f8f9fa;
@@ -191,6 +227,14 @@
                 <p>タップするだけでマンガサイトやアプリをすぐに開けます。</p>
             </div>
             <div class="feature-card">
+                <h3>既読・未読管理</h3>
+                <p>更新曜日に自動で未読に戻り、読んだら既読に。読み忘れを防ぎます。</p>
+            </div>
+            <div class="feature-card">
+                <h3>キャッチアップ</h3>
+                <p>未読マンガをカードをスワイプしてサクサク消化。既読・あとでをすばやく振り分け。</p>
+            </div>
+            <div class="feature-card">
                 <h3>ウィジェット対応</h3>
                 <p>ホーム画面やロック画面から今日のマンガを確認・起動できます。</p>
             </div>
@@ -198,13 +242,41 @@
                 <h3>iCloud同期</h3>
                 <p>iPhone・iPad・Mac間でデータを自動同期。どのデバイスからでも同じマンガにアクセス。</p>
             </div>
-            <div class="feature-card">
-                <h3>2つの表示モード</h3>
-                <p>リスト表示とPinterest風グリッド表示を切り替えて、お好みのスタイルで閲覧。</p>
+        </div>
+
+        <h2 class="sub-features-title">その他の機能</h2>
+        <div class="sub-features">
+            <div class="sub-feature-item">
+                <span class="sub-feature-name">更新頻度の設定</span>
+                <span class="sub-feature-desc">毎週・隔週・月1回など作品ごとに対応</span>
             </div>
-            <div class="feature-card">
-                <h3>バックアップ</h3>
-                <p>JSON形式でのエクスポート・インポートに対応。データの移行も簡単です。</p>
+            <div class="sub-feature-item">
+                <span class="sub-feature-name">休載・完結対応</span>
+                <span class="sub-feature-desc">専用タブで管理、連載再開もスムーズ</span>
+            </div>
+            <div class="sub-feature-item">
+                <span class="sub-feature-name">読書ヒートマップ</span>
+                <span class="sub-feature-desc">GitHub風の記録で読書量を可視化</span>
+            </div>
+            <div class="sub-feature-item">
+                <span class="sub-feature-name">2つの表示モード</span>
+                <span class="sub-feature-desc">リスト表示とグリッド表示を切り替え</span>
+            </div>
+            <div class="sub-feature-item">
+                <span class="sub-feature-name">バックアップ</span>
+                <span class="sub-feature-desc">JSON形式でエクスポート・インポート</span>
+            </div>
+            <div class="sub-feature-item">
+                <span class="sub-feature-name">Siriショートカット</span>
+                <span class="sub-feature-desc">共有メニューからマンガを素早く登録</span>
+            </div>
+            <div class="sub-feature-item">
+                <span class="sub-feature-name">壁紙設定</span>
+                <span class="sub-feature-desc">お気に入りの画像で背景をカスタマイズ</span>
+            </div>
+            <div class="sub-feature-item">
+                <span class="sub-feature-name">更新通知</span>
+                <span class="sub-feature-desc">指定時間に未読マンガをリマインド</span>
             </div>
         </div>
     </section>
