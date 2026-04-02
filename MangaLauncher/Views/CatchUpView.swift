@@ -20,6 +20,9 @@ struct CatchUpView: View {
     @State private var showTutorial = false
     @State private var editingEntry: MangaEntry?
     @State private var reloadCount: Int = 0
+    @State private var achievementAnimated = false
+    @State private var streakAchievement: Int?
+    @State private var milestoneAchievement: Int?
 
     private enum SwipeAction {
         case read, skip
@@ -367,8 +370,43 @@ struct CatchUpView: View {
 
     // MARK: - Completed View
 
+    private static let milestones = [10, 30, 50, 100, 200, 300, 500, 750, 1000, 2000, 3000, 5000, 10000]
+
+    private var sessionReadCount: Int {
+        undoStack.filter { $0.action == .read }.count
+    }
+
+    private func checkStreakAchievement() -> Int? {
+        guard sessionReadCount > 0 else { return nil }
+        let streak = viewModel.currentStreak()
+        guard streak >= 2 else { return nil }
+        let today = Calendar.current.startOfDay(for: Date())
+        let lastShown = UserDefaults.standard.object(forKey: "lastStreakShownDate") as? Date
+        if lastShown == today { return nil }
+        UserDefaults.standard.set(today, forKey: "lastStreakShownDate")
+        return streak
+    }
+
+    private func checkMilestoneAchievement() -> Int? {
+        guard sessionReadCount > 0 else { return nil }
+        let total = viewModel.totalReadCount()
+        let beforeSession = total - sessionReadCount
+        let shownMilestones = UserDefaults.standard.array(forKey: "shownMilestones") as? [Int] ?? []
+        for milestone in Self.milestones {
+            if beforeSession < milestone && total >= milestone && !shownMilestones.contains(milestone) {
+                var updated = shownMilestones
+                updated.append(milestone)
+                UserDefaults.standard.set(updated, forKey: "shownMilestones")
+                return milestone
+            }
+        }
+        return nil
+    }
+
     private func completedView(message: String) -> some View {
         let remainingUnread = filteredUnreadEntries().count
+        let hasAchievement = streakAchievement != nil || milestoneAchievement != nil
+
         return VStack(spacing: 16) {
             Spacer()
             Image(systemName: "checkmark.seal.fill")
@@ -379,9 +417,34 @@ struct CatchUpView: View {
             Text(message)
                 .font(.title2.bold())
                 .opacity(completionAnimated ? 1.0 : 0.0)
+
+            if hasAchievement {
+                VStack(spacing: 12) {
+                    if let streak = streakAchievement {
+                        achievementCard(
+                            icon: "flame.fill",
+                            iconColor: .orange,
+                            text: "\(streak)日連続！"
+                        )
+                    }
+                    if let milestone = milestoneAchievement {
+                        achievementCard(
+                            icon: "trophy.fill",
+                            iconColor: .yellow,
+                            text: "\(milestone)話達成！"
+                        )
+                    }
+                }
+                .scaleEffect(achievementAnimated ? 1.0 : 0.3)
+                .opacity(achievementAnimated ? 1.0 : 0.0)
+            }
+
             if remainingUnread > 0 {
                 Button {
                     completionAnimated = false
+                    achievementAnimated = false
+                    streakAchievement = nil
+                    milestoneAchievement = nil
                     unreadItems = filteredUnreadEntries()
                     currentIndex = 0
                     undoStack = []
@@ -396,12 +459,40 @@ struct CatchUpView: View {
         .frame(maxWidth: .infinity)
         .onAppear {
             completionAnimated = false
+            achievementAnimated = false
+            streakAchievement = checkStreakAchievement()
+            milestoneAchievement = checkMilestoneAchievement()
+            let showAchievement = streakAchievement != nil || milestoneAchievement != nil
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 withAnimation(.spring(duration: 0.6, bounce: 0.5)) {
                     completionAnimated = true
                 }
             }
+            if showAchievement {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                    withAnimation(.spring(duration: 0.6, bounce: 0.5)) {
+                        achievementAnimated = true
+                    }
+                }
+            }
         }
+    }
+
+    private func achievementCard(icon: String, iconColor: Color, text: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundStyle(iconColor)
+            Text(text)
+                .font(.headline)
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 14)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
+                .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+        )
     }
 
     private func openMangaURL(_ urlString: String) {

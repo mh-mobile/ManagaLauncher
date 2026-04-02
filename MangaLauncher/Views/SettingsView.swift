@@ -9,6 +9,7 @@ struct SettingsView: View {
     var viewModel: MangaViewModel
 
     @State private var showingResetConfirmation = false
+    @State private var achievementResetDone = false
     @State private var showingExporter = false
     @State private var showingImporter = false
     @State private var importResult: ImportResult?
@@ -220,6 +221,24 @@ struct SettingsView: View {
                         LicenseListView()
                     }
                 }
+
+                #if DEBUG
+                Section("デバッグ") {
+                    Button {
+                        UserDefaults.standard.removeObject(forKey: "lastStreakShownDate")
+                        UserDefaults.standard.removeObject(forKey: "shownMilestones")
+                        achievementResetDone = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            achievementResetDone = false
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.counterclockwise")
+                            Text(achievementResetDone ? "リセットしました" : "アチーブメント記録をリセット")
+                        }
+                    }
+                }
+                #endif
 
                 Section {
                     Button(role: .destructive) {
