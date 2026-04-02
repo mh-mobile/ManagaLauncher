@@ -192,7 +192,11 @@ final class MangaViewModel {
         }
         UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.lastStreakShownDate)
         UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.shownMilestones)
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            print("[MangaViewModel] deleteAllEntries save failed: \(error)")
+        }
         refreshCounter += 1
         #if canImport(WidgetKit)
         WidgetCenter.shared.reloadAllTimelines()
@@ -345,7 +349,11 @@ final class MangaViewModel {
     }
 
     private func save() {
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            print("[MangaViewModel] save failed: \(error)")
+        }
         refreshCounter += 1
         #if canImport(WidgetKit)
         WidgetCenter.shared.reloadAllTimelines()
