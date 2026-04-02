@@ -135,7 +135,7 @@ struct EditEntryView: View {
                         #endif
                         .autocorrectionDisabled()
                     if !url.isEmpty && !isValidURL {
-                        Text("有効なURLを入力してください（例: https://... または shortcuts://...）")
+                        Text("有効なURLを入力してください（例: https://...）")
                             .font(.caption)
                             .foregroundStyle(.red)
                     }
