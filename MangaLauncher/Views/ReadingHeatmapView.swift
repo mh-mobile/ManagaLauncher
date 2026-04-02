@@ -301,7 +301,8 @@ private struct DayActivitySheet: View {
     private func openMangaURL(_ urlString: String) {
         guard let url = URL(string: urlString) else { return }
         #if canImport(UIKit)
-        if browserMode == "inApp" {
+        let isWebURL = url.scheme?.lowercased() == "http" || url.scheme?.lowercased() == "https"
+        if browserMode == "inApp" && isWebURL {
             safariURL = url
         } else {
             openURL(url)

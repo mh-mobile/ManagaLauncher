@@ -89,12 +89,12 @@ struct EditEntryView: View {
         return calendar.date(byAdding: .day, value: next, to: today)!
     }
 
-    private static let blockedSchemes: Set<String> = ["javascript", "data", "file", "blob"]
+    private static let allowedSchemes: Set<String> = ["https", "http"]
 
     private var isValidURL: Bool {
         guard let url = URL(string: url),
               let scheme = url.scheme?.lowercased() else { return false }
-        return !scheme.isEmpty && !Self.blockedSchemes.contains(scheme)
+        return Self.allowedSchemes.contains(scheme)
     }
 
     init(viewModel: MangaViewModel, entry: MangaEntry, showsDeleteButton: Bool = true) {
