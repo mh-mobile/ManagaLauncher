@@ -378,7 +378,7 @@ struct CatchUpView: View {
 
     private func checkStreakAchievement() -> Int? {
         guard sessionReadCount > 0 else { return nil }
-        let streak = viewModel.currentStreak()
+        let streak = viewModel.stats.currentStreak()
         guard streak >= 2 else { return nil }
         let today = Calendar.current.startOfDay(for: Date())
         let lastShown = UserDefaults.standard.object(forKey: UserDefaultsKeys.lastStreakShownDate) as? Date
@@ -389,7 +389,7 @@ struct CatchUpView: View {
 
     private func checkMilestoneAchievement() -> Int? {
         guard sessionReadCount > 0 else { return nil }
-        let total = viewModel.totalReadCount()
+        let total = viewModel.stats.totalReadCount()
         let beforeSession = total - sessionReadCount
         let shownMilestones = UserDefaults.standard.array(forKey: UserDefaultsKeys.shownMilestones) as? [Int] ?? []
         for milestone in Self.milestones {
