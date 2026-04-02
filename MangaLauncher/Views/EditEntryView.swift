@@ -266,7 +266,7 @@ struct EditEntryView: View {
                     if isCustomInterval {
                         Stepper("\(updateIntervalWeeks)週ごと", value: $updateIntervalWeeks, in: 1...52)
                     }
-                    if actualIntervalWeeks >= 2 {
+                    if actualIntervalWeeks >= 1 {
                         Picker("次の更新日", selection: $nextUpdateDate) {
                             ForEach(nextUpdateCandidates, id: \.self) { date in
                                 Text(date.formatted(.dateTime.month().day().weekday()))
@@ -351,6 +351,9 @@ struct EditEntryView: View {
                     isOnHiatus = entry.isOnHiatus
                     isCompleted = entry.isCompleted
                     didLoadEntry = true
+                } else if entry == nil, !didLoadEntry {
+                    nextUpdateDate = nextUpdateCandidates.first ?? nextOccurrence(of: selectedDay)
+                    didLoadEntry = true
                 }
             }
             #if canImport(UIKit)
@@ -391,11 +394,11 @@ struct EditEntryView: View {
     private func saveEntry() {
         let interval = actualIntervalWeeks
         if let entry {
-            viewModel.updateEntry(entry, name: name, url: url, dayOfWeek: selectedDay, iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval, nextExpectedUpdate: interval >= 2 ? nextUpdateDate : nil)
+            viewModel.updateEntry(entry, name: name, url: url, dayOfWeek: selectedDay, iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval, nextExpectedUpdate: nextUpdateDate)
             entry.isOnHiatus = isOnHiatus
             entry.isCompleted = isCompleted
         } else {
-            viewModel.addEntry(name: name, url: url, days: [selectedDay], iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval, nextExpectedUpdate: interval >= 2 ? nextUpdateDate : nil)
+            viewModel.addEntry(name: name, url: url, days: [selectedDay], iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval, nextExpectedUpdate: nextUpdateDate)
         }
     }
 }

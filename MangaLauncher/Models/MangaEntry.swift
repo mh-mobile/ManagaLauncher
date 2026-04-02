@@ -105,19 +105,11 @@ final class MangaEntry {
     }
 
     func advanceToNextUpdate() {
-        guard updateIntervalWeeks > 1 else {
-            nextExpectedUpdate = nil
-            return
-        }
         let mostRecent = Self.mostRecentOccurrence(of: dayOfWeek)
         nextExpectedUpdate = Calendar.current.date(byAdding: .day, value: updateIntervalWeeks * 7, to: mostRecent)
     }
 
     func resetNextUpdate() {
-        guard updateIntervalWeeks > 1 else {
-            nextExpectedUpdate = nil
-            return
-        }
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         let todayWeekday = calendar.component(.weekday, from: today) - 1
