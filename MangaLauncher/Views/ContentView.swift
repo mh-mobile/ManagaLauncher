@@ -595,7 +595,7 @@ struct ContentView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             } else {
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(colorFromName(entry.iconColor))
+                    .fill(Color.fromName(entry.iconColor))
                     .aspectRatio(3/4, contentMode: .fit)
                     .overlay {
                         Text(entry.name)
@@ -849,7 +849,7 @@ struct ContentView: View {
                 .clipShape(RoundedRectangle(cornerRadius: size > 40 ? 8 : 6))
         } else {
             Circle()
-                .fill(colorFromName(entry.iconColor))
+                .fill(Color.fromName(entry.iconColor))
                 .frame(width: size, height: size)
                 .overlay {
                     Text(String(entry.name.prefix(1)))
@@ -967,19 +967,6 @@ struct ContentView: View {
         .padding(.bottom, 8)
     }
 
-    private func colorFromName(_ name: String) -> Color {
-        switch name {
-        case "red": .red
-        case "orange": .orange
-        case "yellow": .yellow
-        case "green": .green
-        case "blue": .blue
-        case "purple": .purple
-        case "pink": .pink
-        case "teal": .teal
-        default: .blue
-        }
-    }
 }
 
 struct WiggleModifier: ViewModifier {

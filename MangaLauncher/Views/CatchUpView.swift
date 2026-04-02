@@ -204,7 +204,7 @@ struct CatchUpView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
             } else {
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(colorFromName(entry.iconColor))
+                    .fill(Color.fromName(entry.iconColor))
                     .aspectRatio(3/4, contentMode: .fit)
                     .overlay {
                         Text(entry.name)
@@ -381,9 +381,9 @@ struct CatchUpView: View {
         let streak = viewModel.currentStreak()
         guard streak >= 2 else { return nil }
         let today = Calendar.current.startOfDay(for: Date())
-        let lastShown = UserDefaults.standard.object(forKey: "lastStreakShownDate") as? Date
+        let lastShown = UserDefaults.standard.object(forKey: UserDefaultsKeys.lastStreakShownDate) as? Date
         if lastShown == today { return nil }
-        UserDefaults.standard.set(today, forKey: "lastStreakShownDate")
+        UserDefaults.standard.set(today, forKey: UserDefaultsKeys.lastStreakShownDate)
         return streak
     }
 
@@ -391,12 +391,12 @@ struct CatchUpView: View {
         guard sessionReadCount > 0 else { return nil }
         let total = viewModel.totalReadCount()
         let beforeSession = total - sessionReadCount
-        let shownMilestones = UserDefaults.standard.array(forKey: "shownMilestones") as? [Int] ?? []
+        let shownMilestones = UserDefaults.standard.array(forKey: UserDefaultsKeys.shownMilestones) as? [Int] ?? []
         for milestone in Self.milestones {
             if beforeSession < milestone && total >= milestone && !shownMilestones.contains(milestone) {
                 var updated = shownMilestones
                 updated.append(milestone)
-                UserDefaults.standard.set(updated, forKey: "shownMilestones")
+                UserDefaults.standard.set(updated, forKey: UserDefaultsKeys.shownMilestones)
                 return milestone
             }
         }
@@ -590,17 +590,4 @@ struct CatchUpView: View {
         }
     }
 
-    private func colorFromName(_ name: String) -> Color {
-        switch name {
-        case "red": .red
-        case "orange": .orange
-        case "yellow": .yellow
-        case "green": .green
-        case "blue": .blue
-        case "purple": .purple
-        case "pink": .pink
-        case "teal": .teal
-        default: .blue
-        }
-    }
 }

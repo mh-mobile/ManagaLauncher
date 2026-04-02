@@ -318,7 +318,7 @@ struct MangaWidgetEntryView: View {
                         .scaledToFit()
                 } else {
                     Rectangle()
-                        .fill(colorFromName(item.iconColor))
+                        .fill(Color.fromName(item.iconColor))
                         .overlay {
                             Text(item.name)
                                 .font(.system(size: 9, weight: .bold))
@@ -341,19 +341,6 @@ struct MangaWidgetEntryView: View {
         }
     }
 
-    private func colorFromName(_ name: String) -> Color {
-        switch name {
-        case "red": .red
-        case "orange": .orange
-        case "yellow": .yellow
-        case "green": .green
-        case "blue": .blue
-        case "purple": .purple
-        case "pink": .pink
-        case "teal": .teal
-        default: .blue
-        }
-    }
 }
 
 // MARK: - Widget Declaration
