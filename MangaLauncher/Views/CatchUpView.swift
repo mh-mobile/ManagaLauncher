@@ -19,6 +19,7 @@ struct CatchUpView: View {
     @AppStorage("hasSeenCatchUpTutorial") private var hasSeenTutorial = false
     @State private var showTutorial = false
     @State private var editingEntry: MangaEntry?
+    @State private var reloadCount: Int = 0
 
     private enum SwipeAction {
         case read, skip
@@ -89,6 +90,7 @@ struct CatchUpView: View {
         .sheet(item: $editingEntry, onDismiss: {
             editingEntry = nil
             reloadEntries()
+            reloadCount += 1
         }) { entry in
             EditEntryView(viewModel: viewModel, entry: entry, showsDeleteButton: false)
         }
@@ -125,6 +127,7 @@ struct CatchUpView: View {
                 // Next card (background)
                 if currentIndex + 1 < totalCount {
                     cardView(for: unreadItems[currentIndex + 1])
+                        .id("\(unreadItems[currentIndex + 1].id)-\(reloadCount)")
                         .scaleEffect(0.95)
                         .opacity(0.5)
                         .allowsHitTesting(false)
@@ -132,6 +135,7 @@ struct CatchUpView: View {
 
                 // Current card
                 cardView(for: unreadItems[currentIndex])
+                    .id("\(unreadItems[currentIndex].id)-\(reloadCount)")
                     .offset(offset)
                     .rotationEffect(.degrees(Double(offset.width) / 20))
                     .overlay {
