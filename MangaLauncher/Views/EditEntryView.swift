@@ -303,7 +303,7 @@ struct EditEntryView: View {
                     Section {
                         Button(role: .destructive) {
                             if let entry {
-                                viewModel.deleteEntry(entry)
+                                viewModel.queueDelete(entry)
                             }
                             dismiss()
                         } label: {
