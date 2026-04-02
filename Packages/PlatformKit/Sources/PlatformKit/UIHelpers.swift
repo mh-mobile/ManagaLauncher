@@ -38,4 +38,18 @@ extension Color {
         Color(nsColor: .separatorColor)
         #endif
     }
+
+    public static func fromName(_ name: String) -> Color {
+        switch name {
+        case "red": .red
+        case "orange": .orange
+        case "yellow": .yellow
+        case "green": .green
+        case "blue": .blue
+        case "purple": .purple
+        case "pink": .pink
+        case "teal": .teal
+        default: .blue
+        }
+    }
 }

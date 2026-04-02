@@ -190,8 +190,8 @@ final class MangaViewModel {
                 modelContext.delete(activity)
             }
         }
-        UserDefaults.standard.removeObject(forKey: "lastStreakShownDate")
-        UserDefaults.standard.removeObject(forKey: "shownMilestones")
+        UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.lastStreakShownDate)
+        UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.shownMilestones)
         try? modelContext.save()
         refreshCounter += 1
         #if canImport(WidgetKit)
@@ -394,14 +394,14 @@ final class MangaViewModel {
         let counts = fetchActivityCounts(days: 365)
         guard !counts.isEmpty else { return nil }
         let calendar = Calendar.current
-        let dayLabels = ["日", "月", "火", "水", "木", "金", "土"]
         var weekdayCounts: [Int: Int] = [:]
         for (date, count) in counts {
             let weekday = calendar.component(.weekday, from: date) // 1=Sun
             weekdayCounts[weekday, default: 0] += count
         }
-        guard let best = weekdayCounts.max(by: { $0.value < $1.value }) else { return nil }
-        return dayLabels[best.key - 1]
+        guard let best = weekdayCounts.max(by: { $0.value < $1.value }),
+              let day = DayOfWeek(rawValue: best.key - 1) else { return nil }
+        return day.shortName
     }
 
     func rescheduleNotifications() {

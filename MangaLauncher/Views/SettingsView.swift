@@ -225,8 +225,8 @@ struct SettingsView: View {
                 #if DEBUG
                 Section("デバッグ") {
                     Button {
-                        UserDefaults.standard.removeObject(forKey: "lastStreakShownDate")
-                        UserDefaults.standard.removeObject(forKey: "shownMilestones")
+                        UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.lastStreakShownDate)
+                        UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.shownMilestones)
                         achievementResetDone = true
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                             achievementResetDone = false

@@ -8,7 +8,7 @@ struct ReadingHeatmapView: View {
     private let weeks = 52
     private let cellSize: CGFloat = 14
     private let cellSpacing: CGFloat = 3
-    private let dayLabels = ["月", "火", "水", "木", "金", "土", "日"]
+    private let dayLabels = DayOfWeek.orderedDays.map(\.shortName)
 
     @State private var activityCounts: [Date: Int] = [:]
     @State private var selectedDate: Date?
