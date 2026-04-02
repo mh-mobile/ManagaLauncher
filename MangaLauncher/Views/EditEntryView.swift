@@ -89,9 +89,12 @@ struct EditEntryView: View {
         return calendar.date(byAdding: .day, value: next, to: today)!
     }
 
+    private static let allowedSchemes: Set<String> = ["https", "http"]
+
     private var isValidURL: Bool {
-        guard let url = URL(string: url) else { return false }
-        return url.scheme != nil && !url.scheme!.isEmpty
+        guard let url = URL(string: url),
+              let scheme = url.scheme?.lowercased() else { return false }
+        return Self.allowedSchemes.contains(scheme)
     }
 
     init(viewModel: MangaViewModel, entry: MangaEntry, showsDeleteButton: Bool = true) {
@@ -132,7 +135,7 @@ struct EditEntryView: View {
                         #endif
                         .autocorrectionDisabled()
                     if !url.isEmpty && !isValidURL {
-                        Text("有効なURLを入力してください（例: https://... または shortcuts://...）")
+                        Text("有効なURLを入力してください（例: https://...）")
                             .font(.caption)
                             .foregroundStyle(.red)
                     }
