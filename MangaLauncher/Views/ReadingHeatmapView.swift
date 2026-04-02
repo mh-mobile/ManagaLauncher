@@ -27,7 +27,7 @@ struct ReadingHeatmapView: View {
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .onAppear {
-            activityCounts = viewModel.fetchActivityCounts(days: weeks * 7)
+            activityCounts = viewModel.stats.fetchActivityCounts(days: weeks * 7)
         }
         .sheet(item: $selectedDate) { date in
             DayActivitySheet(date: date, viewModel: viewModel)
@@ -39,13 +39,13 @@ struct ReadingHeatmapView: View {
     private var statsSection: some View {
         VStack(spacing: 12) {
             HStack(spacing: 16) {
-                statCard(title: "連続", value: "\(viewModel.currentStreak())", unit: "日")
-                statCard(title: "最長", value: "\(viewModel.longestStreak())", unit: "日")
-                statCard(title: "累計", value: "\(viewModel.totalReadCount())", unit: "話")
+                statCard(title: "連続", value: "\(viewModel.stats.currentStreak())", unit: "日")
+                statCard(title: "最長", value: "\(viewModel.stats.longestStreak())", unit: "日")
+                statCard(title: "累計", value: "\(viewModel.stats.totalReadCount())", unit: "話")
             }
             HStack(spacing: 16) {
-                statCard(title: "今週", value: "\(viewModel.thisWeekReadCount())", unit: "話")
-                statCard(title: "よく読む曜日", value: viewModel.mostActiveDay() ?? "-", unit: "")
+                statCard(title: "今週", value: "\(viewModel.stats.thisWeekReadCount())", unit: "話")
+                statCard(title: "よく読む曜日", value: viewModel.stats.mostActiveDay() ?? "-", unit: "")
             }
         }
     }
@@ -247,7 +247,7 @@ private struct DayActivitySheet: View {
     var body: some View {
         NavigationStack {
             List {
-                let activities = viewModel.fetchActivities(for: date)
+                let activities = viewModel.stats.fetchActivities(for: date)
                 ForEach(activities, id: \.id) { activity in
                     let entry = viewModel.findEntry(by: activity.mangaEntryID)
                     Button {
