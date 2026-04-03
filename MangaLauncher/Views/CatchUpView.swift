@@ -502,17 +502,7 @@ struct CatchUpView: View {
     }
 
     private func openMangaURL(_ urlString: String) {
-        guard let url = URL(string: urlString) else { return }
-        #if canImport(UIKit)
-        let isWebURL = url.scheme?.lowercased() == "http" || url.scheme?.lowercased() == "https"
-        if browserMode == "inApp" && isWebURL {
-            safariURL = url
-        } else {
-            openURL(url)
-        }
-        #else
-        openURL(url)
-        #endif
+        MangaURLOpener(browserMode: browserMode, openURL: openURL) { safariURL = $0 }.open(urlString)
     }
 
     // MARK: - Tutorial Overlay
