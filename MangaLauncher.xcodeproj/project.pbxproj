@@ -88,6 +88,7 @@
 		ECFEA8942F7F93AF00CE4DC0 /* ModelContextExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC44DD5EE5561C4C4F99C248 /* ModelContextExtensions.swift */; };
 		ECFEA8952F7F93AF00CE4DC0 /* AnimationTiming.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD61F7CE55EE24A44A02F14 /* AnimationTiming.swift */; };
 		ECFEA8962F7F93AF00CE4DC0 /* ModelContextExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC44DD5EE5561C4C4F99C248 /* ModelContextExtensions.swift */; };
+		ECFEA89E2F7F96D200CE4DC0 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = ECFEA89D2F7F96D200CE4DC0 /* Localizable.xcstrings */; };
 		F8659628D6F745CA942803EB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E7D977DE254FB1F216740BE6 /* Foundation.framework */; };
 /* End PBXBuildFile section */
 
@@ -190,6 +191,7 @@
 		ECFEA8772F7F8C4000CE4DC0 /* CatchUpTutorialOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatchUpTutorialOverlay.swift; sourceTree = "<group>"; };
 		ECFEA8972F7F941700CE4DC0 /* MangaWidgetDebug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MangaWidgetDebug.entitlements; sourceTree = "<group>"; };
 		ECFEA8982F7F943700CE4DC0 /* MangaShareExtensionDebug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MangaShareExtensionDebug.entitlements; sourceTree = "<group>"; };
+		ECFEA89D2F7F96D200CE4DC0 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		EEC07D90615785B81C2E71C8 /* ImageCropView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ImageCropView.swift; sourceTree = "<group>"; };
 		EEEF347AB79EE547A4014C35 /* MangaLauncher.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaLauncher.entitlements; sourceTree = "<group>"; };
 		F75AA6830F31ABE5BD81DE01 /* MangaLauncherDebug.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaLauncherDebug.entitlements; sourceTree = "<group>"; };
@@ -303,6 +305,7 @@
 				EC04B7E52F78E26600AEE45F /* MangaLauncherAdhoc.entitlements */,
 				9E18CC353D62E01CB4A12BC8 /* Info.plist */,
 				873452A3D59E456024C0BC36 /* Intents */,
+				ECFEA89D2F7F96D200CE4DC0 /* Localizable.xcstrings */,
 			);
 			path = MangaLauncher;
 			sourceTree = "<group>";
@@ -570,6 +573,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ECFEA89E2F7F96D200CE4DC0 /* Localizable.xcstrings in Resources */,
 				A1000006 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -837,6 +841,7 @@
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -895,6 +900,7 @@
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -1050,6 +1056,7 @@
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Adhoc;
