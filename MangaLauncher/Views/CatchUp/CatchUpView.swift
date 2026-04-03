@@ -87,7 +87,7 @@ struct CatchUpView: View {
         }
         .overlay {
             if showTutorial {
-                catchUpTutorialOverlay
+                CatchUpTutorialOverlay(hasSeenTutorial: $hasSeenTutorial, showTutorial: $showTutorial)
             }
         }
         .sheet(item: $editingEntry, onDismiss: {
@@ -110,7 +110,6 @@ struct CatchUpView: View {
     private var cardStackView: some View {
         VStack(spacing: 20) {
             Spacer(minLength: 0)
-            // Progress
             HStack {
                 Text("\(currentIndex + 1) / \(totalCount)")
                     .font(.subheadline.bold())
@@ -125,32 +124,27 @@ struct CatchUpView: View {
             ProgressView(value: Double(currentIndex), total: Double(totalCount))
                 .padding(.horizontal)
 
-            // Cards
             ZStack {
-                // Next card (background)
                 if currentIndex + 1 < totalCount {
-                    cardView(for: unreadItems[currentIndex + 1])
+                    CatchUpCardView(entry: unreadItems[currentIndex + 1], editingEntry: $editingEntry, onOpenURL: openMangaURL)
                         .id("\(unreadItems[currentIndex + 1].id)-\(reloadCount)")
                         .scaleEffect(0.95)
                         .opacity(0.5)
                         .allowsHitTesting(false)
                 }
 
-                // Current card
-                cardView(for: unreadItems[currentIndex])
+                CatchUpCardView(entry: unreadItems[currentIndex], editingEntry: $editingEntry, onOpenURL: openMangaURL)
                     .id("\(unreadItems[currentIndex].id)-\(reloadCount)")
                     .offset(offset)
                     .rotationEffect(.degrees(Double(offset.width) / 20))
                     .overlay {
-                        swipeOverlay
+                        CatchUpSwipeOverlay(offsetWidth: offset.width)
                     }
                     .gesture(dragGesture)
             }
             .padding(.horizontal)
 
-            // Action buttons
             HStack(spacing: 60) {
-                // Skip (left)
                 Button {
                     withAnimation(.spring(duration: 0.3)) {
                         offset = CGSize(width: -500, height: 0)
@@ -168,7 +162,6 @@ struct CatchUpView: View {
                     .foregroundStyle(.orange)
                 }
 
-                // Read (right)
                 Button {
                     withAnimation(.spring(duration: 0.3)) {
                         offset = CGSize(width: 500, height: 0)
@@ -191,90 +184,6 @@ struct CatchUpView: View {
         }
         .frame(maxWidth: 600)
         .frame(maxWidth: .infinity)
-    }
-
-    // MARK: - Card View
-
-    private func cardView(for entry: MangaEntry) -> some View {
-        VStack(spacing: 12) {
-            if let imageData = entry.imageData, let image = imageData.toSwiftUIImage() {
-                image
-                    .resizable()
-                    .scaledToFit()
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-            } else {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.fromName(entry.iconColor))
-                    .aspectRatio(3/4, contentMode: .fit)
-                    .overlay {
-                        Text(entry.name)
-                            .font(.title.bold())
-                            .foregroundStyle(.white)
-                            .multilineTextAlignment(.center)
-                            .padding()
-                    }
-            }
-
-            Text(entry.name)
-                .font(.title3.bold())
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
-
-            if !entry.publisher.isEmpty {
-                Text(entry.publisher)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding()
-        .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.background)
-                .shadow(color: .black.opacity(0.1), radius: 8, y: 4)
-        )
-        .contentShape(Rectangle())
-        .onTapGesture {
-            openMangaURL(entry.url)
-        }
-        .onLongPressGesture {
-            editingEntry = entry
-        }
-    }
-
-    // MARK: - Swipe Overlay
-
-    @ViewBuilder
-    private var swipeOverlay: some View {
-        if offset.width > 30 {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.green.opacity(0.2))
-                .overlay {
-                    VStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 60))
-                            .foregroundStyle(.green)
-                        Text("既読")
-                            .font(.title2.bold())
-                            .foregroundStyle(.green)
-                    }
-                }
-                .opacity(min(Double(offset.width) / 100, 1))
-        } else if offset.width < -30 {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.orange.opacity(0.2))
-                .overlay {
-                    VStack {
-                        Image(systemName: "clock.arrow.circlepath")
-                            .font(.system(size: 60))
-                            .foregroundStyle(.orange)
-                        Text("あとで")
-                            .font(.title2.bold())
-                            .foregroundStyle(.orange)
-                    }
-                }
-                .opacity(min(Double(-offset.width) / 100, 1))
-        }
     }
 
     // MARK: - Drag Gesture
@@ -335,14 +244,12 @@ struct CatchUpView: View {
         let processedIDs = Set(undoStack.filter { $0.action == .read }.map { $0.entry.id })
         let allUnread = filteredUnreadEntries()
 
-        // Batch fetch all needed entries
         var neededIDs = Set(unreadItems.prefix(currentIndex).map(\.id))
         neededIDs.formUnion(undoStack.map(\.entry.id))
         let freshEntries = viewModel.findEntries(by: neededIDs)
 
         var newItems: [MangaEntry] = []
 
-        // Keep already-processed entries in order
         for i in 0..<currentIndex where i < unreadItems.count {
             let oldEntry = unreadItems[i]
             if let fresh = freshEntries[oldEntry.id] {
@@ -350,13 +257,11 @@ struct CatchUpView: View {
             }
         }
 
-        // Remaining unread entries
         for entry in allUnread where !processedIDs.contains(entry.id) && !newItems.contains(where: { $0.id == entry.id }) {
             newItems.append(entry)
         }
 
         unreadItems = newItems
-        // Rebuild undo stack with fresh references
         undoStack = undoStack.compactMap { item in
             guard let fresh = freshEntries[item.entry.id] else { return nil }
             return (entry: fresh, action: item.action)
@@ -410,181 +315,27 @@ struct CatchUpView: View {
     }
 
     private func completedView(message: String) -> some View {
-        let remainingUnread = filteredUnreadEntries().count
-        let hasAchievement = streakAchievement != nil || milestoneAchievement != nil
-
-        return VStack(spacing: 16) {
-            Spacer()
-            Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 64))
-                .foregroundStyle(.green)
-                .scaleEffect(completionAnimated ? 1.0 : 0.3)
-                .opacity(completionAnimated ? 1.0 : 0.0)
-            Text(message)
-                .font(.title2.bold())
-                .opacity(completionAnimated ? 1.0 : 0.0)
-
-            if hasAchievement {
-                VStack(spacing: 12) {
-                    if let streak = streakAchievement {
-                        achievementCard(
-                            icon: "flame.fill",
-                            iconColor: .orange,
-                            text: "\(streak)日連続！"
-                        )
-                    }
-                    if let milestone = milestoneAchievement {
-                        achievementCard(
-                            icon: "trophy.fill",
-                            iconColor: .yellow,
-                            text: "\(milestone)話達成！"
-                        )
-                    }
-                }
-                .scaleEffect(achievementAnimated ? 1.0 : 0.3)
-                .opacity(achievementAnimated ? 1.0 : 0.0)
-            }
-
-            if remainingUnread > 0 {
-                Button {
-                    completionAnimated = false
-                    achievementAnimated = false
-                    streakAchievement = nil
-                    milestoneAchievement = nil
-                    unreadItems = filteredUnreadEntries()
-                    currentIndex = 0
-                    undoStack = []
-                } label: {
-                    Label("未読を再チェック（\(remainingUnread)件）", systemImage: "arrow.counterclockwise")
-                }
-                .buttonStyle(.bordered)
-                .opacity(completionAnimated ? 1.0 : 0.0)
-            }
-            Spacer()
-        }
-        .frame(maxWidth: .infinity)
-        .onAppear {
+        CatchUpCompletedView(
+            message: message,
+            remainingUnread: filteredUnreadEntries().count,
+            streakAchievement: $streakAchievement,
+            milestoneAchievement: $milestoneAchievement,
+            completionAnimated: $completionAnimated,
+            achievementAnimated: $achievementAnimated,
+            checkStreak: checkStreakAchievement,
+            checkMilestone: checkMilestoneAchievement
+        ) {
             completionAnimated = false
             achievementAnimated = false
-            streakAchievement = checkStreakAchievement()
-            milestoneAchievement = checkMilestoneAchievement()
-            let showAchievement = streakAchievement != nil || milestoneAchievement != nil
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                withAnimation(.spring(duration: 0.6, bounce: 0.5)) {
-                    completionAnimated = true
-                }
-            }
-            if showAchievement {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
-                    withAnimation(.spring(duration: 0.6, bounce: 0.5)) {
-                        achievementAnimated = true
-                    }
-                }
-            }
+            streakAchievement = nil
+            milestoneAchievement = nil
+            unreadItems = filteredUnreadEntries()
+            currentIndex = 0
+            undoStack = []
         }
-    }
-
-    private func achievementCard(icon: String, iconColor: Color, text: String) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundStyle(iconColor)
-            Text(text)
-                .font(.headline)
-        }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 14)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.ultraThinMaterial)
-                .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
-        )
     }
 
     private func openMangaURL(_ urlString: String) {
         MangaURLOpener(browserMode: browserMode, openURL: openURL) { safariURL = $0 }.open(urlString)
     }
-
-    // MARK: - Tutorial Overlay
-
-    private var catchUpTutorialOverlay: some View {
-        ZStack {
-            Color.black.opacity(0.6)
-                .ignoresSafeArea()
-
-            VStack(spacing: 24) {
-                Text("使い方")
-                    .font(.title2.bold())
-                    .foregroundStyle(.white)
-
-                VStack(alignment: .leading, spacing: 16) {
-                    tutorialRow(
-                        icon: "hand.tap.fill",
-                        color: .blue,
-                        title: "タップで開く",
-                        description: "カード画像をタップするとサイトを開けます"
-                    )
-                    tutorialRow(
-                        icon: "arrow.right",
-                        color: .green,
-                        title: "右スワイプ → 既読",
-                        description: "読み終わったマンガを既読にします"
-                    )
-                    tutorialRow(
-                        icon: "arrow.left",
-                        color: .orange,
-                        title: "左スワイプ → あとで",
-                        description: "あとで読むマンガをスキップします"
-                    )
-                    tutorialRow(
-                        icon: "arrow.uturn.backward",
-                        color: .secondary,
-                        title: "元に戻す",
-                        description: "ツールバーのボタンで直前の操作を取り消せます"
-                    )
-                }
-
-                Button {
-                    withAnimation {
-                        hasSeenTutorial = true
-                        showTutorial = false
-                    }
-                } label: {
-                    Text("OK")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(Color.accentColor)
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-            }
-            .padding(24)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(.ultraThinMaterial)
-            )
-            .frame(maxWidth: 400)
-            .padding(.horizontal, 32)
-        }
-        .transition(.opacity)
-    }
-
-    private func tutorialRow(icon: String, color: Color, title: String, description: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundStyle(color)
-                .frame(width: 28)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.subheadline.bold())
-                    .foregroundStyle(.white)
-                Text(description)
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.8))
-            }
-        }
-    }
-
 }
