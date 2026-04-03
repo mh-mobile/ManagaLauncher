@@ -529,62 +529,6 @@ struct ContentView: View {
         #endif
     }
 
-    @ViewBuilder
-    private func gridView(entries: [MangaEntry], day: DayOfWeek, viewModel: MangaViewModel) -> some View {
-        GeometryReader { geo in
-        ScrollView {
-            MasonryLayout(entries: entries, availableWidth: geo.size.width - 32) { entry in
-                MangaGridCell(entry: entry, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, isGridEditMode: $isGridEditMode, editingEntry: $editingEntry, onOpenURL: openMangaURL)
-                    .overlay(alignment: .topLeading) {
-                        if isGridEditMode {
-                            Button {
-                                viewModel.queueDelete(entry)
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.title3)
-                                    .symbolRenderingMode(.palette)
-                                    .foregroundStyle(.white, .gray)
-                            }
-                            .offset(x: -6, y: -6)
-                        }
-                    }
-                    .modifier(WiggleModifier(isActive: isGridEditMode))
-                    .onDrag {
-                        draggingEntryID = entry.id
-                        return NSItemProvider(object: entry.id.uuidString as NSString)
-                    } preview: {
-                        MangaGridCell(entry: entry, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, isGridEditMode: $isGridEditMode, editingEntry: $editingEntry, onOpenURL: openMangaURL)
-                            .frame(width: 120)
-                    }
-                    .onDrop(of: [.text], delegate: GridDropDelegate(
-                        entry: entry,
-                        entries: entries,
-                        day: day,
-                        draggingEntryID: $draggingEntryID,
-                        viewModel: viewModel
-                    ))
-            }
-            .padding()
-        }
-        .contentMargins(.top, headerHeight, for: .scrollContent)
-        .scrollContentBackground(.hidden)
-        .contentShape(Rectangle())
-        .onLongPressGesture {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                isGridEditMode = true
-            }
-        }
-        .onDrop(of: [.text], delegate: EmptyPageDropDelegate(
-            day: day,
-            draggingEntryID: $draggingEntryID,
-            viewModel: viewModel
-        ))
-        }
-    }
-
-
-
-
 
     @ViewBuilder
     private func emptyStateView<Content: View>(@ViewBuilder content: () -> Content) -> some View {
