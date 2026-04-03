@@ -57,8 +57,12 @@ struct MangaGridCell: View {
                 .padding(.vertical, hasWallpaper ? 6 : 0)
                 .background {
                     if hasWallpaper {
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color(.secondarySystemBackground).opacity(reduceTransparency ? 0.6 : 0.3))
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color(.systemFill))
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
+                        }
                     }
                 }
             }

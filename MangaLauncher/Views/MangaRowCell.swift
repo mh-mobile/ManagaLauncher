@@ -52,10 +52,14 @@ struct MangaRowCell: View {
             .listRowBackground(
                 Group {
                     if hasWallpaper {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(.secondarySystemBackground).opacity(reduceTransparency ? 0.6 : 0.3))
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 2)
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color(.systemFill))
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
+                        }
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 2)
                     } else {
                         Color.platformBackground
                     }

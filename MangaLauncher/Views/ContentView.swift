@@ -593,10 +593,14 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.top, headerHeight)
                 .background {
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color(.secondarySystemBackground).opacity(reduceTransparency ? 0.6 : 0.3))
-                        .padding()
-                        .padding(.top, headerHeight)
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color(.systemFill))
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
+                    }
+                    .padding()
+                    .padding(.top, headerHeight)
                 }
         } else {
             content()
