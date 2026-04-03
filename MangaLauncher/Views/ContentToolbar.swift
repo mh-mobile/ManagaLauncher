@@ -3,14 +3,10 @@ import SwiftUI
 struct ContentToolbar: ToolbarContent {
     var viewModel: MangaViewModel
     let displayMode: DisplayMode
-    let pageIndex: Int
-    let isGridEditMode: Bool
+    var paging: PagingState
+    var edit: EditState
     let showingWallpaperPicker: Bool
-    #if os(iOS) || os(visionOS)
-    let listEditMode: EditMode
-    #endif
     let selectedPublisher: String?
-    let dayForPageIndex: (Int) -> DayOfWeek
     var onCatchUp: () -> Void
     var onToggleDisplayMode: () -> Void
     var onAdd: () -> Void
@@ -24,7 +20,6 @@ struct ContentToolbar: ToolbarContent {
             } else {
                 allUnread.count
             }
-            let isEditMode = isGridEditMode || listEditMode == .active
             Button {
                 onCatchUp()
             } label: {
@@ -36,11 +31,11 @@ struct ContentToolbar: ToolbarContent {
                             .foregroundStyle(.white)
                             .padding(.horizontal, 5)
                             .padding(.vertical, 2)
-                            .background(.red.opacity(isEditMode ? 0.3 : 1), in: Capsule())
+                            .background(.red.opacity(edit.isEditing ? 0.3 : 1), in: Capsule())
                     }
                 }
             }
-            .disabled(unreadCount == 0 || isEditMode || dayForPageIndex(pageIndex).isHiatus || dayForPageIndex(pageIndex).isCompleted)
+            .disabled(unreadCount == 0 || edit.isEditing || paging.currentDay.isHiatus || paging.currentDay.isCompleted)
         }
         ToolbarItem(placement: .automatic) {
             Button {
@@ -56,7 +51,7 @@ struct ContentToolbar: ToolbarContent {
             } label: {
                 Image(systemName: "plus")
             }
-            .disabled(isGridEditMode || listEditMode == .active || dayForPageIndex(pageIndex).isHiatus || dayForPageIndex(pageIndex).isCompleted)
+            .disabled(edit.isEditing || paging.currentDay.isHiatus || paging.currentDay.isCompleted)
         }
         ToolbarItem(placement: .automatic) {
             Button {
@@ -64,7 +59,7 @@ struct ContentToolbar: ToolbarContent {
             } label: {
                 Image(systemName: "gearshape")
             }
-            .disabled(isGridEditMode || listEditMode == .active)
+            .disabled(edit.isEditing)
         }
     }
 }

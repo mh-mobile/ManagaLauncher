@@ -77,6 +77,7 @@
 		ECFEA85E2F7F7E0400CE4DC0 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECFEA85D2F7F7E0400CE4DC0 /* EmptyStateView.swift */; };
 		ECFEA8602F7F7E2000CE4DC0 /* DayPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECFEA85F2F7F7E2000CE4DC0 /* DayPageView.swift */; };
 		ECFEA8622F7F7E3200CE4DC0 /* ContentToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECFEA8612F7F7E3200CE4DC0 /* ContentToolbar.swift */; };
+		ECFEA8642F7F829A00CE4DC0 /* HomeState.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECFEA8632F7F829A00CE4DC0 /* HomeState.swift */; };
 		F8659628D6F745CA942803EB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E7D977DE254FB1F216740BE6 /* Foundation.framework */; };
 /* End PBXBuildFile section */
 
@@ -170,6 +171,7 @@
 		ECFEA85D2F7F7E0400CE4DC0 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
 		ECFEA85F2F7F7E2000CE4DC0 /* DayPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayPageView.swift; sourceTree = "<group>"; };
 		ECFEA8612F7F7E3200CE4DC0 /* ContentToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentToolbar.swift; sourceTree = "<group>"; };
+		ECFEA8632F7F829A00CE4DC0 /* HomeState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeState.swift; sourceTree = "<group>"; };
 		EEC07D90615785B81C2E71C8 /* ImageCropView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ImageCropView.swift; sourceTree = "<group>"; };
 		EEEF347AB79EE547A4014C35 /* MangaLauncher.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaLauncher.entitlements; sourceTree = "<group>"; };
 		F75AA6830F31ABE5BD81DE01 /* MangaLauncherDebug.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaLauncherDebug.entitlements; sourceTree = "<group>"; };
@@ -335,6 +337,7 @@
 			children = (
 				A2000003 /* MangaViewModel.swift */,
 				ECFEA82F2F7E970700CE4DC0 /* ReadingStatsProvider.swift */,
+				ECFEA8632F7F829A00CE4DC0 /* HomeState.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -549,6 +552,7 @@
 				A1000005 /* EditEntryView.swift in Sources */,
 				EC04B7CF2F70D9FE00AEE45F /* CatchUpView.swift in Sources */,
 				ECFEA8622F7F7E3200CE4DC0 /* ContentToolbar.swift in Sources */,
+				ECFEA8642F7F829A00CE4DC0 /* HomeState.swift in Sources */,
 				4975296B405867976ADBBA9F /* SharedModelContainer.swift in Sources */,
 				2AA2BDFC2D4CFE5BF3F85D4A /* DataMigration.swift in Sources */,
 				D43D0695E7E3840F3142A594 /* SettingsView.swift in Sources */,
