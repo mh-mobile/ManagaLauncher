@@ -70,7 +70,7 @@ struct ContentView: View {
                             dayTabBar(viewModel: viewModel)
                             let publishers = viewModel.publishers(for: viewModel.selectedDay)
                             if !publishers.isEmpty {
-                                publisherFilter(publishers: publishers)
+                                PublisherFilterView(publishers: publishers, selectedPublisher: $selectedPublisher)
                             }
                         }
                         .background {
@@ -107,61 +107,26 @@ struct ContentView: View {
                 .animation(.easeInOut(duration: 0.2), value: isGridEditMode)
                 .animation(.easeInOut(duration: 0.2), value: listEditMode)
                 .toolbar {
-                    ToolbarItem(placement: .navigation) {
-                        let allUnread = viewModel.unreadEntries(for: viewModel.selectedDay)
-                        let unreadCount = if let selectedPublisher {
-                            allUnread.filter { $0.publisher == selectedPublisher }.count
-                        } else {
-                            allUnread.count
-                        }
-                        let isEditMode = isGridEditMode || listEditMode == .active
-                        Button {
-                            showingCatchUp = true
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "rectangle.stack")
-                                if unreadCount > 0 {
-                                    Text("\(unreadCount)")
-                                        .font(.caption2.bold())
-                                        .foregroundStyle(.white)
-                                        .padding(.horizontal, 5)
-                                        .padding(.vertical, 2)
-                                        .background(.red.opacity(isEditMode ? 0.3 : 1), in: Capsule())
-                                }
-                            }
-                        }
-                        .disabled(unreadCount == 0 || isEditMode || dayForPageIndex(pageIndex).isHiatus || dayForPageIndex(pageIndex).isCompleted)
-                    }
-                    ToolbarItem(placement: .automatic) {
-                        Button {
+                    ContentToolbar(
+                        viewModel: viewModel,
+                        displayMode: displayMode,
+                        pageIndex: pageIndex,
+                        isGridEditMode: isGridEditMode,
+                        showingWallpaperPicker: showingWallpaperPicker,
+                        listEditMode: listEditMode,
+                        selectedPublisher: selectedPublisher,
+                        dayForPageIndex: dayForPageIndex,
+                        onCatchUp: { showingCatchUp = true },
+                        onToggleDisplayMode: {
                             withAnimation {
                                 isGridEditMode = false
-                                #if os(iOS) || os(visionOS)
                                 listEditMode = .inactive
-                                #endif
                                 displayMode = displayMode == .list ? .grid : .list
                             }
-                        } label: {
-                            Image(systemName: displayMode == .list ? "square.grid.2x2" : "list.bullet")
-                        }
-                        .disabled(showingWallpaperPicker)
-                    }
-                    ToolbarItem(placement: .automatic) {
-                        Button {
-                            showingAddSheet = true
-                        } label: {
-                            Image(systemName: "plus")
-                        }
-                        .disabled(isGridEditMode || listEditMode == .active || dayForPageIndex(pageIndex).isHiatus || dayForPageIndex(pageIndex).isCompleted)
-                    }
-                    ToolbarItem(placement: .automatic) {
-                        Button {
-                            showingSettings = true
-                        } label: {
-                            Image(systemName: "gearshape")
-                        }
-                        .disabled(isGridEditMode || listEditMode == .active)
-                    }
+                        },
+                        onAdd: { showingAddSheet = true },
+                        onSettings: { showingSettings = true }
+                    )
                 }
                 .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
                 .sheet(isPresented: $showingWallpaperPicker, onDismiss: {
@@ -248,149 +213,8 @@ struct ContentView: View {
         }
     }
 
-    @ViewBuilder
     private func dayPage(day: DayOfWeek, viewModel: MangaViewModel) -> some View {
-        let _ = viewModel.refreshCounter
-        let allEntries = viewModel.fetchEntries(for: day)
-        let entries = if let selectedPublisher {
-            allEntries.filter { $0.publisher == selectedPublisher }
-        } else {
-            allEntries
-        }
-
-        if displayMode == .list && !allEntries.isEmpty && !entries.isEmpty {
-            listView(entries: entries, day: day, viewModel: viewModel)
-        } else {
-            GeometryReader { geo in
-                ScrollView {
-                    if allEntries.isEmpty {
-                        emptyStateView {
-                            if day.isCompleted {
-                                ContentUnavailableView {
-                                    Label("完結したマンガはありません", systemImage: "checkmark.seal")
-                                } description: {
-                                    Text("コンテキストメニューや編集画面から\n「完結にする」でここに移動できます")
-                                }
-                            } else if day.isHiatus {
-                                ContentUnavailableView {
-                                    Label("休載中のマンガはありません", systemImage: "moon.zzz")
-                                } description: {
-                                    Text("コンテキストメニューや編集画面から\n「休載中にする」でここに移動できます")
-                                }
-                            } else {
-                                ContentUnavailableView {
-                                    Label("エントリなし", systemImage: "book.closed")
-                                } description: {
-                                    Text("\(day.displayName)に登録されたマンガはありません")
-                                } actions: {
-                                    Button("追加する") {
-                                        showingAddSheet = true
-                                    }
-                                }
-                            }
-                        }
-                        .frame(maxWidth: 600)
-                        .frame(maxWidth: .infinity, minHeight: geo.size.height - headerHeight)
-                    } else if entries.isEmpty {
-                        emptyStateView {
-                            ContentUnavailableView {
-                                Label("該当なし", systemImage: "line.3.horizontal.decrease.circle")
-                            } description: {
-                                Text("この掲載誌のマンガはありません")
-                            } actions: {
-                                Button("フィルター解除") {
-                                    selectedPublisher = nil
-                                }
-                            }
-                        }
-                        .frame(maxWidth: 600)
-                        .frame(maxWidth: .infinity, minHeight: geo.size.height - headerHeight)
-                    } else {
-                        MasonryLayout(entries: entries, availableWidth: geo.size.width - 32) { entry in
-                            MangaGridCell(entry: entry, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, isGridEditMode: $isGridEditMode, editingEntry: $editingEntry, onOpenURL: openMangaURL)
-                                .overlay(alignment: .topLeading) {
-                                    if isGridEditMode {
-                                        Button {
-                                            viewModel.queueDelete(entry)
-                                        } label: {
-                                            Image(systemName: "xmark.circle.fill")
-                                                .font(.title3)
-                                                .symbolRenderingMode(.palette)
-                                                .foregroundStyle(.white, .gray)
-                                                .frame(width: 36, height: 36)
-                                                .contentShape(Rectangle())
-                                        }
-                                        .offset(x: -6, y: -6)
-                                    }
-                                }
-                                .modifier(WiggleModifier(isActive: isGridEditMode))
-                                .onDrag {
-                                    draggingEntryID = entry.id
-                                    return NSItemProvider(object: entry.id.uuidString as NSString)
-                                } preview: {
-                                    MangaGridCell(entry: entry, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, isGridEditMode: $isGridEditMode, editingEntry: $editingEntry, onOpenURL: openMangaURL)
-                                        .frame(width: 120)
-                                }
-                                .onDrop(of: [.text], delegate: GridDropDelegate(
-                                    entry: entry,
-                                    entries: entries,
-                                    day: day,
-                                    draggingEntryID: $draggingEntryID,
-                                    viewModel: viewModel
-                                ))
-                        }
-                        .padding()
-                    }
-                }
-                .contentMargins(.top, headerHeight, for: .scrollContent)
-                .scrollContentBackground(.hidden)
-                .contentShape(Rectangle())
-                .simultaneousGesture(
-                    LongPressGesture(minimumDuration: 0.5)
-                        .onEnded { _ in
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                isGridEditMode = true
-                            }
-                        }
-                )
-                .onDrop(of: [.text], delegate: EmptyPageDropDelegate(
-                    day: day,
-                    draggingEntryID: $draggingEntryID,
-                    viewModel: viewModel
-                ))
-            }
-        }
-    }
-
-    private func publisherFilter(publishers: [String]) -> some View {
-        PublisherFilterView(publishers: publishers, selectedPublisher: $selectedPublisher)
-    }
-
-    private func listView(entries: [MangaEntry], day: DayOfWeek, viewModel: MangaViewModel) -> some View {
-        MangaListView(entries: entries, day: day, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, headerHeight: headerHeight, editingEntry: $editingEntry, listEditMode: $listEditMode, onOpenURL: openMangaURL)
-    }
-
-
-    @ViewBuilder
-    private func emptyStateView<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        if hasWallpaper {
-            content()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(.top, headerHeight)
-                .background {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color(.systemFill))
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
-                    }
-                    .padding()
-                    .padding(.top, headerHeight)
-                }
-        } else {
-            content()
-                .padding(.top, headerHeight)
-        }
+        DayPageView(day: day, viewModel: viewModel, displayMode: displayMode, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, headerHeight: headerHeight, selectedPublisher: $selectedPublisher, showingAddSheet: $showingAddSheet, isGridEditMode: $isGridEditMode, editingEntry: $editingEntry, draggingEntryID: $draggingEntryID, listEditMode: $listEditMode, onOpenURL: openMangaURL)
     }
 
     private var editModeButtons: some View {
