@@ -586,46 +586,13 @@ struct ContentView: View {
 
 
 
-    @ViewBuilder
     private var wallpaperBackground: some View {
-        let _ = wallpaperRefresh
-        GeometryReader { geo in
-            if wallpaperPreviewActive {
-                switch wallpaperPreviewSnapshot.wallpaperType {
-                case .color:
-                    wallpaperColor(wallpaperPreviewSnapshot.colorName, customHex: wallpaperPreviewSnapshot.customColorHex)
-                        .frame(width: geo.size.width, height: geo.size.height)
-                case .image:
-                    if let data = wallpaperPreviewSnapshot.imageData,
-                       let image = data.toSwiftUIImage() {
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: geo.size.width, height: geo.size.height)
-                            .clipped()
-                    }
-                case .none:
-                    EmptyView()
-                }
-            } else {
-                switch WallpaperManager.wallpaperType {
-                case .color:
-                    wallpaperColor(WallpaperManager.wallpaperColor)
-                        .frame(width: geo.size.width, height: geo.size.height)
-                case .image:
-                    if let image = cachedWallpaperImage {
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: geo.size.width, height: geo.size.height)
-                            .clipped()
-                    }
-                case .none:
-                    EmptyView()
-                }
-            }
-        }
-        .ignoresSafeArea()
+        WallpaperBackgroundView(
+            wallpaperRefresh: wallpaperRefresh,
+            wallpaperPreviewActive: wallpaperPreviewActive,
+            wallpaperPreviewSnapshot: wallpaperPreviewSnapshot,
+            cachedWallpaperImage: cachedWallpaperImage
+        )
     }
 
     private func loadWallpaperImage() {
@@ -638,23 +605,6 @@ struct ContentView: View {
         }
     }
 
-    private func wallpaperColor(_ name: String, customHex: String? = nil) -> Color {
-        switch name {
-        case "blue": .blue
-        case "purple": .purple
-        case "pink": .pink
-        case "red": .red
-        case "orange": .orange
-        case "yellow": .yellow
-        case "green": .green
-        case "teal": .teal
-        case "gray": .gray
-        case "black": .black
-        case "custom": Color(hex: customHex ?? WallpaperManager.customColorHex)
-        default: .blue
-        }
-    }
-
     private func openMangaURL(_ urlString: String) {
         MangaURLOpener(browserMode: browserMode, openURL: openURL) { safariURL = $0 }.open(urlString)
     }
@@ -662,111 +612,6 @@ struct ContentView: View {
 
 
 }
-
-struct WiggleModifier: ViewModifier {
-    let isActive: Bool
-    @State private var isWiggling = false
-
-    func body(content: Content) -> some View {
-        content
-            .rotationEffect(.degrees(isActive ? (isWiggling ? 2 : -2) : 0))
-            .animation(
-                isActive
-                    ? .easeInOut(duration: 0.12).repeatForever(autoreverses: true)
-                    : .easeInOut(duration: 0.15),
-                value: isActive ? isWiggling : false
-            )
-            .onChange(of: isActive) { _, active in
-                isWiggling = active
-            }
-            .onAppear {
-                isWiggling = isActive
-            }
-    }
-}
-
-struct GridDropDelegate: DropDelegate {
-    let entry: MangaEntry
-    let entries: [MangaEntry]
-    let day: DayOfWeek
-    @Binding var draggingEntryID: UUID?
-    let viewModel: MangaViewModel
-
-    func performDrop(info: DropInfo) -> Bool {
-        draggingEntryID = nil
-        return true
-    }
-
-    func dropEntered(info: DropInfo) {
-        guard let draggingID = draggingEntryID,
-              draggingID != entry.id else { return }
-
-        // Cross-day: move entry to this day first
-        if !entries.contains(where: { $0.id == draggingID }),
-           let draggedEntry = viewModel.findEntry(by: draggingID) {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                viewModel.moveEntryToDay(draggedEntry, to: day, at: entry)
-            }
-            return
-        }
-
-        // Same-day reorder
-        guard let fromIndex = entries.firstIndex(where: { $0.id == draggingID }),
-              let toIndex = entries.firstIndex(where: { $0.id == entry.id }) else { return }
-
-        withAnimation(.easeInOut(duration: 0.2)) {
-            viewModel.moveEntries(
-                for: day,
-                from: IndexSet(integer: fromIndex),
-                to: toIndex > fromIndex ? toIndex + 1 : toIndex
-            )
-        }
-    }
-
-    func dropUpdated(info: DropInfo) -> DropProposal? {
-        DropProposal(operation: .move)
-    }
-}
-
-struct EmptyPageDropDelegate: DropDelegate {
-    let day: DayOfWeek
-    @Binding var draggingEntryID: UUID?
-    let viewModel: MangaViewModel
-
-    func performDrop(info: DropInfo) -> Bool {
-        if let draggingID = draggingEntryID,
-           let draggedEntry = viewModel.findEntry(by: draggingID),
-           draggedEntry.dayOfWeek != day {
-            viewModel.moveEntryToDay(draggedEntry, to: day)
-        }
-        draggingEntryID = nil
-        return true
-    }
-
-    func dropUpdated(info: DropInfo) -> DropProposal? {
-        DropProposal(operation: .move)
-    }
-}
-
-struct FilterChip: View {
-    let label: String
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text(label)
-                .font(.caption)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(isSelected ? Color.accentColor : Color.platformGray5)
-                .foregroundStyle(isSelected ? .white : .primary)
-                .clipShape(Capsule())
-        }
-        .buttonStyle(.plain)
-    }
-}
-
 
 #Preview {
     ContentView()
