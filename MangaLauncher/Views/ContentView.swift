@@ -362,55 +362,12 @@ struct ContentView: View {
         }
     }
 
-    @ViewBuilder
     private func publisherFilter(publishers: [String]) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                FilterChip(label: "すべて", isSelected: selectedPublisher == nil) {
-                    withAnimation { selectedPublisher = nil }
-                }
-                ForEach(publishers, id: \.self) { pub in
-                    FilterChip(label: pub, isSelected: selectedPublisher == pub) {
-                        withAnimation { selectedPublisher = selectedPublisher == pub ? nil : pub }
-                    }
-                }
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 6)
-        }
+        PublisherFilterView(publishers: publishers, selectedPublisher: $selectedPublisher)
     }
 
-    @ViewBuilder
     private func listView(entries: [MangaEntry], day: DayOfWeek, viewModel: MangaViewModel) -> some View {
-        List {
-            ForEach(entries, id: \.id) { entry in
-                MangaRowCell(entry: entry, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, editingEntry: $editingEntry, listEditMode: $listEditMode, onOpenURL: openMangaURL)
-            }
-            .onDelete { indexSet in
-                let entriesToDelete = indexSet.map { entries[$0] }
-                for entry in entriesToDelete {
-                    viewModel.queueDelete(entry)
-                }
-            }
-            .onMove { source, destination in
-                viewModel.moveEntries(for: day, from: source, to: destination)
-            }
-            .listRowSeparator(hasWallpaper ? .hidden : .automatic)
-        }
-        .listStyle(.plain)
-        .contentMargins(.top, headerHeight, for: .scrollContent)
-        .scrollContentBackground(hasWallpaper ? .hidden : .automatic)
-        .simultaneousGesture(
-            LongPressGesture(minimumDuration: 0.5)
-                .onEnded { _ in
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        listEditMode = .active
-                    }
-                }
-        )
-        #if os(iOS) || os(visionOS)
-        .environment(\.editMode, $listEditMode)
-        #endif
+        MangaListView(entries: entries, day: day, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, headerHeight: headerHeight, editingEntry: $editingEntry, listEditMode: $listEditMode, onOpenURL: openMangaURL)
     }
 
 
@@ -436,36 +393,8 @@ struct ContentView: View {
         }
     }
 
-    @ViewBuilder
     private var editModeButtons: some View {
-        HStack(spacing: 12) {
-            Button {
-                showingWallpaperPicker = true
-            } label: {
-                Label("壁紙", systemImage: "photo.artframe")
-                    .font(.headline)
-                    .fixedSize()
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 10)
-                    .foregroundStyle(.primary)
-                    .background(.regularMaterial, in: Capsule())
-            }
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isGridEditMode = false
-                    listEditMode = .inactive
-                }
-            } label: {
-                Text("完了")
-                    .font(.headline)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 10)
-                    .foregroundStyle(.primary)
-                    .background(.regularMaterial, in: Capsule())
-            }
-        }
-        .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
-        .padding(.bottom, 16)
+        EditModeButtons(isGridEditMode: $isGridEditMode, listEditMode: $listEditMode, showingWallpaperPicker: $showingWallpaperPicker)
     }
 
 
