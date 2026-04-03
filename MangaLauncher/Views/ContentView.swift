@@ -464,11 +464,14 @@ struct ContentView: View {
                 .contentMargins(.top, headerHeight, for: .scrollContent)
                 .scrollContentBackground(.hidden)
                 .contentShape(Rectangle())
-                .onLongPressGesture {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        isGridEditMode = true
-                    }
-                }
+                .simultaneousGesture(
+                    LongPressGesture(minimumDuration: 0.5)
+                        .onEnded { _ in
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                isGridEditMode = true
+                            }
+                        }
+                )
                 .onDrop(of: [.text], delegate: EmptyPageDropDelegate(
                     day: day,
                     draggingEntryID: $draggingEntryID,
