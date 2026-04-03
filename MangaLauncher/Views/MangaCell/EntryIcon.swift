@@ -12,6 +12,7 @@ struct EntryIcon: View {
                 .scaledToFill()
                 .frame(width: size, height: size)
                 .clipShape(RoundedRectangle(cornerRadius: size > 40 ? 8 : 6))
+                .accessibilityLabel("\(entry.name)のアイコン")
         } else {
             Circle()
                 .fill(Color.fromName(entry.iconColor))

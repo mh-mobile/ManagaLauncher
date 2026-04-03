@@ -28,7 +28,12 @@ enum DataMigration {
 
         // Ensure destination directory exists
         let destDir = newStoreURL.deletingLastPathComponent()
-        try? fileManager.createDirectory(at: destDir, withIntermediateDirectories: true)
+        do {
+            try fileManager.createDirectory(at: destDir, withIntermediateDirectories: true)
+        } catch {
+            print("[DataMigration] Failed to create destination directory: \(error)")
+            return
+        }
 
         // Copy SQLite files
         let suffixes = ["", "-wal", "-shm"]
@@ -40,6 +45,7 @@ enum DataMigration {
             do {
                 try fileManager.copyItem(at: src, to: dst)
             } catch {
+                print("[DataMigration] Failed to copy \(src.lastPathComponent): \(error)")
                 allCopied = false
                 break
             }
@@ -55,19 +61,25 @@ enum DataMigration {
                 let srcExternal = appSupportURL.appendingPathComponent(dirName)
                 let dstExternal = destDir.appendingPathComponent(dirName)
                 if fileManager.fileExists(atPath: srcExternal.path) {
-                    try? fileManager.copyItem(at: srcExternal, to: dstExternal)
+                    do {
+                        try fileManager.copyItem(at: srcExternal, to: dstExternal)
+                    } catch {
+                        print("[DataMigration] Failed to copy external storage \(dirName): \(error)")
+                    }
                 }
             }
         }
 
         if allCopied {
             UserDefaults.standard.set(true, forKey: migrationKey)
+            print("[DataMigration] Migration completed successfully")
         } else {
             // Rollback: remove partially copied files
             for suffix in suffixes {
                 let dst = URL(fileURLWithPath: newStoreURL.path + suffix)
                 try? fileManager.removeItem(at: dst)
             }
+            print("[DataMigration] Migration failed, rolled back")
         }
     }
 }

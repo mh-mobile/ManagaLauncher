@@ -46,6 +46,9 @@ struct MangaRowCell: View {
             }
             .padding(.vertical, hasWallpaper ? 4 : 0)
             .contentShape(Rectangle())
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(entry.name)\(entry.publisher.isEmpty ? "" : "、\(entry.publisher)")\(entry.isRead ? "" : "、未読")")
+            .accessibilityHint("タップでサイトを開く")
             .onTapGesture {
                 onOpenURL(entry.url)
             }

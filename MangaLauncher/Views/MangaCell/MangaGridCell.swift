@@ -67,6 +67,9 @@ struct MangaGridCell: View {
                 }
             }
             .contentShape(Rectangle())
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(entry.name)\(entry.publisher.isEmpty ? "" : "、\(entry.publisher)")\(entry.isRead ? "" : "、未読")")
+            .accessibilityHint("タップでサイトを開く")
             .onTapGesture {
                 if isGridEditMode {
                     withAnimation(.easeInOut(duration: 0.2)) {
