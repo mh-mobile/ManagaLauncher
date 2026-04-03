@@ -12,7 +12,7 @@ struct ReadingStatsProvider {
             predicate: #Predicate { $0.date >= startDate },
             sortBy: [SortDescriptor(\.date)]
         )
-        let activities = (try? modelContext.fetch(descriptor)) ?? []
+        let activities = modelContext.fetchLogged(descriptor)
         var counts: [Date: Int] = [:]
         for activity in activities {
             counts[activity.date, default: 0] += 1
@@ -26,7 +26,7 @@ struct ReadingStatsProvider {
             predicate: #Predicate { $0.date == targetDate },
             sortBy: [SortDescriptor(\.date)]
         )
-        return (try? modelContext.fetch(descriptor)) ?? []
+        return modelContext.fetchLogged(descriptor)
     }
 
     func currentStreak() -> Int {
@@ -68,7 +68,7 @@ struct ReadingStatsProvider {
 
     func totalReadCount() -> Int {
         let descriptor = FetchDescriptor<ReadingActivity>()
-        return (try? modelContext.fetchCount(descriptor)) ?? 0
+        return modelContext.fetchCountLogged(descriptor)
     }
 
     func thisWeekReadCount() -> Int {
@@ -80,7 +80,7 @@ struct ReadingStatsProvider {
         let descriptor = FetchDescriptor<ReadingActivity>(
             predicate: #Predicate { $0.date >= monday }
         )
-        return (try? modelContext.fetchCount(descriptor)) ?? 0
+        return modelContext.fetchCountLogged(descriptor)
     }
 
     func mostActiveDay() -> String? {

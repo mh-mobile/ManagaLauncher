@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		EC440D83EFDF1B4B6F95E82D /* ModelContextExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC44DD5EE5561C4C4F99C248 /* ModelContextExtensions.swift */; };
 		EC79B98AEA2FF142AA989EF0 /* AnimationTiming.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD61F7CE55EE24A44A02F14 /* AnimationTiming.swift */; };
 		0F66A6093327A5A5BD16B10F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E7D977DE254FB1F216740BE6 /* Foundation.framework */; };
 		125D8CEEBC201DD7B9C5BCE3 /* ShareExtensionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 358605C94F78CC23682FF911 /* ShareExtensionView.swift */; };
@@ -119,6 +120,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		EC44DD5EE5561C4C4F99C248 /* ModelContextExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelContextExtensions.swift; sourceTree = "<group>"; };
 		ECD61F7CE55EE24A44A02F14 /* AnimationTiming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationTiming.swift; sourceTree = "<group>"; };
 		0557E9481117CB9F8B903947 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0CDE508C489E5FAA3881A522 /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -440,6 +442,7 @@
 				1CF568E5CBBFA07B55373C73 /* DataMigration.swift */,
 				ECFEA8202F7E8B9D00CE4DC0 /* UserDefaultsKeys.swift */,
 				ECD61F7CE55EE24A44A02F14 /* AnimationTiming.swift */,
+				EC44DD5EE5561C4C4F99C248 /* ModelContextExtensions.swift */,
 				ECFEA8472F7F6E5700CE4DC0 /* MangaURLOpener.swift */,
 			);
 			path = Shared;
@@ -583,6 +586,7 @@
 				3650352634B47DCA879C45C1 /* ChangeDayIntent.swift in Sources */,
 				ECFEA8222F7E8B9D00CE4DC0 /* UserDefaultsKeys.swift in Sources */,
 				EC79B98AEA2FF142AA989EF0 /* AnimationTiming.swift in Sources */,
+				EC440D83EFDF1B4B6F95E82D /* ModelContextExtensions.swift in Sources */,
 				AA000001 /* ReadingActivity.swift in Sources */,
 				ECFEA84A2F7F6E5700CE4DC0 /* MangaURLOpener.swift in Sources */,
 			);
@@ -598,6 +602,7 @@
 				B26E164ECFAC0FC6A4B39CC6 /* SharedModelContainer.swift in Sources */,
 				ECFEA8212F7E8B9D00CE4DC0 /* UserDefaultsKeys.swift in Sources */,
 				EC79B98AEA2FF142AA989EF0 /* AnimationTiming.swift in Sources */,
+				EC440D83EFDF1B4B6F95E82D /* ModelContextExtensions.swift in Sources */,
 				AA000002 /* ReadingActivity.swift in Sources */,
 				ECFEA8492F7F6E5700CE4DC0 /* MangaURLOpener.swift in Sources */,
 			);
@@ -625,6 +630,7 @@
 				ECFEA8742F7F8C3F00CE4DC0 /* CatchUpSwipeOverlay.swift in Sources */,
 				ECFEA8232F7E8B9D00CE4DC0 /* UserDefaultsKeys.swift in Sources */,
 				EC79B98AEA2FF142AA989EF0 /* AnimationTiming.swift in Sources */,
+				EC440D83EFDF1B4B6F95E82D /* ModelContextExtensions.swift in Sources */,
 				A1000005 /* EditEntryView.swift in Sources */,
 				EC04B7CF2F70D9FE00AEE45F /* CatchUpView.swift in Sources */,
 				ECFEA8622F7F7E3200CE4DC0 /* ContentToolbar.swift in Sources */,

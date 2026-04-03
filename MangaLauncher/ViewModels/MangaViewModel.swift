@@ -39,7 +39,7 @@ final class MangaViewModel {
                 sortBy: [SortDescriptor(\.sortOrder)]
             )
         }
-        let results = (try? modelContext.fetch(descriptor)) ?? []
+        let results = modelContext.fetchLogged(descriptor)
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
         var seenIDs = Set<UUID>()
         return results.filter { entry in
@@ -100,7 +100,7 @@ final class MangaViewModel {
 
     func allPublishers() -> [String] {
         let descriptor = FetchDescriptor<MangaEntry>()
-        let entries = (try? modelContext.fetch(descriptor)) ?? []
+        let entries = modelContext.fetchLogged(descriptor)
         let publishers = Set(entries.map(\.publisher)).filter { !$0.isEmpty }
         return publishers.sorted()
     }
@@ -180,15 +180,12 @@ final class MangaViewModel {
 
     func deleteAllEntries() {
         let descriptor = FetchDescriptor<MangaEntry>()
-        guard let entries = try? modelContext.fetch(descriptor) else { return }
-        for entry in entries {
+        for entry in modelContext.fetchLogged(descriptor) {
             modelContext.delete(entry)
         }
         let activityDescriptor = FetchDescriptor<ReadingActivity>()
-        if let activities = try? modelContext.fetch(activityDescriptor) {
-            for activity in activities {
-                modelContext.delete(activity)
-            }
+        for activity in modelContext.fetchLogged(activityDescriptor) {
+            modelContext.delete(activity)
         }
         UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.lastStreakShownDate)
         UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.shownMilestones)
@@ -208,7 +205,7 @@ final class MangaViewModel {
     func totalEntryCount() -> Int {
         let _ = refreshCounter
         let descriptor = FetchDescriptor<MangaEntry>()
-        let results = (try? modelContext.fetch(descriptor)) ?? []
+        let results = modelContext.fetchLogged(descriptor)
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
         var seenIDs = Set<UUID>()
         return results.filter { entry in
@@ -219,9 +216,10 @@ final class MangaViewModel {
 
     func exportBackupData() -> Data? {
         let descriptor = FetchDescriptor<MangaEntry>(sortBy: [SortDescriptor(\.dayOfWeekRawValue), SortDescriptor(\.sortOrder)])
-        guard let entries = try? modelContext.fetch(descriptor) else { return nil }
+        let entries = modelContext.fetchLogged(descriptor)
+        guard !entries.isEmpty else { return nil }
         let activityDescriptor = FetchDescriptor<ReadingActivity>(sortBy: [SortDescriptor(\.date)])
-        let activities = (try? modelContext.fetch(activityDescriptor)) ?? []
+        let activities = modelContext.fetchLogged(activityDescriptor)
         let backup = BackupData.from(entries, activities: activities)
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
@@ -233,7 +231,7 @@ final class MangaViewModel {
         decoder.dateDecodingStrategy = .iso8601
         guard let backup = try? decoder.decode(BackupData.self, from: data) else { return 0 }
 
-        let existingIDs = Set((try? modelContext.fetch(FetchDescriptor<MangaEntry>()))?.map(\.id) ?? [])
+        let existingIDs = Set(modelContext.fetchLogged(FetchDescriptor<MangaEntry>()).map(\.id))
 
         var importedCount = 0
         for backupEntry in backup.entries {
@@ -257,7 +255,7 @@ final class MangaViewModel {
             importedCount += 1
         }
         if let backupActivities = backup.activities {
-            let existingActivityIDs = Set((try? modelContext.fetch(FetchDescriptor<ReadingActivity>()))?.map(\.id) ?? [])
+            let existingActivityIDs = Set(modelContext.fetchLogged(FetchDescriptor<ReadingActivity>()).map(\.id))
             for backupActivity in backupActivities {
                 guard !existingActivityIDs.contains(backupActivity.id) else { continue }
                 let activity = ReadingActivity(
@@ -278,12 +276,12 @@ final class MangaViewModel {
         let descriptor = FetchDescriptor<MangaEntry>(
             predicate: #Predicate { $0.id == id }
         )
-        return try? modelContext.fetch(descriptor).first
+        return modelContext.fetchLogged(descriptor).first
     }
 
     func findEntries(by ids: Set<UUID>) -> [UUID: MangaEntry] {
         let descriptor = FetchDescriptor<MangaEntry>()
-        guard let entries = try? modelContext.fetch(descriptor) else { return [:] }
+        let entries = modelContext.fetchLogged(descriptor)
         var result: [UUID: MangaEntry] = [:]
         for entry in entries where ids.contains(entry.id) {
             result[entry.id] = entry
@@ -311,7 +309,7 @@ final class MangaViewModel {
             predicate: #Predicate { $0.date == today && $0.mangaEntryID == entryID },
             sortBy: [SortDescriptor(\.date, order: .reverse)]
         )
-        if let activity = try? modelContext.fetch(descriptor).first {
+        if let activity = modelContext.fetchLogged(descriptor).first {
             modelContext.delete(activity)
         }
         save()
