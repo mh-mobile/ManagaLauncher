@@ -58,13 +58,13 @@ struct CatchUpCompletedView: View {
             streakAchievement = checkStreak()
             milestoneAchievement = checkMilestone()
             let showAchievement = streakAchievement != nil || milestoneAchievement != nil
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + AnimationTiming.completionAppear) {
                 withAnimation(.spring(duration: 0.6, bounce: 0.5)) {
                     completionAnimated = true
                 }
             }
             if showAchievement {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + AnimationTiming.achievementAppear) {
                     withAnimation(.spring(duration: 0.6, bounce: 0.5)) {
                         achievementAnimated = true
                     }

@@ -28,13 +28,13 @@ struct DayPagerView<PageContent: View>: View {
             }
 
             if newValue == 0 {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + AnimationTiming.pageLoop) {
                     withAnimation(.none) {
                         paging.pageIndex = 9
                     }
                 }
             } else if newValue == 10 {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + AnimationTiming.pageLoop) {
                     withAnimation(.none) {
                         paging.pageIndex = 1
                     }
