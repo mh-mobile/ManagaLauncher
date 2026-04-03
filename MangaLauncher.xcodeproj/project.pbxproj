@@ -157,7 +157,7 @@
 		EC04B7D72F74202400AEE45F /* SafariView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariView.swift; sourceTree = "<group>"; };
 		EC04B7DB2F75301D00AEE45F /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		EC04B7E52F78E26600AEE45F /* MangaLauncherAdhoc.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MangaLauncherAdhoc.entitlements; sourceTree = "<group>"; };
-		EC04B7E62F78E50F00AEE45F /* MangaWidgetExtensionAdhoc.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MangaWidgetExtensionAdhoc.entitlements; sourceTree = "<group>"; };
+		EC04B7E62F78E50F00AEE45F /* MangaWidgetAdhoc.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MangaWidgetAdhoc.entitlements; sourceTree = "<group>"; };
 		EC04B7E72F78E55300AEE45F /* MangaShareExtensionAdhoc.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MangaShareExtensionAdhoc.entitlements; sourceTree = "<group>"; };
 		ECCD2FCD2F65596900BF3309 /* PublisherPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherPickerView.swift; sourceTree = "<group>"; };
 		ECFEA8202F7E8B9D00CE4DC0 /* UserDefaultsKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsKeys.swift; sourceTree = "<group>"; };
@@ -349,7 +349,7 @@
 			children = (
 				7EFDC883F33BA3C119960C0B /* MangaWidget.swift */,
 				A576F9BEFBD3B37AA9275FAB /* MangaWidget.entitlements */,
-				EC04B7E62F78E50F00AEE45F /* MangaWidgetExtensionAdhoc.entitlements */,
+				EC04B7E62F78E50F00AEE45F /* MangaWidgetAdhoc.entitlements */,
 				BC0276ADB2A6EFEC185148CA /* Info.plist */,
 				4117777580B33705902FA67A /* ChangeDayIntent.swift */,
 			);
@@ -1089,7 +1089,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGN_ENTITLEMENTS = MangaWidget/MangaWidgetExtensionAdhoc.entitlements;
+				CODE_SIGN_ENTITLEMENTS = MangaWidget/MangaWidgetAdhoc.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MangaWidget/Info.plist;
