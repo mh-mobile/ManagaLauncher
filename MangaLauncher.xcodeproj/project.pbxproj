@@ -302,32 +302,13 @@
 		A5000004 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				EC04B7DB2F75301D00AEE45F /* OnboardingView.swift */,
-				EC04B7D72F74202400AEE45F /* SafariView.swift */,
-				EC04B7CE2F70D9FE00AEE45F /* CatchUpView.swift */,
-				ECCD2FCD2F65596900BF3309 /* PublisherPickerView.swift */,
-				A2000004 /* ContentView.swift */,
-				A2000005 /* EditEntryView.swift */,
-				0CDE508C489E5FAA3881A522 /* SettingsView.swift */,
-				96C7D9E283FFCADD60181726 /* MasonryLayout.swift */,
-				EEC07D90615785B81C2E71C8 /* ImageCropView.swift */,
-				AA000011 /* ReadingHeatmapView.swift */,
-				ECFEA8252F7E918E00CE4DC0 /* DeleteToastView.swift */,
-				ECFEA8272F7E919A00CE4DC0 /* MangaContextMenu.swift */,
-				ECFEA8292F7E91A800CE4DC0 /* MangaGridCell.swift */,
-				ECFEA82B2F7E91B500CE4DC0 /* MangaRowCell.swift */,
-				ECFEA82D2F7E91BD00CE4DC0 /* EntryIcon.swift */,
-				ECFEA84B2F7F741000CE4DC0 /* WallpaperBackgroundView.swift */,
-				ECFEA84F2F7F755F00CE4DC0 /* GridHelpers.swift */,
-				ECFEA8512F7F756A00CE4DC0 /* FilterChip.swift */,
-				ECFEA8532F7F78B400CE4DC0 /* DayPagerView.swift */,
-				ECFEA8552F7F7AA700CE4DC0 /* DayTabBarView.swift */,
-				ECFEA8572F7F7C3500CE4DC0 /* MangaListView.swift */,
-				ECFEA8592F7F7C4500CE4DC0 /* EditModeButtons.swift */,
-				ECFEA85B2F7F7C5200CE4DC0 /* PublisherFilterView.swift */,
-				ECFEA85D2F7F7E0400CE4DC0 /* EmptyStateView.swift */,
-				ECFEA85F2F7F7E2000CE4DC0 /* DayPageView.swift */,
-				ECFEA8612F7F7E3200CE4DC0 /* ContentToolbar.swift */,
+				ECFEA8702F7F87FE00CE4DC0 /* Common */,
+				ECFEA86F2F7F87F600CE4DC0 /* Heatmap */,
+				ECFEA86E2F7F87EF00CE4DC0 /* Settings */,
+				ECFEA86B2F7F87DD00CE4DC0 /* Entry */,
+				ECFEA86A2F7F87D000CE4DC0 /* CatchUp */,
+				ECFEA8672F7F87A700CE4DC0 /* Home */,
+				ECFEA8662F7F877400CE4DC0 /* MangaCell */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -361,6 +342,81 @@
 				4117777580B33705902FA67A /* ChangeDayIntent.swift */,
 			);
 			path = MangaWidget;
+			sourceTree = "<group>";
+		};
+		ECFEA8662F7F877400CE4DC0 /* MangaCell */ = {
+			isa = PBXGroup;
+			children = (
+				ECFEA8272F7E919A00CE4DC0 /* MangaContextMenu.swift */,
+				ECFEA8292F7E91A800CE4DC0 /* MangaGridCell.swift */,
+				ECFEA82B2F7E91B500CE4DC0 /* MangaRowCell.swift */,
+				ECFEA84F2F7F755F00CE4DC0 /* GridHelpers.swift */,
+				ECFEA8572F7F7C3500CE4DC0 /* MangaListView.swift */,
+				ECFEA82D2F7E91BD00CE4DC0 /* EntryIcon.swift */,
+				96C7D9E283FFCADD60181726 /* MasonryLayout.swift */,
+			);
+			path = MangaCell;
+			sourceTree = "<group>";
+		};
+		ECFEA8672F7F87A700CE4DC0 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				A2000004 /* ContentView.swift */,
+				ECFEA84B2F7F741000CE4DC0 /* WallpaperBackgroundView.swift */,
+				ECFEA8512F7F756A00CE4DC0 /* FilterChip.swift */,
+				ECFEA8532F7F78B400CE4DC0 /* DayPagerView.swift */,
+				ECFEA8552F7F7AA700CE4DC0 /* DayTabBarView.swift */,
+				ECFEA8592F7F7C4500CE4DC0 /* EditModeButtons.swift */,
+				ECFEA85B2F7F7C5200CE4DC0 /* PublisherFilterView.swift */,
+				ECFEA85D2F7F7E0400CE4DC0 /* EmptyStateView.swift */,
+				ECFEA85F2F7F7E2000CE4DC0 /* DayPageView.swift */,
+				ECFEA8612F7F7E3200CE4DC0 /* ContentToolbar.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		ECFEA86A2F7F87D000CE4DC0 /* CatchUp */ = {
+			isa = PBXGroup;
+			children = (
+				EC04B7CE2F70D9FE00AEE45F /* CatchUpView.swift */,
+			);
+			path = CatchUp;
+			sourceTree = "<group>";
+		};
+		ECFEA86B2F7F87DD00CE4DC0 /* Entry */ = {
+			isa = PBXGroup;
+			children = (
+				ECCD2FCD2F65596900BF3309 /* PublisherPickerView.swift */,
+				EEC07D90615785B81C2E71C8 /* ImageCropView.swift */,
+				A2000005 /* EditEntryView.swift */,
+			);
+			path = Entry;
+			sourceTree = "<group>";
+		};
+		ECFEA86E2F7F87EF00CE4DC0 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				0CDE508C489E5FAA3881A522 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		ECFEA86F2F7F87F600CE4DC0 /* Heatmap */ = {
+			isa = PBXGroup;
+			children = (
+				AA000011 /* ReadingHeatmapView.swift */,
+			);
+			path = Heatmap;
+			sourceTree = "<group>";
+		};
+		ECFEA8702F7F87FE00CE4DC0 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				ECFEA8252F7E918E00CE4DC0 /* DeleteToastView.swift */,
+				EC04B7DB2F75301D00AEE45F /* OnboardingView.swift */,
+				EC04B7D72F74202400AEE45F /* SafariView.swift */,
+			);
+			path = Common;
 			sourceTree = "<group>";
 		};
 		F40871AEA45509078C83A570 /* Shared */ = {
