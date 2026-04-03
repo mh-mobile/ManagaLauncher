@@ -7,14 +7,9 @@ struct DayPageView: View {
     let hasWallpaper: Bool
     let reduceTransparency: Bool
     let headerHeight: CGFloat
+    @Bindable var edit: EditState
     @Binding var selectedPublisher: String?
     @Binding var showingAddSheet: Bool
-    @Binding var isGridEditMode: Bool
-    @Binding var editingEntry: MangaEntry?
-    @Binding var draggingEntryID: UUID?
-    #if os(iOS) || os(visionOS)
-    @Binding var listEditMode: EditMode
-    #endif
     let onOpenURL: (String) -> Void
 
     var body: some View {
@@ -27,7 +22,7 @@ struct DayPageView: View {
         }
 
         if displayMode == .list && !allEntries.isEmpty && !entries.isEmpty {
-            MangaListView(entries: entries, day: day, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, headerHeight: headerHeight, editingEntry: $editingEntry, listEditMode: $listEditMode, onOpenURL: onOpenURL)
+            MangaListView(entries: entries, day: day, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, headerHeight: headerHeight, editingEntry: $edit.editingEntry, listEditMode: $edit.listEditMode, onOpenURL: onOpenURL)
         } else {
             GeometryReader { geo in
                 ScrollView {
@@ -75,9 +70,9 @@ struct DayPageView: View {
                         .frame(maxWidth: .infinity, minHeight: geo.size.height - headerHeight)
                     } else {
                         MasonryLayout(entries: entries, availableWidth: geo.size.width - 32) { entry in
-                            MangaGridCell(entry: entry, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, isGridEditMode: $isGridEditMode, editingEntry: $editingEntry, onOpenURL: onOpenURL)
+                            MangaGridCell(entry: entry, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, isGridEditMode: $edit.isGridEditMode, editingEntry: $edit.editingEntry, onOpenURL: onOpenURL)
                                 .overlay(alignment: .topLeading) {
-                                    if isGridEditMode {
+                                    if edit.isGridEditMode {
                                         Button {
                                             viewModel.queueDelete(entry)
                                         } label: {
@@ -91,19 +86,19 @@ struct DayPageView: View {
                                         .offset(x: -6, y: -6)
                                     }
                                 }
-                                .modifier(WiggleModifier(isActive: isGridEditMode))
+                                .modifier(WiggleModifier(isActive: edit.isGridEditMode))
                                 .onDrag {
-                                    draggingEntryID = entry.id
+                                    edit.draggingEntryID = entry.id
                                     return NSItemProvider(object: entry.id.uuidString as NSString)
                                 } preview: {
-                                    MangaGridCell(entry: entry, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, isGridEditMode: $isGridEditMode, editingEntry: $editingEntry, onOpenURL: onOpenURL)
+                                    MangaGridCell(entry: entry, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, isGridEditMode: $edit.isGridEditMode, editingEntry: $edit.editingEntry, onOpenURL: onOpenURL)
                                         .frame(width: 120)
                                 }
                                 .onDrop(of: [.text], delegate: GridDropDelegate(
                                     entry: entry,
                                     entries: entries,
                                     day: day,
-                                    draggingEntryID: $draggingEntryID,
+                                    draggingEntryID: $edit.draggingEntryID,
                                     viewModel: viewModel
                                 ))
                         }
@@ -117,13 +112,13 @@ struct DayPageView: View {
                     LongPressGesture(minimumDuration: 0.5)
                         .onEnded { _ in
                             withAnimation(.easeInOut(duration: 0.2)) {
-                                isGridEditMode = true
+                                edit.isGridEditMode = true
                             }
                         }
                 )
                 .onDrop(of: [.text], delegate: EmptyPageDropDelegate(
                     day: day,
-                    draggingEntryID: $draggingEntryID,
+                    draggingEntryID: $edit.draggingEntryID,
                     viewModel: viewModel
                 ))
             }

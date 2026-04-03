@@ -3,10 +3,9 @@ import PlatformKit
 
 struct DayTabBarView: View {
     var viewModel: MangaViewModel
-    @Binding var pageIndex: Int
-    @Binding var isAnimatingPageChange: Bool
+    var paging: PagingState
+    var edit: EditState
     @Binding var selectedPublisher: String?
-    @Binding var draggingEntryID: UUID?
     let hasWallpaper: Bool
     let orderedDays: [DayOfWeek]
     let tabUnderline: Namespace.ID
@@ -14,18 +13,18 @@ struct DayTabBarView: View {
     @State private var dropTargetDay: DayOfWeek?
 
     var body: some View {
-        let currentDay = dayForPageIndex(pageIndex)
+        let currentDay = paging.currentDay
         HStack(spacing: 0) {
             ForEach(orderedDays) { day in
                 Button {
-                    isAnimatingPageChange = true
+                    paging.isAnimatingPageChange = true
                     withAnimation(.easeInOut(duration: 0.3)) {
-                        pageIndex = pageIndexForDay(day)
+                        paging.pageIndex = paging.pageIndexForDay(day)
                     }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                         viewModel.selectedDay = day
                         selectedPublisher = nil
-                        isAnimatingPageChange = false
+                        paging.isAnimatingPageChange = false
                     }
                 } label: {
                     let isSelected = currentDay == day
@@ -77,12 +76,12 @@ struct DayTabBarView: View {
                     set: { dropTargetDay = $0 ? day : nil }
                 )) { providers in
                     dropTargetDay = nil
-                    if let draggingID = draggingEntryID,
+                    if let draggingID = edit.draggingEntryID,
                        let entry = viewModel.findEntry(by: draggingID) {
                         viewModel.moveEntryToDay(entry, to: day)
-                        draggingEntryID = nil
+                        edit.draggingEntryID = nil
                         withAnimation(.easeInOut(duration: 0.3)) {
-                            pageIndex = pageIndexForDay(day)
+                            paging.pageIndex = paging.pageIndexForDay(day)
                         }
                         return true
                     }
@@ -93,9 +92,9 @@ struct DayTabBarView: View {
                                let uuid = UUID(uuidString: uuidString),
                                let entry = viewModel.findEntry(by: uuid) {
                                 viewModel.moveEntryToDay(entry, to: day)
-                                draggingEntryID = nil
+                                edit.draggingEntryID = nil
                                 withAnimation(.easeInOut(duration: 0.3)) {
-                                    pageIndex = pageIndexForDay(day)
+                                    paging.pageIndex = paging.pageIndexForDay(day)
                                 }
                             }
                         }
@@ -106,15 +105,6 @@ struct DayTabBarView: View {
         }
         .padding(.horizontal, 8)
         .padding(.top, 4)
-        .animation(.easeInOut(duration: 0.25), value: pageIndex)
-    }
-
-    private func dayForPageIndex(_ index: Int) -> DayOfWeek {
-        let clamped = ((index - 1) % 9 + 9) % 9
-        return orderedDays[clamped]
-    }
-
-    private func pageIndexForDay(_ day: DayOfWeek) -> Int {
-        DayPagerView<EmptyView>.pageIndexForDay(day)
+        .animation(.easeInOut(duration: 0.25), value: paging.pageIndex)
     }
 }
