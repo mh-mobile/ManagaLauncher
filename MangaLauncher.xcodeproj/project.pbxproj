@@ -115,7 +115,7 @@
 
 /* Begin PBXFileReference section */
 		0557E9481117CB9F8B903947 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		0CDE508C489E5FAA3881A522 /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		0CDE508C489E5FAA3881A522 /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Settings/SettingsView.swift; sourceTree = "<group>"; };
 		1CF568E5CBBFA07B55373C73 /* DataMigration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DataMigration.swift; sourceTree = "<group>"; };
 		23E67B082915C8518CC0A973 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		358605C94F78CC23682FF911 /* ShareExtensionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShareExtensionView.swift; sourceTree = "<group>"; };
@@ -127,52 +127,52 @@
 		68E247987CED890FF8E2D6A1 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		7EFDC883F33BA3C119960C0B /* MangaWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MangaWidget.swift; sourceTree = "<group>"; };
 		90F26F2E86530882A39954F6 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
-		96C7D9E283FFCADD60181726 /* MasonryLayout.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MasonryLayout.swift; sourceTree = "<group>"; };
+		96C7D9E283FFCADD60181726 /* MasonryLayout.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MangaCell/MasonryLayout.swift; sourceTree = "<group>"; };
 		9C7FA9735199D021E15CEED8 /* SharedModelContainer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SharedModelContainer.swift; sourceTree = "<group>"; };
 		9E18CC353D62E01CB4A12BC8 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A2000001 /* MangaLauncherApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaLauncherApp.swift; sourceTree = "<group>"; };
 		A2000002 /* MangaEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaEntry.swift; sourceTree = "<group>"; };
 		A2000003 /* MangaViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaViewModel.swift; sourceTree = "<group>"; };
-		A2000004 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		A2000005 /* EditEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditEntryView.swift; sourceTree = "<group>"; };
+		A2000004 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Home/ContentView.swift; sourceTree = "<group>"; };
+		A2000005 /* EditEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entry/EditEntryView.swift; sourceTree = "<group>"; };
 		A2000006 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A3000001 /* MangaLauncher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MangaLauncher.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A55D3FF44BE586A52AAF2B43 /* AddMangaIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AddMangaIntent.swift; sourceTree = "<group>"; };
 		A576F9BEFBD3B37AA9275FAB /* MangaWidget.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaWidget.entitlements; sourceTree = "<group>"; };
 		AA000010 /* ReadingActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingActivity.swift; sourceTree = "<group>"; };
-		AA000011 /* ReadingHeatmapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingHeatmapView.swift; sourceTree = "<group>"; };
+		AA000011 /* ReadingHeatmapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Heatmap/ReadingHeatmapView.swift; sourceTree = "<group>"; };
 		BB770326E8D34706AF8B81EC /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = SDKROOT; };
 		BC0276ADB2A6EFEC185148CA /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D899D5F8F3BA6AC39B41C8B4 /* MangaShareExtension.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaShareExtension.entitlements; sourceTree = "<group>"; };
 		E7D977DE254FB1F216740BE6 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		EC04B7CE2F70D9FE00AEE45F /* CatchUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatchUpView.swift; sourceTree = "<group>"; };
-		EC04B7D72F74202400AEE45F /* SafariView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariView.swift; sourceTree = "<group>"; };
-		EC04B7DB2F75301D00AEE45F /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		EC04B7CE2F70D9FE00AEE45F /* CatchUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatchUp/CatchUpView.swift; sourceTree = "<group>"; };
+		EC04B7D72F74202400AEE45F /* SafariView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Common/SafariView.swift; sourceTree = "<group>"; };
+		EC04B7DB2F75301D00AEE45F /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Common/OnboardingView.swift; sourceTree = "<group>"; };
 		EC04B7E52F78E26600AEE45F /* MangaLauncherAdhoc.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MangaLauncherAdhoc.entitlements; sourceTree = "<group>"; };
 		EC04B7E62F78E50F00AEE45F /* MangaWidgetExtensionAdhoc.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MangaWidgetExtensionAdhoc.entitlements; sourceTree = "<group>"; };
 		EC04B7E72F78E55300AEE45F /* MangaShareExtensionAdhoc.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MangaShareExtensionAdhoc.entitlements; sourceTree = "<group>"; };
-		ECCD2FCD2F65596900BF3309 /* PublisherPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherPickerView.swift; sourceTree = "<group>"; };
+		ECCD2FCD2F65596900BF3309 /* PublisherPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entry/PublisherPickerView.swift; sourceTree = "<group>"; };
 		ECFEA8202F7E8B9D00CE4DC0 /* UserDefaultsKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsKeys.swift; sourceTree = "<group>"; };
-		ECFEA8252F7E918E00CE4DC0 /* DeleteToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteToastView.swift; sourceTree = "<group>"; };
-		ECFEA8272F7E919A00CE4DC0 /* MangaContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaContextMenu.swift; sourceTree = "<group>"; };
-		ECFEA8292F7E91A800CE4DC0 /* MangaGridCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaGridCell.swift; sourceTree = "<group>"; };
-		ECFEA82B2F7E91B500CE4DC0 /* MangaRowCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaRowCell.swift; sourceTree = "<group>"; };
-		ECFEA82D2F7E91BD00CE4DC0 /* EntryIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryIcon.swift; sourceTree = "<group>"; };
+		ECFEA8252F7E918E00CE4DC0 /* DeleteToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Common/DeleteToastView.swift; sourceTree = "<group>"; };
+		ECFEA8272F7E919A00CE4DC0 /* MangaContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaCell/MangaContextMenu.swift; sourceTree = "<group>"; };
+		ECFEA8292F7E91A800CE4DC0 /* MangaGridCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaCell/MangaGridCell.swift; sourceTree = "<group>"; };
+		ECFEA82B2F7E91B500CE4DC0 /* MangaRowCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaCell/MangaRowCell.swift; sourceTree = "<group>"; };
+		ECFEA82D2F7E91BD00CE4DC0 /* EntryIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaCell/EntryIcon.swift; sourceTree = "<group>"; };
 		ECFEA82F2F7E970700CE4DC0 /* ReadingStatsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingStatsProvider.swift; sourceTree = "<group>"; };
 		ECFEA8472F7F6E5700CE4DC0 /* MangaURLOpener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaURLOpener.swift; sourceTree = "<group>"; };
-		ECFEA84B2F7F741000CE4DC0 /* WallpaperBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperBackgroundView.swift; sourceTree = "<group>"; };
-		ECFEA84F2F7F755F00CE4DC0 /* GridHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridHelpers.swift; sourceTree = "<group>"; };
-		ECFEA8512F7F756A00CE4DC0 /* FilterChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterChip.swift; sourceTree = "<group>"; };
-		ECFEA8532F7F78B400CE4DC0 /* DayPagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayPagerView.swift; sourceTree = "<group>"; };
-		ECFEA8552F7F7AA700CE4DC0 /* DayTabBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayTabBarView.swift; sourceTree = "<group>"; };
-		ECFEA8572F7F7C3500CE4DC0 /* MangaListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaListView.swift; sourceTree = "<group>"; };
-		ECFEA8592F7F7C4500CE4DC0 /* EditModeButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditModeButtons.swift; sourceTree = "<group>"; };
-		ECFEA85B2F7F7C5200CE4DC0 /* PublisherFilterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherFilterView.swift; sourceTree = "<group>"; };
-		ECFEA85D2F7F7E0400CE4DC0 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
-		ECFEA85F2F7F7E2000CE4DC0 /* DayPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayPageView.swift; sourceTree = "<group>"; };
-		ECFEA8612F7F7E3200CE4DC0 /* ContentToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentToolbar.swift; sourceTree = "<group>"; };
+		ECFEA84B2F7F741000CE4DC0 /* WallpaperBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Home/WallpaperBackgroundView.swift; sourceTree = "<group>"; };
+		ECFEA84F2F7F755F00CE4DC0 /* GridHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaCell/GridHelpers.swift; sourceTree = "<group>"; };
+		ECFEA8512F7F756A00CE4DC0 /* FilterChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Home/FilterChip.swift; sourceTree = "<group>"; };
+		ECFEA8532F7F78B400CE4DC0 /* DayPagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Home/DayPagerView.swift; sourceTree = "<group>"; };
+		ECFEA8552F7F7AA700CE4DC0 /* DayTabBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Home/DayTabBarView.swift; sourceTree = "<group>"; };
+		ECFEA8572F7F7C3500CE4DC0 /* MangaListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaCell/MangaListView.swift; sourceTree = "<group>"; };
+		ECFEA8592F7F7C4500CE4DC0 /* EditModeButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Home/EditModeButtons.swift; sourceTree = "<group>"; };
+		ECFEA85B2F7F7C5200CE4DC0 /* PublisherFilterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Home/PublisherFilterView.swift; sourceTree = "<group>"; };
+		ECFEA85D2F7F7E0400CE4DC0 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Home/EmptyStateView.swift; sourceTree = "<group>"; };
+		ECFEA85F2F7F7E2000CE4DC0 /* DayPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Home/DayPageView.swift; sourceTree = "<group>"; };
+		ECFEA8612F7F7E3200CE4DC0 /* ContentToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Home/ContentToolbar.swift; sourceTree = "<group>"; };
 		ECFEA8632F7F829A00CE4DC0 /* HomeState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeState.swift; sourceTree = "<group>"; };
-		EEC07D90615785B81C2E71C8 /* ImageCropView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ImageCropView.swift; sourceTree = "<group>"; };
+		EEC07D90615785B81C2E71C8 /* ImageCropView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Entry/ImageCropView.swift; sourceTree = "<group>"; };
 		EEEF347AB79EE547A4014C35 /* MangaLauncher.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaLauncher.entitlements; sourceTree = "<group>"; };
 		F75AA6830F31ABE5BD81DE01 /* MangaLauncherDebug.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaLauncherDebug.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -302,6 +302,13 @@
 		A5000004 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				ECFEA8702F7F87FE00CE4DC0 /* Common */,
+				ECFEA86F2F7F87F600CE4DC0 /* Heatmap */,
+				ECFEA86E2F7F87EF00CE4DC0 /* Settings */,
+				ECFEA86B2F7F87DD00CE4DC0 /* Entry */,
+				ECFEA86A2F7F87D000CE4DC0 /* CatchUp */,
+				ECFEA8672F7F87A700CE4DC0 /* Home */,
+				ECFEA8662F7F877400CE4DC0 /* MangaCell */,
 				EC04B7DB2F75301D00AEE45F /* OnboardingView.swift */,
 				EC04B7D72F74202400AEE45F /* SafariView.swift */,
 				EC04B7CE2F70D9FE00AEE45F /* CatchUpView.swift */,
@@ -361,6 +368,55 @@
 				4117777580B33705902FA67A /* ChangeDayIntent.swift */,
 			);
 			path = MangaWidget;
+			sourceTree = "<group>";
+		};
+		ECFEA8662F7F877400CE4DC0 /* MangaCell */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = MangaCell;
+			sourceTree = "<group>";
+		};
+		ECFEA8672F7F87A700CE4DC0 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		ECFEA86A2F7F87D000CE4DC0 /* CatchUp */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = CatchUp;
+			sourceTree = "<group>";
+		};
+		ECFEA86B2F7F87DD00CE4DC0 /* Entry */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Entry;
+			sourceTree = "<group>";
+		};
+		ECFEA86E2F7F87EF00CE4DC0 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		ECFEA86F2F7F87F600CE4DC0 /* Heatmap */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Heatmap;
+			sourceTree = "<group>";
+		};
+		ECFEA8702F7F87FE00CE4DC0 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Common;
 			sourceTree = "<group>";
 		};
 		F40871AEA45509078C83A570 /* Shared */ = {
