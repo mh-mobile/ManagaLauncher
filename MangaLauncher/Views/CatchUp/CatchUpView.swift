@@ -149,7 +149,7 @@ struct CatchUpView: View {
                     withAnimation(.spring(duration: 0.3)) {
                         offset = CGSize(width: -500, height: 0)
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + AnimationTiming.swipeCompletion) {
                         performAction(.skip)
                     }
                 } label: {
@@ -166,7 +166,7 @@ struct CatchUpView: View {
                     withAnimation(.spring(duration: 0.3)) {
                         offset = CGSize(width: 500, height: 0)
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + AnimationTiming.swipeCompletion) {
                         performAction(.read)
                     }
                 } label: {
@@ -199,14 +199,14 @@ struct CatchUpView: View {
                     withAnimation(.spring(duration: 0.3)) {
                         offset = CGSize(width: 500, height: value.translation.height)
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + AnimationTiming.swipeCompletion) {
                         performAction(.read)
                     }
                 } else if value.translation.width < -threshold {
                     withAnimation(.spring(duration: 0.3)) {
                         offset = CGSize(width: -500, height: value.translation.height)
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + AnimationTiming.swipeCompletion) {
                         performAction(.skip)
                     }
                 } else {

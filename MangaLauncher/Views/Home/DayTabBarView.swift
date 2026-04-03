@@ -21,7 +21,7 @@ struct DayTabBarView: View {
                     withAnimation(.easeInOut(duration: 0.3)) {
                         paging.pageIndex = paging.pageIndexForDay(day)
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + AnimationTiming.tabTransition) {
                         viewModel.selectedDay = day
                         selectedPublisher = nil
                         paging.isAnimatingPageChange = false

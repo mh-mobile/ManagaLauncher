@@ -228,7 +228,7 @@ struct SettingsView: View {
                         UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.lastStreakShownDate)
                         UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.shownMilestones)
                         achievementResetDone = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + AnimationTiming.feedbackDuration) {
                             achievementResetDone = false
                         }
                     } label: {
