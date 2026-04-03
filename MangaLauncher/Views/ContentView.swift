@@ -43,16 +43,13 @@ struct ContentView: View {
     private var hasWallpaper: Bool { WallpaperManager.wallpaperType != .none }
     private let orderedDays = DayOfWeek.orderedCases // [completed, mon, tue, wed, thu, fri, sat, sun, hiatus]
 
-    // orderedDays: [completed=0, mon=1, tue=2, wed=3, thu=4, fri=5, sat=6, sun=7, hiatus=8]
-    // pageIndex:   [hiatus(fake)=0, completed=1, mon=2, tue=3, wed=4, thu=5, fri=6, sat=7, sun=8, hiatus=9, completed(fake)=10]
     private func dayForPageIndex(_ index: Int) -> DayOfWeek {
-        let clamped = ((index - 1) % 9 + 9) % 9  // 0..8
+        let clamped = ((index - 1) % 9 + 9) % 9
         return orderedDays[clamped]
     }
 
     private func pageIndexForDay(_ day: DayOfWeek) -> Int {
-        guard let index = orderedDays.firstIndex(of: day) else { return 1 }
-        return index + 1
+        DayPagerView<EmptyView>.pageIndexForDay(day)
     }
 
     var body: some View {
@@ -324,47 +321,16 @@ struct ContentView: View {
         .animation(.easeInOut(duration: 0.25), value: pageIndex)
     }
 
-    @ViewBuilder
     private func dayPager(viewModel: MangaViewModel) -> some View {
-        #if os(iOS) || os(visionOS)
-        // 11 pages: [hiatus(fake), completed, mon, tue, wed, thu, fri, sat, sun, hiatus, completed(fake)]
-        TabView(selection: $pageIndex) {
-            ForEach(0..<11, id: \.self) { index in
-                dayPage(day: dayForPageIndex(index), viewModel: viewModel)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag(index)
-            }
+        DayPagerView(
+            pageIndex: $pageIndex,
+            isAnimatingPageChange: $isAnimatingPageChange,
+            listEditMode: $listEditMode,
+            selectedPublisher: $selectedPublisher,
+            viewModel: viewModel
+        ) { day, vm in
+            dayPage(day: day, viewModel: vm)
         }
-        .tabViewStyle(.page(indexDisplayMode: .never))
-        .onChange(of: pageIndex) { oldValue, newValue in
-            let day = dayForPageIndex(newValue)
-            if !isAnimatingPageChange {
-                // スワイプ時: UIPageViewControllerが既にアニメーション済みなので即更新
-                viewModel.selectedDay = day
-                listEditMode = .inactive
-                selectedPublisher = nil
-            }
-
-            // Loop: if landed on fake page, jump to real page
-            if newValue == 0 {
-                // fake hiatus → real hiatus (index 9)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    withAnimation(.none) {
-                        pageIndex = 9
-                    }
-                }
-            } else if newValue == 10 {
-                // fake completed → real completed (index 1)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    withAnimation(.none) {
-                        pageIndex = 1
-                    }
-                }
-            }
-        }
-        #else
-        dayPage(day: viewModel.selectedDay, viewModel: viewModel)
-        #endif
     }
 
     @ViewBuilder
