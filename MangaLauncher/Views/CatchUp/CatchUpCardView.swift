@@ -45,6 +45,9 @@ struct CatchUpCardView: View {
                 .shadow(color: .black.opacity(0.1), radius: 8, y: 4)
         )
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(entry.name)\(entry.publisher.isEmpty ? "" : "、\(entry.publisher)")")
+        .accessibilityHint("タップでサイトを開く、長押しで編集")
         .onTapGesture {
             onOpenURL(entry.url)
         }
