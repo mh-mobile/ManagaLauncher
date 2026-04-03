@@ -274,7 +274,6 @@
 		A5000001 = {
 			isa = PBXGroup;
 			children = (
-				EC04B7E62F78E50F00AEE45F /* MangaWidgetExtensionAdhoc.entitlements */,
 				A5000002 /* MangaLauncher */,
 				A5000006 /* Products */,
 				1464396C7EC8424773F56425 /* Frameworks */,
@@ -350,6 +349,7 @@
 			children = (
 				7EFDC883F33BA3C119960C0B /* MangaWidget.swift */,
 				A576F9BEFBD3B37AA9275FAB /* MangaWidget.entitlements */,
+				EC04B7E62F78E50F00AEE45F /* MangaWidgetExtensionAdhoc.entitlements */,
 				BC0276ADB2A6EFEC185148CA /* Info.plist */,
 				4117777580B33705902FA67A /* ChangeDayIntent.swift */,
 			);
@@ -1089,7 +1089,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGN_ENTITLEMENTS = MangaWidgetExtensionAdhoc.entitlements;
+				CODE_SIGN_ENTITLEMENTS = MangaWidget/MangaWidgetExtensionAdhoc.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MangaWidget/Info.plist;
