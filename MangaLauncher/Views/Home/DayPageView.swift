@@ -31,24 +31,32 @@ struct DayPageView: View {
                             if day.isCompleted {
                                 ContentUnavailableView {
                                     Label("完結したマンガはありません", systemImage: "checkmark.seal")
+                                        .foregroundStyle(InkTheme.onSurfaceVariant)
                                 } description: {
                                     Text("コンテキストメニューや編集画面から\n「完結にする」でここに移動できます")
+                                        .foregroundStyle(InkTheme.onSurfaceVariant.opacity(0.7))
                                 }
                             } else if day.isHiatus {
                                 ContentUnavailableView {
                                     Label("休載中のマンガはありません", systemImage: "moon.zzz")
+                                        .foregroundStyle(InkTheme.onSurfaceVariant)
                                 } description: {
                                     Text("コンテキストメニューや編集画面から\n「休載中にする」でここに移動できます")
+                                        .foregroundStyle(InkTheme.onSurfaceVariant.opacity(0.7))
                                 }
                             } else {
                                 ContentUnavailableView {
                                     Label("エントリなし", systemImage: "book.closed")
+                                        .foregroundStyle(InkTheme.onSurfaceVariant)
                                 } description: {
                                     Text("\(day.displayName)に登録されたマンガはありません")
+                                        .foregroundStyle(InkTheme.onSurfaceVariant.opacity(0.7))
                                 } actions: {
                                     Button("追加する") {
                                         showingAddSheet = true
                                     }
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(InkTheme.primary)
                                 }
                             }
                         }
@@ -58,12 +66,16 @@ struct DayPageView: View {
                         EmptyStateView(hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, headerHeight: headerHeight) {
                             ContentUnavailableView {
                                 Label("該当なし", systemImage: "line.3.horizontal.decrease.circle")
+                                    .foregroundStyle(InkTheme.onSurfaceVariant)
                             } description: {
                                 Text("この掲載誌のマンガはありません")
+                                    .foregroundStyle(InkTheme.onSurfaceVariant.opacity(0.7))
                             } actions: {
                                 Button("フィルター解除") {
                                     selectedPublisher = nil
                                 }
+                                .fontWeight(.bold)
+                                .foregroundStyle(InkTheme.primary)
                             }
                         }
                         .frame(maxWidth: 600)

@@ -10,25 +10,25 @@ struct OnboardingView: View {
             "calendar",
             "曜日ごとに管理",
             "週間連載のマンガを曜日ごとに登録。\n今日読むマンガがひと目で分かります。",
-            .blue
+            InkTheme.primary
         ),
         (
             "rectangle.stack",
             "キャッチアップ",
             "カードスワイプで未読マンガをチェック。\n右スワイプで既読、左スワイプであとで。",
-            .green
+            InkTheme.secondary
         ),
         (
             "square.grid.2x2",
             "ウィジェット & 通知",
             "ホーム画面のウィジェットから\n今日のマンガをすぐに確認。\n指定時間にリマインド通知も。",
-            .orange
+            InkTheme.tertiary
         ),
         (
             "square.and.arrow.up",
             "かんたん登録",
             "マンガアプリやブラウザの共有ボタンから\nワンタップで登録できます。",
-            .purple
+            InkTheme.primary
         ),
     ]
 
@@ -58,12 +58,12 @@ struct OnboardingView: View {
                 }
             } label: {
                 Text(currentPage < pages.count - 1 ? "次へ" : "はじめる")
-                    .font(.headline)
+                    .font(.headline.bold())
                     .frame(maxWidth: 320)
                     .padding()
-                    .background(Color.accentColor)
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .background(InkTheme.primary)
+                    .foregroundStyle(InkTheme.onPrimary)
+                    .clipShape(RoundedRectangle(cornerRadius: InkTheme.cardCornerRadius))
             }
             .frame(maxWidth: .infinity)
             .padding(.bottom, 16)
@@ -75,11 +75,12 @@ struct OnboardingView: View {
                     dismiss()
                 }
             }
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
+            .font(.subheadline.bold())
+            .foregroundStyle(InkTheme.onSurfaceVariant)
             .padding(.bottom, 8)
             .opacity(currentPage < pages.count - 1 ? 1 : 0)
         }
+        .background(InkTheme.surface)
     }
 
     private func pageView(page: (icon: String, title: String, description: String, color: Color)) -> some View {
@@ -88,14 +89,16 @@ struct OnboardingView: View {
 
             Image(systemName: page.icon)
                 .font(.system(size: 72))
+                .fontWeight(.bold)
                 .foregroundStyle(page.color)
 
             Text(page.title)
-                .font(.title.bold())
+                .font(.title.weight(.black))
+                .foregroundStyle(InkTheme.onSurface)
 
             Text(page.description)
-                .font(.body)
-                .foregroundStyle(.secondary)
+                .font(.body.bold())
+                .foregroundStyle(InkTheme.onSurfaceVariant)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
 

@@ -52,15 +52,17 @@ struct SettingsView: View {
                 Section("アプリ情報") {
                     HStack {
                         Text("バージョン")
+                            .foregroundStyle(InkTheme.onSurface)
                         Spacer()
                         Text(appVersion)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(InkTheme.onSurfaceVariant)
                     }
                     HStack {
                         Text("登録数")
+                            .foregroundStyle(InkTheme.onSurface)
                         Spacer()
                         Text("\(viewModel.totalEntryCount())件")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(InkTheme.onSurfaceVariant)
                     }
                     switch updateStatus {
                     case .idle:
@@ -80,7 +82,7 @@ struct SettingsView: View {
                                 Text("v\(version)が利用可能です")
                                 Spacer()
                                 Image(systemName: "arrow.up.circle.fill")
-                                    .foregroundStyle(.blue)
+                                    .foregroundStyle(InkTheme.secondary)
                             }
                         }
                     case .upToDate:
@@ -88,13 +90,13 @@ struct SettingsView: View {
                             Text("最新バージョンです")
                             Spacer()
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(.green)
+                                .foregroundStyle(InkTheme.secondary)
                         }
                     case .error:
                         Button("確認できませんでした（再試行）") {
                             checkForUpdate()
                         }
-                        .foregroundStyle(.red)
+                        .foregroundStyle(InkTheme.error)
                     }
                 }
 
@@ -116,8 +118,8 @@ struct SettingsView: View {
                         Spacer()
                         if let date = syncMonitor.lastSyncDate {
                             Text(date, style: .time)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .font(.caption.bold())
+                                .foregroundStyle(InkTheme.onSurfaceVariant)
                         }
                     }
                     .contentShape(Rectangle())
@@ -254,15 +256,20 @@ struct SettingsView: View {
                     Text("登録されたすべてのマンガデータを削除します。この操作は取り消せません。")
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(InkTheme.surface)
             .navigationTitle("設定")
             #if os(iOS) || os(visionOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .toolbarBackground(InkTheme.surfaceBright, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("閉じる") {
                         dismiss()
                     }
+                    .foregroundStyle(InkTheme.onSurfaceVariant)
                 }
             }
             .alert("データをリセット", isPresented: $showingResetConfirmation) {
@@ -319,17 +326,17 @@ struct SettingsView: View {
         switch syncMonitor.syncStatus {
         case .idle:
             Image(systemName: "checkmark.icloud")
-                .foregroundStyle(.green)
+                .foregroundStyle(InkTheme.secondary)
         case .syncing:
             Image(systemName: "arrow.triangle.2.circlepath.icloud")
                 .symbolEffect(.rotate, isActive: true)
-                .foregroundStyle(.blue)
+                .foregroundStyle(InkTheme.secondary)
         case .failed:
             Image(systemName: "exclamationmark.icloud")
-                .foregroundStyle(.red)
+                .foregroundStyle(InkTheme.error)
         case .notAvailable:
             Image(systemName: "xmark.icloud")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(InkTheme.onSurfaceVariant)
         }
     }
 
@@ -338,14 +345,16 @@ struct SettingsView: View {
         switch syncMonitor.syncStatus {
         case .idle:
             Text("同期済み")
+                .foregroundStyle(InkTheme.onSurface)
         case .syncing:
             Text("同期中...")
+                .foregroundStyle(InkTheme.onSurface)
         case .failed:
             Text("同期エラー")
-                .foregroundStyle(.red)
+                .foregroundStyle(InkTheme.error)
         case .notAvailable:
             Text("iCloud未設定")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(InkTheme.onSurfaceVariant)
         }
     }
 
@@ -418,19 +427,27 @@ struct SettingsView: View {
                         Text(license.text)
                             .font(.caption)
                             .monospaced()
+                            .foregroundStyle(InkTheme.onSurfaceVariant)
                             .padding()
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    .background(InkTheme.surface)
                     .navigationTitle(license.name)
                     #if os(iOS) || os(visionOS)
                     .navigationBarTitleDisplayMode(.inline)
                     #endif
+                    .toolbarBackground(InkTheme.surfaceBright, for: .navigationBar)
+                    .toolbarColorScheme(.dark, for: .navigationBar)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(InkTheme.surface)
             .navigationTitle("ライセンス")
             #if os(iOS) || os(visionOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .toolbarBackground(InkTheme.surfaceBright, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
         }
     }
 

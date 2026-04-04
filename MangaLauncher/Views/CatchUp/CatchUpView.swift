@@ -43,15 +43,17 @@ struct CatchUpView: View {
                     cardStackView
                 }
             }
+            .background(InkTheme.surface)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     VStack(spacing: 2) {
                         Text("\(day.displayName)のキャッチアップ")
-                            .font(.headline)
+                            .font(.system(size: 16, weight: .black))
+                            .foregroundStyle(InkTheme.onSurface)
                         if let publisher {
                             Text(publisher)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .font(.system(size: 12))
+                                .foregroundStyle(InkTheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -59,9 +61,13 @@ struct CatchUpView: View {
             #if os(iOS) || os(visionOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .toolbarBackground(InkTheme.surfaceBright, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("閉じる") { dismiss() }
+                        .foregroundStyle(InkTheme.primary)
                 }
                 if !undoStack.isEmpty {
                     ToolbarItem(placement: .automatic) {
@@ -112,16 +118,17 @@ struct CatchUpView: View {
             Spacer(minLength: 0)
             HStack {
                 Text("\(currentIndex + 1) / \(totalCount)")
-                    .font(.subheadline.bold())
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(InkTheme.onSurfaceVariant)
                 Spacer()
                 Text("残り \(remainingCount) 件")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(InkTheme.onSurfaceVariant)
             }
             .padding(.horizontal)
 
             ProgressView(value: Double(currentIndex), total: Double(totalCount))
+                .tint(InkTheme.primary)
                 .padding(.horizontal)
 
             ZStack {
@@ -155,11 +162,11 @@ struct CatchUpView: View {
                 } label: {
                     VStack(spacing: 4) {
                         Image(systemName: "clock.arrow.circlepath")
-                            .font(.system(size: 44))
+                            .font(.system(size: 44, weight: .bold))
                         Text("あとで")
-                            .font(.caption.bold())
+                            .font(.system(size: 12, weight: .black))
                     }
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(InkTheme.tertiary)
                 }
 
                 Button {
@@ -172,11 +179,11 @@ struct CatchUpView: View {
                 } label: {
                     VStack(spacing: 4) {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 44))
+                            .font(.system(size: 44, weight: .bold))
                         Text("既読")
-                            .font(.caption.bold())
+                            .font(.system(size: 12, weight: .black))
                     }
-                    .foregroundStyle(.green)
+                    .foregroundStyle(InkTheme.secondary)
                 }
             }
             .padding(.bottom)

@@ -54,6 +54,7 @@ struct MangaLauncherApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .preferredColorScheme(.dark)
                 .environment(syncMonitor)
                 .onOpenURL { url in
                     handleDeepLink(url)

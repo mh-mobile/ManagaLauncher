@@ -28,11 +28,13 @@ struct MangaListView: View {
             .onMove { source, destination in
                 viewModel.moveEntries(for: day, from: source, to: destination)
             }
-            .listRowSeparator(hasWallpaper ? .hidden : .automatic)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 2, leading: 12, bottom: 2, trailing: 12))
         }
         .listStyle(.plain)
         .contentMargins(.top, headerHeight, for: .scrollContent)
-        .scrollContentBackground(hasWallpaper ? .hidden : .automatic)
+        .scrollContentBackground(.hidden)
+        .background(InkTheme.surface)
         .simultaneousGesture(
             LongPressGesture(minimumDuration: 0.5)
                 .onEnded { _ in

@@ -18,33 +18,39 @@ struct MangaRowCell: View {
         } else {
             HStack(spacing: 12) {
                 if !entry.isRead {
-                    Circle()
-                        .fill(Color.accentColor)
-                        .frame(width: 8, height: 8)
+                    Text("NEW")
+                        .font(.system(size: 9, weight: .black))
+                        .foregroundStyle(InkTheme.onPrimary)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
+                        .background(InkTheme.primary)
+                        .clipShape(RoundedRectangle(cornerRadius: 2))
                 } else {
                     Color.clear
-                        .frame(width: 8, height: 8)
+                        .frame(width: 28, height: 8)
                 }
 
                 EntryIcon(entry: entry, size: 36)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(entry.name)
-                        .font(.body)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(InkTheme.onSurface)
                     if !entry.publisher.isEmpty {
                         Text(entry.publisher)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(.system(size: 12))
+                            .foregroundStyle(InkTheme.onSurfaceVariant)
                     }
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(InkTheme.onSurfaceVariant.opacity(0.5))
             }
-            .padding(.vertical, hasWallpaper ? 4 : 0)
+            .padding(.vertical, 8)
+            .padding(.horizontal, 4)
             .contentShape(Rectangle())
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(entry.name)\(entry.publisher.isEmpty ? "" : "、\(entry.publisher)")\(entry.isRead ? "" : "、未読")")
@@ -56,15 +62,15 @@ struct MangaRowCell: View {
                 Group {
                     if hasWallpaper {
                         ZStack {
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color(.systemFill))
-                            RoundedRectangle(cornerRadius: 12)
+                            RoundedRectangle(cornerRadius: InkTheme.cardCornerRadius)
+                                .fill(InkTheme.surfaceContainerHigh)
+                            RoundedRectangle(cornerRadius: InkTheme.cardCornerRadius)
                                 .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
                         }
                         .padding(.horizontal, 4)
                         .padding(.vertical, 2)
                     } else {
-                        Color.platformBackground
+                        InkTheme.surface
                     }
                 }
             )

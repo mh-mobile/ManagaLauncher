@@ -28,6 +28,7 @@ struct PublisherPickerView: View {
                             selectPublisher(newPublisher)
                         }
                         .bold()
+                        .foregroundStyle(InkTheme.primary)
                     }
                 }
             }
@@ -40,11 +41,12 @@ struct PublisherPickerView: View {
                         } label: {
                             HStack {
                                 Text(pub)
-                                    .foregroundStyle(.primary)
+                                    .foregroundStyle(InkTheme.onSurface)
                                 Spacer()
                                 if publisher == pub {
                                     Image(systemName: "checkmark")
-                                        .foregroundStyle(Color.accentColor)
+                                        .foregroundStyle(InkTheme.primary)
+                                        .fontWeight(.bold)
                                 }
                             }
                         }
@@ -58,14 +60,19 @@ struct PublisherPickerView: View {
                         selectPublisher("")
                     } label: {
                         Text("掲載誌を解除")
+                            .foregroundStyle(InkTheme.error)
                     }
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(InkTheme.surface)
         .navigationTitle("掲載誌")
         #if os(iOS) || os(visionOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .toolbarBackground(InkTheme.surfaceBright, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
     }
 
     private func selectPublisher(_ value: String) {

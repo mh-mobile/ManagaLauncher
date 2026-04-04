@@ -75,10 +75,11 @@ public struct WallpaperCropView: View {
                         Button("キャンセル") {
                             onCancel()
                         }
-                        .font(.body.weight(.medium))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(.ultraThinMaterial, in: Capsule())
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(Color(red: 0.15, green: 0.15, blue: 0.15), in: RoundedRectangle(cornerRadius: 6))
 
                         Spacer()
 
@@ -91,10 +92,11 @@ public struct WallpaperCropView: View {
                                 }
                             }
                         }
-                        .font(.body.weight(.medium))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(.ultraThinMaterial, in: Capsule())
+                        .font(.system(size: 15, weight: .black))
+                        .foregroundStyle(Color(red: 0.055, green: 0.055, blue: 0.055))
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(Color(red: 1.0, green: 0.553, blue: 0.553), in: RoundedRectangle(cornerRadius: 6))
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 12)
@@ -103,11 +105,11 @@ public struct WallpaperCropView: View {
 
                     if showHint {
                         Text("ピンチで拡大・ドラッグで位置調整")
-                            .font(.subheadline)
+                            .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)
-                            .background(.black.opacity(0.5), in: Capsule())
+                            .background(Color(red: 0.15, green: 0.15, blue: 0.15), in: RoundedRectangle(cornerRadius: 4))
                             .transition(.opacity)
                     }
 

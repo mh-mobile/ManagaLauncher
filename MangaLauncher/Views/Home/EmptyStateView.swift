@@ -13,9 +13,9 @@ struct EmptyStateView<Content: View>: View {
                 .padding(.top, headerHeight)
                 .background {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color(.systemFill))
-                        RoundedRectangle(cornerRadius: 16)
+                        RoundedRectangle(cornerRadius: InkTheme.cardCornerRadius)
+                            .fill(InkTheme.surfaceContainerHigh)
+                        RoundedRectangle(cornerRadius: InkTheme.cardCornerRadius)
                             .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
                     }
                     .padding()
@@ -24,6 +24,7 @@ struct EmptyStateView<Content: View>: View {
         } else {
             content()
                 .padding(.top, headerHeight)
+                .background(InkTheme.surface)
         }
     }
 }

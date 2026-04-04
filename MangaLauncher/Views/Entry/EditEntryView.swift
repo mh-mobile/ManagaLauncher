@@ -136,18 +136,18 @@ struct EditEntryView: View {
                         .autocorrectionDisabled()
                     if !url.isEmpty && !isValidURL {
                         Text("有効なURLを入力してください（例: https://...）")
-                            .font(.caption)
-                            .foregroundStyle(.red)
+                            .font(.caption.bold())
+                            .foregroundStyle(InkTheme.error)
                     }
                     NavigationLink {
                         PublisherPickerView(publisher: $publisher, viewModel: viewModel)
                     } label: {
                         HStack {
                             Text("掲載誌")
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(InkTheme.onSurface)
                             Spacer()
                             Text(publisher.isEmpty ? "未設定" : publisher)
-                                .foregroundStyle(publisher.isEmpty ? .tertiary : .secondary)
+                                .foregroundStyle(publisher.isEmpty ? InkTheme.onSurfaceVariant.opacity(0.5) : InkTheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -218,19 +218,19 @@ struct EditEntryView: View {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
                         ForEach(DayOfWeek.orderedDays) { day in
                             Text(day.shortName)
-                                .font(.subheadline.bold())
+                                .font(.subheadline.weight(.black))
                                 .frame(width: 36, height: 36)
                                 .background(
                                     selectedDay == day
-                                        ? Color.accentColor
-                                        : Color.platformGray5
+                                        ? InkTheme.primary
+                                        : InkTheme.surfaceContainerHighest
                                 )
                                 .foregroundStyle(
                                     selectedDay == day
-                                        ? .white
-                                        : .primary
+                                        ? InkTheme.onPrimary
+                                        : InkTheme.onSurface
                                 )
-                                .clipShape(Circle())
+                                .clipShape(RoundedRectangle(cornerRadius: InkTheme.cornerRadius))
                                 .onTapGesture {
                                     selectedDay = day
                                     // nextUpdateCandidatesはselectedDayに依存するので
@@ -319,15 +319,20 @@ struct EditEntryView: View {
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(InkTheme.surface)
             .navigationTitle(isEditing ? "編集" : "新規登録")
             #if os(iOS) || os(visionOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .toolbarBackground(InkTheme.surfaceBright, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("キャンセル") {
                         dismiss()
                     }
+                    .foregroundStyle(InkTheme.onSurfaceVariant)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") {
@@ -335,6 +340,7 @@ struct EditEntryView: View {
                         dismiss()
                     }
                     .disabled(name.isEmpty || url.isEmpty || !isValidURL)
+                    .foregroundStyle(InkTheme.primary)
                 }
             }
             .onAppear {

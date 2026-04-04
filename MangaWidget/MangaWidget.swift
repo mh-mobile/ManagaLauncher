@@ -3,6 +3,20 @@ import SwiftUI
 import SwiftData
 import PlatformKit
 
+// MARK: - Ink Theme Colors (Widget-local, mirrors DesignSystem.swift)
+
+private enum WidgetInk {
+    static let surface = Color(red: 0.055, green: 0.055, blue: 0.055)
+    static let surfaceHigh = Color(red: 0.13, green: 0.13, blue: 0.13)
+    static let surfaceHighest = Color(red: 0.15, green: 0.15, blue: 0.15)
+    static let primary = Color(red: 1.0, green: 0.553, blue: 0.553)
+    static let secondary = Color(red: 0.0, green: 0.933, blue: 0.988)
+    static let onSurface = Color.white
+    static let onSurfaceVariant = Color(red: 0.63, green: 0.63, blue: 0.63)
+    static let onPrimary = Color(red: 0.055, green: 0.055, blue: 0.055)
+    static let cornerRadius: CGFloat = 4
+}
+
 // MARK: - Timeline Entry
 
 struct MangaTimelineEntry: TimelineEntry {
@@ -66,8 +80,6 @@ struct MangaTimelineProvider: TimelineProvider {
     }
 }
 
-// MARK: - Widget Views
-
 struct MangaWidgetEntryView: View {
     var entry: MangaTimelineEntry
     @Environment(\.widgetFamily) var family
@@ -95,8 +107,8 @@ struct MangaWidgetEntryView: View {
         HStack(spacing: 0) {
             Button(intent: ChangeDayIntent(direction: -1)) {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 10, weight: .black))
+                    .foregroundStyle(WidgetInk.onSurfaceVariant)
                     .frame(width: 28, height: 28)
                     .contentShape(Rectangle())
             }
@@ -104,26 +116,26 @@ struct MangaWidgetEntryView: View {
 
             if entry.isToday {
                 Text(compact ? "\(entry.dayOfWeek.shortName)曜" : "\(entry.dayOfWeek.displayName)")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(Color.primary)
+                    .font(.system(size: 13, weight: .black))
+                    .foregroundStyle(WidgetInk.onSurface)
                     .lineLimit(1)
             } else {
                 Button(intent: ChangeDayIntent(direction: 0)) {
                     HStack(spacing: 2) {
                         Text(compact ? "\(entry.dayOfWeek.shortName)曜" : "\(entry.dayOfWeek.displayName)")
-                            .font(.system(size: 12, weight: .bold))
+                            .font(.system(size: 13, weight: .black))
                         Image(systemName: "arrow.uturn.backward")
-                            .font(.system(size: 8))
+                            .font(.system(size: 8, weight: .bold))
                     }
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(WidgetInk.secondary)
                 }
                 .buttonStyle(.plain)
             }
 
             Button(intent: ChangeDayIntent(direction: 1)) {
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 10, weight: .black))
+                    .foregroundStyle(WidgetInk.onSurfaceVariant)
                     .frame(width: 28, height: 28)
                     .contentShape(Rectangle())
             }
@@ -132,8 +144,8 @@ struct MangaWidgetEntryView: View {
             Spacer()
 
             Text("\(entry.items.count)件")
-                .font(.system(size: 9))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(WidgetInk.onSurfaceVariant)
         }
     }
 
@@ -158,8 +170,8 @@ struct MangaWidgetEntryView: View {
                 if entry.items.isEmpty {
                     Spacer()
                     Text("登録なし")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(WidgetInk.onSurfaceVariant)
                         .frame(maxWidth: .infinity)
                     Spacer()
                 } else {
@@ -183,7 +195,7 @@ struct MangaWidgetEntryView: View {
                 }
             }
         }
-        .containerBackground(.fill.tertiary, for: .widget)
+        .containerBackground(WidgetInk.surface, for: .widget)
     }
 
     // MARK: - Medium Widget (4x2)
@@ -207,8 +219,8 @@ struct MangaWidgetEntryView: View {
                 if entry.items.isEmpty {
                     Spacer()
                     Text("登録なし")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(WidgetInk.onSurfaceVariant)
                         .frame(maxWidth: .infinity)
                     Spacer()
                 } else {
@@ -232,7 +244,7 @@ struct MangaWidgetEntryView: View {
                 }
             }
         }
-        .containerBackground(.fill.tertiary, for: .widget)
+        .containerBackground(WidgetInk.surface, for: .widget)
     }
 
     // MARK: - Large Widget (4x4)
@@ -256,8 +268,8 @@ struct MangaWidgetEntryView: View {
                 if entry.items.isEmpty {
                     Spacer()
                     Text("登録なし")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(WidgetInk.onSurfaceVariant)
                         .frame(maxWidth: .infinity)
                     Spacer()
                 } else {
@@ -281,7 +293,7 @@ struct MangaWidgetEntryView: View {
                 }
             }
         }
-        .containerBackground(.fill.tertiary, for: .widget)
+        .containerBackground(WidgetInk.surface, for: .widget)
     }
 
     // MARK: - Lock Screen
@@ -290,16 +302,16 @@ struct MangaWidgetEntryView: View {
     private var lockScreenView: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text("\(entry.dayOfWeek.shortName)曜のマンガ")
-                .font(.headline)
+                .font(.system(size: 14, weight: .black))
                 .widgetAccentable()
             ForEach(entry.items.prefix(2)) { item in
                 Text(item.name)
-                    .font(.caption)
+                    .font(.system(size: 12, weight: .bold))
                     .lineLimit(1)
             }
             if entry.items.isEmpty {
                 Text("登録なし")
-                    .font(.caption)
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(.secondary)
             }
         }
@@ -321,7 +333,7 @@ struct MangaWidgetEntryView: View {
                         .fill(Color.fromName(item.iconColor))
                         .overlay {
                             Text(item.name)
-                                .font(.system(size: 9, weight: .bold))
+                                .font(.system(size: 9, weight: .black))
                                 .foregroundStyle(.white)
                                 .multilineTextAlignment(.center)
                                 .padding(2)
@@ -329,13 +341,17 @@ struct MangaWidgetEntryView: View {
                 }
             }
             .frame(width: size, height: size)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .clipShape(RoundedRectangle(cornerRadius: WidgetInk.cornerRadius))
             .overlay(alignment: .topLeading) {
                 if !item.isRead {
-                    Circle()
-                        .fill(Color.accentColor)
-                        .frame(width: 6, height: 6)
-                        .padding(3)
+                    Text("N")
+                        .font(.system(size: 7, weight: .black))
+                        .foregroundStyle(WidgetInk.onPrimary)
+                        .padding(.horizontal, 3)
+                        .padding(.vertical, 1)
+                        .background(WidgetInk.primary)
+                        .clipShape(RoundedRectangle(cornerRadius: 2))
+                        .padding(2)
                 }
             }
         }
@@ -357,16 +373,14 @@ struct MangaLauncherWidget: Widget {
         StaticConfiguration(kind: kind, provider: MangaTimelineProvider(container: container)) { entry in
             MangaWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("今日のマンガ")
-        .description("今日更新のマンガを表示します")
-        .supportedFamilies(supportedFamilies)
-    }
-
-    private var supportedFamilies: [WidgetFamily] {
-        var families: [WidgetFamily] = [.systemSmall, .systemMedium, .systemLarge]
-        #if os(iOS)
-        families.append(.accessoryRectangular)
-        #endif
-        return families
+        .configurationDisplayName("マンガ曜日")
+        .description("今日のマンガをチェック")
+        .supportedFamilies({
+            var families: [WidgetFamily] = [.systemSmall, .systemMedium, .systemLarge]
+            #if os(iOS)
+            families.append(.accessoryRectangular)
+            #endif
+            return families
+        }())
     }
 }

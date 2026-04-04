@@ -5,30 +5,30 @@ struct CatchUpSwipeOverlay: View {
 
     var body: some View {
         if offsetWidth > 30 {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.green.opacity(0.2))
+            RoundedRectangle(cornerRadius: InkTheme.cardCornerRadius)
+                .fill(InkTheme.secondary.opacity(0.15))
                 .overlay {
                     VStack {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 60))
-                            .foregroundStyle(.green)
+                            .font(.system(size: 60, weight: .black))
+                            .foregroundStyle(InkTheme.secondary)
                         Text("既読")
-                            .font(.title2.bold())
-                            .foregroundStyle(.green)
+                            .font(.system(size: 22, weight: .black))
+                            .foregroundStyle(InkTheme.secondary)
                     }
                 }
                 .opacity(min(Double(offsetWidth) / 100, 1))
         } else if offsetWidth < -30 {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.orange.opacity(0.2))
+            RoundedRectangle(cornerRadius: InkTheme.cardCornerRadius)
+                .fill(InkTheme.tertiary.opacity(0.15))
                 .overlay {
                     VStack {
                         Image(systemName: "clock.arrow.circlepath")
-                            .font(.system(size: 60))
-                            .foregroundStyle(.orange)
+                            .font(.system(size: 60, weight: .black))
+                            .foregroundStyle(InkTheme.tertiary)
                         Text("あとで")
-                            .font(.title2.bold())
-                            .foregroundStyle(.orange)
+                            .font(.system(size: 22, weight: .black))
+                            .foregroundStyle(InkTheme.tertiary)
                     }
                 }
                 .opacity(min(Double(-offsetWidth) / 100, 1))

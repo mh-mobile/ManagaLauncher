@@ -22,10 +22,13 @@ struct ReadingHeatmapView: View {
             }
             .padding()
         }
+        .background(InkTheme.surface)
         .navigationTitle("読書アクティビティ")
         #if os(iOS) || os(visionOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .toolbarBackground(InkTheme.surfaceBright, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
         .onAppear {
             activityCounts = viewModel.stats.fetchActivityCounts(days: weeks * 7)
         }
@@ -53,20 +56,21 @@ struct ReadingHeatmapView: View {
     private func statCard(title: String, value: String, unit: String) -> some View {
         VStack(spacing: 4) {
             Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(.caption.bold())
+                .foregroundStyle(InkTheme.onSurfaceVariant)
             HStack(alignment: .lastTextBaseline, spacing: 2) {
                 Text(value)
                     .font(.title2)
-                    .fontWeight(.bold)
+                    .fontWeight(.black)
+                    .foregroundStyle(InkTheme.onSurface)
                 Text(unit)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.caption.bold())
+                    .foregroundStyle(InkTheme.onSurfaceVariant)
             }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 10))
+        .background(InkTheme.surfaceContainerHigh, in: RoundedRectangle(cornerRadius: InkTheme.cardCornerRadius))
     }
 
     // MARK: - Heatmap
@@ -84,8 +88,8 @@ struct ReadingHeatmapView: View {
                     .frame(height: 14)
                 ForEach(0..<7, id: \.self) { dayIndex in
                     Text(dayLabels[dayIndex])
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(.caption2.bold())
+                        .foregroundStyle(InkTheme.onSurfaceVariant)
                         .frame(width: 20, height: cellSize)
                 }
             }
@@ -100,8 +104,8 @@ struct ReadingHeatmapView: View {
                                 let date = grid[weekIndex][0]
                                 if let date, isFirstWeekOfMonth(date: date, weekIndex: weekIndex, grid: grid) {
                                     Text(monthLabel(for: date))
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
+                                        .font(.caption2.bold())
+                                        .foregroundStyle(InkTheme.onSurfaceVariant)
                                         .fixedSize()
                                         .frame(width: cellSize, alignment: .leading)
                                 } else {
@@ -152,16 +156,16 @@ struct ReadingHeatmapView: View {
         HStack(spacing: 4) {
             Spacer()
             Text("少ない")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                .font(.caption2.bold())
+                .foregroundStyle(InkTheme.onSurfaceVariant)
             ForEach(0..<5, id: \.self) { level in
                 RoundedRectangle(cornerRadius: 2)
                     .fill(levelColor(level))
                     .frame(width: 12, height: 12)
             }
             Text("多い")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                .font(.caption2.bold())
+                .foregroundStyle(InkTheme.onSurfaceVariant)
         }
     }
 
@@ -195,7 +199,7 @@ struct ReadingHeatmapView: View {
 
     private func cellColor(count: Int, maxCount: Int) -> Color {
         if count == 0 {
-            return Color(.systemGray5)
+            return InkTheme.surfaceContainerHigh
         }
         let level: Int
         if maxCount <= 4 {
@@ -209,12 +213,12 @@ struct ReadingHeatmapView: View {
 
     private func levelColor(_ level: Int) -> Color {
         switch level {
-        case 0: Color(.systemGray5)
-        case 1: Color.green.opacity(0.3)
-        case 2: Color.green.opacity(0.5)
-        case 3: Color.green.opacity(0.7)
-        case 4: Color.green.opacity(0.9)
-        default: Color.green
+        case 0: InkTheme.surfaceContainerHigh
+        case 1: InkTheme.primary.opacity(0.3)
+        case 2: InkTheme.primary.opacity(0.5)
+        case 3: InkTheme.primary.opacity(0.7)
+        case 4: InkTheme.primary.opacity(0.9)
+        default: InkTheme.primary
         }
     }
 
@@ -262,31 +266,37 @@ private struct DayActivitySheet: View {
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: 40, height: 40)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                                    .clipShape(RoundedRectangle(cornerRadius: InkTheme.cardCornerRadius))
                             } else {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(.fill.tertiary)
+                                RoundedRectangle(cornerRadius: InkTheme.cardCornerRadius)
+                                    .fill(InkTheme.surfaceContainerHighest)
                                     .frame(width: 40, height: 40)
                                     .overlay {
                                         Image(systemName: "book.closed")
-                                            .foregroundStyle(.secondary)
+                                            .foregroundStyle(InkTheme.onSurfaceVariant)
                                     }
                             }
                             Text(activity.mangaName)
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(InkTheme.onSurface)
+                                .fontWeight(.bold)
                         }
                     }
-                    .tint(.primary)
+                    .tint(InkTheme.onSurface)
                     .disabled(entry == nil)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(InkTheme.surface)
             .navigationTitle(dateTitle)
             #if os(iOS) || os(visionOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .toolbarBackground(InkTheme.surfaceBright, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("閉じる") { dismiss() }
+                        .foregroundStyle(InkTheme.onSurfaceVariant)
                 }
             }
             #if canImport(UIKit)

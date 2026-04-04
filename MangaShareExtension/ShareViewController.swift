@@ -5,8 +5,10 @@ class ShareViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        overrideUserInterfaceStyle = .dark
         let hostingView = UIHostingController(
             rootView: ShareExtensionView(extensionContext: extensionContext)
+                .preferredColorScheme(.dark)
         )
         addChild(hostingView)
         view.addSubview(hostingView.view)

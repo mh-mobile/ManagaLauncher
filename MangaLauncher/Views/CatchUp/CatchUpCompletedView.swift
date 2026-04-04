@@ -20,20 +20,21 @@ struct CatchUpCompletedView: View {
             Spacer()
             Image(systemName: "checkmark.seal.fill")
                 .font(.system(size: 64))
-                .foregroundStyle(.green)
+                .foregroundStyle(InkTheme.secondary)
                 .scaleEffect(completionAnimated ? 1.0 : 0.3)
                 .opacity(completionAnimated ? 1.0 : 0.0)
             Text(message)
-                .font(.title2.bold())
+                .font(.system(size: 22, weight: .black))
+                .foregroundStyle(InkTheme.onSurface)
                 .opacity(completionAnimated ? 1.0 : 0.0)
 
             if hasAchievement {
                 VStack(spacing: 12) {
                     if let streak = streakAchievement {
-                        achievementCard(icon: "flame.fill", iconColor: .orange, text: "\(streak)日連続！")
+                        achievementCard(icon: "flame.fill", iconColor: InkTheme.primary, text: "\(streak)日連続！")
                     }
                     if let milestone = milestoneAchievement {
-                        achievementCard(icon: "trophy.fill", iconColor: .yellow, text: "\(milestone)話達成！")
+                        achievementCard(icon: "trophy.fill", iconColor: InkTheme.tertiary, text: "\(milestone)話達成！")
                     }
                 }
                 .scaleEffect(achievementAnimated ? 1.0 : 0.3)
@@ -45,13 +46,15 @@ struct CatchUpCompletedView: View {
                     onRecheck()
                 } label: {
                     Label("未読を再チェック（\(remainingUnread)件）", systemImage: "arrow.counterclockwise")
+                        .font(.system(size: 15, weight: .bold))
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(SpeechBubbleButtonStyle(isPrimary: false))
                 .opacity(completionAnimated ? 1.0 : 0.0)
             }
             Spacer()
         }
         .frame(maxWidth: .infinity)
+        .background(InkTheme.surface)
         .onAppear {
             completionAnimated = false
             achievementAnimated = false
@@ -76,17 +79,17 @@ struct CatchUpCompletedView: View {
     private func achievementCard(icon: String, iconColor: Color, text: String) -> some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.title2)
+                .font(.system(size: 22, weight: .bold))
                 .foregroundStyle(iconColor)
             Text(text)
-                .font(.headline)
+                .font(.system(size: 17, weight: .black))
+                .foregroundStyle(InkTheme.onSurface)
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 14)
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.ultraThinMaterial)
-                .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+            RoundedRectangle(cornerRadius: InkTheme.cardCornerRadius)
+                .fill(InkTheme.surfaceContainerHighest)
         )
     }
 }

@@ -62,12 +62,16 @@ struct ContentView: View {
     private func mainContent(viewModel: MangaViewModel) -> some View {
         ZStack(alignment: .bottom) {
             ZStack(alignment: .top) {
-                WallpaperBackgroundView(
-                    wallpaperRefresh: homeState.wallpaper.refresh,
-                    wallpaperPreviewActive: homeState.wallpaper.previewActive,
-                    wallpaperPreviewSnapshot: homeState.wallpaper.previewSnapshot,
-                    cachedWallpaperImage: homeState.wallpaper.cachedWallpaperImage
-                )
+                ZStack {
+                    InkTheme.surface.ignoresSafeArea()
+                    ScreenTonePattern(opacity: 0.02).ignoresSafeArea()
+                    WallpaperBackgroundView(
+                        wallpaperRefresh: homeState.wallpaper.refresh,
+                        wallpaperPreviewActive: homeState.wallpaper.previewActive,
+                        wallpaperPreviewSnapshot: homeState.wallpaper.previewSnapshot,
+                        cachedWallpaperImage: homeState.wallpaper.cachedWallpaperImage
+                    )
+                }
 
                 DayPagerView(
                     paging: homeState.paging,
@@ -187,17 +191,11 @@ struct ContentView: View {
             }
         }
         .background {
-            #if canImport(UIKit)
-            VisualEffectBlur(style: homeState.wallpaper.hasWallpaper
-                ? (reduceTransparency ? .systemThinMaterial : .systemUltraThinMaterial)
-                : .systemMaterial)
+            ZStack {
+                InkTheme.surface.opacity(0.95)
+                ScreenTonePattern(opacity: 0.03)
+            }
             .ignoresSafeArea(edges: .top)
-            #else
-            Rectangle().fill(homeState.wallpaper.hasWallpaper
-                ? (reduceTransparency ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(.ultraThinMaterial))
-                : AnyShapeStyle(.regularMaterial))
-            .ignoresSafeArea(edges: .top)
-            #endif
         }
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { newHeight in
             if abs(newHeight - homeState.headerHeight) > 2 {

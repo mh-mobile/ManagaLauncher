@@ -13,12 +13,12 @@ struct EditModeButtons: View {
                 showingWallpaperPicker = true
             } label: {
                 Label("壁紙", systemImage: "photo.artframe")
-                    .font(.headline)
+                    .font(.system(size: 15, weight: .black))
                     .fixedSize()
                     .padding(.horizontal, 20)
                     .padding(.vertical, 10)
-                    .foregroundStyle(.primary)
-                    .background(.regularMaterial, in: Capsule())
+                    .foregroundStyle(InkTheme.onSurface)
+                    .background(InkTheme.surfaceContainerHighest, in: Capsule())
             }
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) {
@@ -29,14 +29,13 @@ struct EditModeButtons: View {
                 }
             } label: {
                 Text("完了")
-                    .font(.headline)
+                    .font(.system(size: 15, weight: .black))
                     .padding(.horizontal, 24)
                     .padding(.vertical, 10)
-                    .foregroundStyle(.primary)
-                    .background(.regularMaterial, in: Capsule())
+                    .foregroundStyle(InkTheme.onPrimary)
+                    .background(InkTheme.primary, in: Capsule())
             }
         }
-        .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
         .padding(.bottom, 16)
     }
 }

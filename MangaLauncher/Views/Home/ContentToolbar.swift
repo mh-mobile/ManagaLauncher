@@ -27,11 +27,11 @@ struct ContentToolbar: ToolbarContent {
                     Image(systemName: "rectangle.stack")
                     if unreadCount > 0 {
                         Text("\(unreadCount)")
-                            .font(.caption2.bold())
-                            .foregroundStyle(.white)
+                            .font(.system(size: 11, weight: .black))
+                            .foregroundStyle(InkTheme.onPrimary)
                             .padding(.horizontal, 5)
                             .padding(.vertical, 2)
-                            .background(.red.opacity(edit.isEditing ? 0.3 : 1), in: Capsule())
+                            .background(InkTheme.primary.opacity(edit.isEditing ? 0.3 : 1), in: Capsule())
                     }
                 }
             }

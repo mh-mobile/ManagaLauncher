@@ -7,42 +7,54 @@ struct CatchUpCardView: View {
     let onOpenURL: (String) -> Void
 
     var body: some View {
-        VStack(spacing: 12) {
-            if let imageData = entry.imageData, let image = imageData.toSwiftUIImage() {
-                image
-                    .resizable()
-                    .scaledToFit()
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-            } else {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.fromName(entry.iconColor))
-                    .aspectRatio(3/4, contentMode: .fit)
-                    .overlay {
-                        Text(entry.name)
-                            .font(.title.bold())
-                            .foregroundStyle(.white)
-                            .multilineTextAlignment(.center)
-                            .padding()
-                    }
+        VStack(spacing: 0) {
+            // Manga panel image
+            ZStack(alignment: .topLeading) {
+                if let imageData = entry.imageData, let image = imageData.toSwiftUIImage() {
+                    image
+                        .resizable()
+                        .scaledToFit()
+                        .clipShape(RoundedRectangle(cornerRadius: InkTheme.cardCornerRadius))
+                } else {
+                    RoundedRectangle(cornerRadius: InkTheme.cardCornerRadius)
+                        .fill(Color.fromName(entry.iconColor))
+                        .aspectRatio(3/4, contentMode: .fit)
+                        .overlay {
+                            ZStack {
+                                ScreenTonePattern(opacity: 0.08, spacing: 4)
+                                Text(entry.name)
+                                    .font(.system(size: 28, weight: .black))
+                                    .foregroundStyle(.white)
+                                    .multilineTextAlignment(.center)
+                                    .padding()
+                            }
+                        }
+                }
             }
 
-            Text(entry.name)
-                .font(.title3.bold())
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
+            // Title area
+            VStack(spacing: 4) {
+                Text(entry.name)
+                    .font(.system(size: 18, weight: .black))
+                    .foregroundStyle(InkTheme.onSurface)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
 
-            if !entry.publisher.isEmpty {
-                Text(entry.publisher)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                if !entry.publisher.isEmpty {
+                    Text(entry.publisher)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(InkTheme.onSurfaceVariant)
+                }
             }
+            .padding(.horizontal, InkTheme.spacingMD)
+            .padding(.vertical, InkTheme.spacingSM + 4)
+            .frame(maxWidth: .infinity)
+            .background(InkTheme.surfaceContainerHighest)
         }
-        .padding()
-        .frame(maxWidth: .infinity)
+        .clipShape(RoundedRectangle(cornerRadius: InkTheme.cardCornerRadius))
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.background)
-                .shadow(color: .black.opacity(0.1), radius: 8, y: 4)
+            RoundedRectangle(cornerRadius: InkTheme.cardCornerRadius)
+                .fill(InkTheme.surfaceContainerHigh)
         )
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)

@@ -6,36 +6,36 @@ struct CatchUpTutorialOverlay: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.6)
+            Color.black.opacity(0.7)
                 .ignoresSafeArea()
 
             VStack(spacing: 24) {
                 Text("使い方")
-                    .font(.title2.bold())
-                    .foregroundStyle(.white)
+                    .font(.system(size: 22, weight: .black))
+                    .foregroundStyle(InkTheme.onSurface)
 
                 VStack(alignment: .leading, spacing: 16) {
                     tutorialRow(
                         icon: "hand.tap.fill",
-                        color: .blue,
+                        color: InkTheme.secondary,
                         title: "タップで開く",
                         description: "カード画像をタップするとサイトを開けます"
                     )
                     tutorialRow(
                         icon: "arrow.right",
-                        color: .green,
+                        color: InkTheme.secondary,
                         title: "右スワイプ → 既読",
                         description: "読み終わったマンガを既読にします"
                     )
                     tutorialRow(
                         icon: "arrow.left",
-                        color: .orange,
+                        color: InkTheme.tertiary,
                         title: "左スワイプ → あとで",
                         description: "あとで読むマンガをスキップします"
                     )
                     tutorialRow(
                         icon: "arrow.uturn.backward",
-                        color: .secondary,
+                        color: InkTheme.onSurfaceVariant,
                         title: "元に戻す",
                         description: "ツールバーのボタンで直前の操作を取り消せます"
                     )
@@ -48,19 +48,24 @@ struct CatchUpTutorialOverlay: View {
                     }
                 } label: {
                     Text("OK")
-                        .font(.headline)
+                        .font(.system(size: 17, weight: .black))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(Color.accentColor)
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .background(InkTheme.primary)
+                        .foregroundStyle(InkTheme.onPrimary)
+                        .clipShape(RoundedRectangle(cornerRadius: InkTheme.cardCornerRadius))
                 }
             }
             .padding(24)
             .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(.ultraThinMaterial)
+                RoundedRectangle(cornerRadius: InkTheme.cardCornerRadius)
+                    .fill(InkTheme.surfaceContainerHigh)
             )
+            .overlay {
+                RoundedRectangle(cornerRadius: InkTheme.cardCornerRadius)
+                    .inset(by: 0.5)
+                    .stroke(InkTheme.surfaceContainerHighest, lineWidth: 1)
+            }
             .frame(maxWidth: 400)
             .padding(.horizontal, 32)
         }
@@ -70,16 +75,16 @@ struct CatchUpTutorialOverlay: View {
     private func tutorialRow(icon: String, color: Color, title: String, description: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
-                .font(.title3)
+                .font(.system(size: 18, weight: .bold))
                 .foregroundStyle(color)
                 .frame(width: 28)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.subheadline.bold())
-                    .foregroundStyle(.white)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(InkTheme.onSurface)
                 Text(description)
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.8))
+                    .font(.system(size: 12))
+                    .foregroundStyle(InkTheme.onSurfaceVariant)
             }
         }
     }

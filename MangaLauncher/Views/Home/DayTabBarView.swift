@@ -14,11 +14,11 @@ struct DayTabBarView: View {
 
     var body: some View {
         let currentDay = paging.currentDay
-        HStack(spacing: 0) {
+        HStack(spacing: 2) {
             ForEach(orderedDays) { day in
                 Button {
                     paging.isAnimatingPageChange = true
-                    withAnimation(.easeInOut(duration: 0.3)) {
+                    withAnimation(.spring(duration: 0.4, bounce: 0.2)) {
                         paging.pageIndex = paging.pageIndexForDay(day)
                     }
                     DispatchQueue.main.asyncAfter(deadline: .now() + AnimationTiming.tabTransition) {
@@ -29,47 +29,45 @@ struct DayTabBarView: View {
                 } label: {
                     let isSelected = currentDay == day
                     let hasUnread = !day.isHiatus && !day.isCompleted && viewModel.unreadCount(for: day) > 0
-                    VStack(spacing: 4) {
+                    VStack(spacing: 2) {
                         Text(day.shortName)
-                            .font(.headline)
+                            .font(.system(size: isSelected ? 26 : 18, weight: .black))
                             .foregroundStyle(
-                                !day.isHiatus && !day.isCompleted && day == .today
-                                    ? .white
-                                    : (hasWallpaper && isSelected)
-                                        ? .white
-                                        : isSelected
-                                            ? Color.accentColor
-                                            : (day.isHiatus || day.isCompleted) ? .secondary : .primary
+                                isSelected
+                                    ? InkTheme.secondary
+                                    : !day.isHiatus && !day.isCompleted && day == .today
+                                        ? InkTheme.primary
+                                        : (day.isHiatus || day.isCompleted)
+                                            ? InkTheme.onSurfaceVariant.opacity(0.5)
+                                            : InkTheme.onSurfaceVariant
                             )
-                            .frame(width: 32, height: 32)
-                            .background {
-                                if !day.isHiatus && !day.isCompleted && day == .today {
-                                    Circle()
-                                        .fill(Color.accentColor)
-                                } else if hasWallpaper && isSelected {
-                                    Circle()
-                                        .fill(Color.black.opacity(0.3))
-                                }
-                            }
-                        Circle()
-                            .fill(hasUnread ? Color.accentColor : .clear)
-                            .frame(width: 5, height: 5)
+                            .rotationEffect(.degrees(isSelected ? -3 : 0))
+                            .scaleEffect(isSelected ? 1.1 : 1.0)
+                            .animation(.spring(duration: 0.3, bounce: 0.3), value: isSelected)
+
+                        if hasUnread {
+                            Circle()
+                                .fill(InkTheme.primary)
+                                .frame(width: 6, height: 6)
+                        } else {
+                            Color.clear.frame(width: 6, height: 6)
+                        }
+
                         if isSelected {
-                            Rectangle()
-                                .fill(Color.accentColor)
-                                .frame(height: 2)
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(InkTheme.secondary)
+                                .frame(height: 3)
                                 .matchedGeometryEffect(id: "tabUnderline", in: tabUnderline)
                         } else {
-                            Color.clear
-                                .frame(height: 2)
+                            Color.clear.frame(height: 3)
                         }
                     }
+                    .frame(height: 52)
                 }
                 .frame(maxWidth: .infinity)
                 .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(dropTargetDay == day ? Color.accentColor.opacity(0.3) : .clear)
-                        .padding(.horizontal, 2)
+                    RoundedRectangle(cornerRadius: InkTheme.cornerRadius)
+                        .fill(dropTargetDay == day ? InkTheme.secondary.opacity(0.2) : .clear)
                 )
                 .onDrop(of: [.text], isTargeted: Binding(
                     get: { dropTargetDay == day },
@@ -104,7 +102,7 @@ struct DayTabBarView: View {
             }
         }
         .padding(.horizontal, 8)
-        .padding(.top, 4)
+        .padding(.vertical, 6)
         .animation(.easeInOut(duration: 0.25), value: paging.pageIndex)
     }
 }
