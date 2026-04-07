@@ -28,13 +28,6 @@ struct CatchUpView: View {
     private var theme: ThemeStyle { ThemeManager.shared.style }
     private var hasGradient: Bool { backgroundGradient != nil }
 
-    /// fullScreenCover内ではnil（OS準拠）が親を継承するため、UIKitからOS設定を直接取得
-    private var systemColorScheme: ColorScheme {
-        let style = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?
-            .traitCollection.userInterfaceStyle
-        return style == .dark ? .dark : .light
-    }
-
     private enum SwipeAction {
         case read, skip
     }
@@ -136,7 +129,7 @@ struct CatchUpView: View {
                 .ignoresSafeArea()
         }
         #endif
-        .preferredColorScheme(hasGradient ? .dark : (theme.colorSchemeOverride ?? systemColorScheme))
+        .preferredColorScheme(hasGradient ? .dark : theme.resolvedColorScheme(system: systemColorScheme))
     }
 
     // MARK: - Card Stack

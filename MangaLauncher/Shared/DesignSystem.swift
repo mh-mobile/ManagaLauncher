@@ -76,6 +76,12 @@ struct ThemeStyle {
     /// `colorSchemeOverride == .dark` の簡易アクセス（各Viewのスタイリング分岐用）
     var forceDarkMode: Bool { colorSchemeOverride == .dark }
 
+    /// sheet/fullScreenCover内で安全に使えるカラースキーム。
+    /// `colorSchemeOverride` が `nil`（OS準拠）の場合、`systemColorScheme` で解決する。
+    func resolvedColorScheme(system: ColorScheme) -> ColorScheme {
+        colorSchemeOverride ?? system
+    }
+
     // Spacing
     let spacingSM: CGFloat
     let spacingMD: CGFloat
@@ -309,3 +315,5 @@ extension View {
         }
     }
 }
+
+
