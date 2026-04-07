@@ -19,6 +19,9 @@ struct DayPagerView<PageContent: View>: View {
             }
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
+        .if(ThemeManager.shared.style.usesCustomSurface) { view in
+            view.background(ThemeManager.shared.style.surface)
+        }
         .onChange(of: paging.pageIndex) { oldValue, newValue in
             let day = paging.dayForPageIndex(newValue)
             if !paging.isAnimatingPageChange {
