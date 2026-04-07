@@ -73,7 +73,8 @@ struct ContentView: View {
                     paging: homeState.paging,
                     listEditMode: $homeState.edit.listEditMode,
                     selectedPublisher: $homeState.selectedPublisher,
-                    viewModel: viewModel
+                    viewModel: viewModel,
+                    hasWallpaper: homeState.wallpaper.hasWallpaper
                 ) { day, vm in
                     DayPageView(
                         day: day,
