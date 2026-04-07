@@ -2,11 +2,16 @@ import UIKit
 import SwiftUI
 
 class ShareViewController: UIViewController {
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        overrideUserInterfaceStyle = theme.forceDarkMode ? .dark : .unspecified
+
         let hostingView = UIHostingController(
             rootView: ShareExtensionView(extensionContext: extensionContext)
+                .preferredColorScheme(theme.colorSchemeOverride)
         )
         addChild(hostingView)
         view.addSubview(hostingView.view)

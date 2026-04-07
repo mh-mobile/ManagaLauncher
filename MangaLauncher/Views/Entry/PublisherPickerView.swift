@@ -7,6 +7,8 @@ struct PublisherPickerView: View {
 
     @State private var newPublisher: String = ""
 
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+
     private var existingPublishers: [String] {
         var pubs = Set(viewModel.allPublishers())
         if !publisher.isEmpty {
@@ -28,6 +30,9 @@ struct PublisherPickerView: View {
                             selectPublisher(newPublisher)
                         }
                         .bold()
+                        .if(theme.forceDarkMode) { view in
+                            view.foregroundStyle(theme.primary)
+                        }
                     }
                 }
             }
@@ -40,11 +45,14 @@ struct PublisherPickerView: View {
                         } label: {
                             HStack {
                                 Text(pub)
-                                    .foregroundStyle(.primary)
+                                    .foregroundStyle(theme.onSurface)
                                 Spacer()
                                 if publisher == pub {
                                     Image(systemName: "checkmark")
-                                        .foregroundStyle(Color.accentColor)
+                                        .foregroundStyle(theme.primary)
+                                        .if(theme.forceDarkMode) { view in
+                                            view.fontWeight(.bold)
+                                        }
                                 }
                             }
                         }
@@ -58,10 +66,14 @@ struct PublisherPickerView: View {
                         selectPublisher("")
                     } label: {
                         Text("掲載誌を解除")
+                            .if(theme.forceDarkMode) { view in
+                                view.foregroundStyle(theme.error)
+                            }
                     }
                 }
             }
         }
+        .themedNavigationStyle()
         .navigationTitle("掲載誌")
         #if os(iOS) || os(visionOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -72,6 +84,17 @@ struct PublisherPickerView: View {
         publisher = value
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             dismiss()
+        }
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
         }
     }
 }

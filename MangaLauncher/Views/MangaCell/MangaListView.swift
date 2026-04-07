@@ -14,6 +14,8 @@ struct MangaListView: View {
     #endif
     let onOpenURL: (String) -> Void
 
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+
     var body: some View {
         List {
             ForEach(entries, id: \.id) { entry in
@@ -28,11 +30,17 @@ struct MangaListView: View {
             .onMove { source, destination in
                 viewModel.moveEntries(for: day, from: source, to: destination)
             }
-            .listRowSeparator(hasWallpaper ? .hidden : .automatic)
+            .listRowSeparator(theme.forceDarkMode ? .hidden : (hasWallpaper ? .hidden : .automatic))
+            .if(theme.forceDarkMode) { view in
+                view.listRowInsets(EdgeInsets(top: 2, leading: 12, bottom: 2, trailing: 12))
+            }
         }
         .listStyle(.plain)
         .contentMargins(.top, headerHeight, for: .scrollContent)
-        .scrollContentBackground(hasWallpaper ? .hidden : .automatic)
+        .scrollContentBackground(theme.forceDarkMode ? .hidden : (hasWallpaper ? .hidden : .automatic))
+        .if(theme.forceDarkMode) { view in
+            view.background(theme.surface)
+        }
         .simultaneousGesture(
             LongPressGesture(minimumDuration: 0.5)
                 .onEnded { _ in
@@ -44,5 +52,16 @@ struct MangaListView: View {
         #if os(iOS) || os(visionOS)
         .environment(\.editMode, $listEditMode)
         #endif
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
     }
 }

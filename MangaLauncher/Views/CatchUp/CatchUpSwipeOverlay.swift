@@ -3,32 +3,34 @@ import SwiftUI
 struct CatchUpSwipeOverlay: View {
     let offsetWidth: CGFloat
 
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+
     var body: some View {
         if offsetWidth > 30 {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.green.opacity(0.2))
+            RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                .fill(theme.catchUpReadColor.opacity(0.15))
                 .overlay {
                     VStack {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 60))
-                            .foregroundStyle(.green)
+                            .font(theme.forceDarkMode ? .system(size: 60, weight: .black) : .system(size: 60))
+                            .foregroundStyle(theme.catchUpReadColor)
                         Text("既読")
-                            .font(.title2.bold())
-                            .foregroundStyle(.green)
+                            .font(theme.title2Font)
+                            .foregroundStyle(theme.catchUpReadColor)
                     }
                 }
                 .opacity(min(Double(offsetWidth) / 100, 1))
         } else if offsetWidth < -30 {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.orange.opacity(0.2))
+            RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                .fill(theme.catchUpSkipColor.opacity(0.15))
                 .overlay {
                     VStack {
                         Image(systemName: "clock.arrow.circlepath")
-                            .font(.system(size: 60))
-                            .foregroundStyle(.orange)
+                            .font(theme.forceDarkMode ? .system(size: 60, weight: .black) : .system(size: 60))
+                            .foregroundStyle(theme.catchUpSkipColor)
                         Text("あとで")
-                            .font(.title2.bold())
-                            .foregroundStyle(.orange)
+                            .font(theme.title2Font)
+                            .foregroundStyle(theme.catchUpSkipColor)
                     }
                 }
                 .opacity(min(Double(-offsetWidth) / 100, 1))

@@ -12,6 +12,8 @@ struct ContentToolbar: ToolbarContent {
     var onAdd: () -> Void
     var onSettings: () -> Void
 
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+
     var body: some ToolbarContent {
         ToolbarItem(placement: .navigation) {
             let allUnread = viewModel.unreadEntries(for: viewModel.selectedDay)
@@ -27,11 +29,12 @@ struct ContentToolbar: ToolbarContent {
                     Image(systemName: "rectangle.stack")
                     if unreadCount > 0 {
                         Text("\(unreadCount)")
-                            .font(.caption2.bold())
-                            .foregroundStyle(.white)
+                            .font(theme.caption2Font.bold())
+                            .foregroundStyle(theme.onPrimary)
                             .padding(.horizontal, 5)
                             .padding(.vertical, 2)
-                            .background(.red.opacity(edit.isEditing ? 0.3 : 1), in: Capsule())
+                            .background(theme.badgeColor.opacity(edit.isEditing ? 0.3 : 1),
+                                in: Capsule())
                     }
                 }
             }

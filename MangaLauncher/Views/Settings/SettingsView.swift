@@ -18,6 +18,14 @@ struct SettingsView: View {
     @State private var updateStatus: UpdateStatus = .idle
     @State private var showingOnboarding = false
     @State private var showingSyncError = false
+    @State private var currentThemeMode: ThemeMode = ThemeManager.shared.mode
+
+    /// sheet内ではnil（OS準拠）が親の.darkを継承するため、UIKitからOS設定を直接取得
+    private var systemColorScheme: ColorScheme {
+        let style = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?
+            .traitCollection.userInterfaceStyle
+        return style == .dark ? .dark : .light
+    }
 
     private enum UpdateStatus {
         case idle, checking, available(String), upToDate, error
@@ -154,6 +162,18 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Picker("テーマ", selection: $currentThemeMode) {
+                        ForEach(ThemeMode.allCases, id: \.self) { mode in
+                            Label(mode.displayName, systemImage: mode.iconName).tag(mode)
+                        }
+                    }
+                } header: {
+                    Text("テーマ")
+                } footer: {
+                    Text("「Kinetic Ink」はマンガ風のダークテーマです。")
+                }
+
+                Section {
                     Picker("ブラウザ", selection: $browserMode) {
                         Text("アプリ内（Safari）").tag("inApp")
                         Text("デフォルトブラウザ").tag("external")
@@ -254,6 +274,10 @@ struct SettingsView: View {
                     Text("登録されたすべてのマンガデータを削除します。この操作は取り消せません。")
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(currentThemeMode.style.groupedBackground)
+            .toolbarBackground(currentThemeMode.style.toolbarBackgroundVisibility, for: .navigationBar)
+            .toolbarColorScheme(currentThemeMode.style.colorSchemeOverride ?? systemColorScheme, for: .navigationBar)
             .navigationTitle("設定")
             #if os(iOS) || os(visionOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -311,6 +335,10 @@ struct SettingsView: View {
                     Text(message)
                 }
             }
+        }
+        .preferredColorScheme(currentThemeMode.style.colorSchemeOverride ?? systemColorScheme)
+        .onChange(of: currentThemeMode) { _, newValue in
+            ThemeManager.shared.mode = newValue
         }
     }
 
@@ -427,6 +455,7 @@ struct SettingsView: View {
                     #endif
                 }
             }
+            .themedNavigationStyle()
             .navigationTitle("ライセンス")
             #if os(iOS) || os(visionOS)
             .navigationBarTitleDisplayMode(.inline)

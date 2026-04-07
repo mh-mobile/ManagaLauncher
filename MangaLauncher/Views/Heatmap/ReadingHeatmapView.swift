@@ -10,6 +10,8 @@ struct ReadingHeatmapView: View {
     private let cellSpacing: CGFloat = 3
     private let dayLabels = DayOfWeek.orderedDays.map(\.shortName)
 
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+
     @State private var activityCounts: [Date: Int] = [:]
     @State private var selectedDate: Date?
 
@@ -22,6 +24,7 @@ struct ReadingHeatmapView: View {
             }
             .padding()
         }
+        .themedNavigationStyle()
         .navigationTitle("読書アクティビティ")
         #if os(iOS) || os(visionOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -53,20 +56,28 @@ struct ReadingHeatmapView: View {
     private func statCard(title: String, value: String, unit: String) -> some View {
         VStack(spacing: 4) {
             Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(theme.captionFont)
+                .foregroundStyle(theme.onSurfaceVariant)
             HStack(alignment: .lastTextBaseline, spacing: 2) {
                 Text(value)
                     .font(.title2)
-                    .fontWeight(.bold)
+                    .fontWeight(theme.forceDarkMode ? .black : .bold)
+                    .foregroundStyle(theme.onSurface)
                 Text(unit)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(theme.captionFont)
+                    .foregroundStyle(theme.onSurfaceVariant)
             }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 10))
+        .background {
+            switch ThemeManager.shared.mode {
+            case .ink:
+                RoundedRectangle(cornerRadius: theme.cardCornerRadius).fill(theme.surfaceContainerHigh)
+            case .classic:
+                RoundedRectangle(cornerRadius: 10).fill(.fill.tertiary)
+            }
+        }
     }
 
     // MARK: - Heatmap
@@ -84,8 +95,8 @@ struct ReadingHeatmapView: View {
                     .frame(height: 14)
                 ForEach(0..<7, id: \.self) { dayIndex in
                     Text(dayLabels[dayIndex])
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(theme.caption2Font)
+                        .foregroundStyle(theme.onSurfaceVariant)
                         .frame(width: 20, height: cellSize)
                 }
             }
@@ -100,8 +111,8 @@ struct ReadingHeatmapView: View {
                                 let date = grid[weekIndex][0]
                                 if let date, isFirstWeekOfMonth(date: date, weekIndex: weekIndex, grid: grid) {
                                     Text(monthLabel(for: date))
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
+                                        .font(theme.caption2Font)
+                                        .foregroundStyle(theme.onSurfaceVariant)
                                         .fixedSize()
                                         .frame(width: cellSize, alignment: .leading)
                                 } else {
@@ -152,16 +163,16 @@ struct ReadingHeatmapView: View {
         HStack(spacing: 4) {
             Spacer()
             Text("少ない")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                .font(theme.caption2Font)
+                .foregroundStyle(theme.onSurfaceVariant)
             ForEach(0..<5, id: \.self) { level in
                 RoundedRectangle(cornerRadius: 2)
                     .fill(levelColor(level))
                     .frame(width: 12, height: 12)
             }
             Text("多い")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                .font(theme.caption2Font)
+                .foregroundStyle(theme.onSurfaceVariant)
         }
     }
 
@@ -195,7 +206,7 @@ struct ReadingHeatmapView: View {
 
     private func cellColor(count: Int, maxCount: Int) -> Color {
         if count == 0 {
-            return Color(.systemGray5)
+            return theme.forceDarkMode ? theme.surfaceContainerHigh : Color(.systemGray5)
         }
         let level: Int
         if maxCount <= 4 {
@@ -209,12 +220,12 @@ struct ReadingHeatmapView: View {
 
     private func levelColor(_ level: Int) -> Color {
         switch level {
-        case 0: Color(.systemGray5)
-        case 1: Color.green.opacity(0.3)
-        case 2: Color.green.opacity(0.5)
-        case 3: Color.green.opacity(0.7)
-        case 4: Color.green.opacity(0.9)
-        default: Color.green
+        case 0: theme.forceDarkMode ? theme.surfaceContainerHigh : Color(.systemGray5)
+        case 1: theme.heatmapColor.opacity(0.3)
+        case 2: theme.heatmapColor.opacity(0.5)
+        case 3: theme.heatmapColor.opacity(0.7)
+        case 4: theme.heatmapColor.opacity(0.9)
+        default: theme.heatmapColor
         }
     }
 
@@ -244,6 +255,8 @@ private struct DayActivitySheet: View {
     @AppStorage("browserMode") private var browserMode: String = "external"
     @State private var safariURL: URL?
 
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+
     var body: some View {
         NavigationStack {
             List {
@@ -262,24 +275,20 @@ private struct DayActivitySheet: View {
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: 40, height: 40)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                                    .clipShape(RoundedRectangle(cornerRadius: theme.cardCornerRadius))
                             } else {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(.fill.tertiary)
-                                    .frame(width: 40, height: 40)
-                                    .overlay {
-                                        Image(systemName: "book.closed")
-                                            .foregroundStyle(.secondary)
-                                    }
+                                activityPlaceholderIcon
                             }
                             Text(activity.mangaName)
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(theme.onSurface)
+                                .fontWeight(theme.forceDarkMode ? .bold : .regular)
                         }
                     }
-                    .tint(.primary)
+                    .tint(theme.onSurface)
                     .disabled(entry == nil)
                 }
             }
+            .themedNavigationStyle()
             .navigationTitle(dateTitle)
             #if os(iOS) || os(visionOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -287,6 +296,9 @@ private struct DayActivitySheet: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("閉じる") { dismiss() }
+                        .if(theme.forceDarkMode) { view in
+                            view.foregroundStyle(theme.onSurfaceVariant)
+                        }
                 }
             }
             #if canImport(UIKit)
@@ -302,11 +314,44 @@ private struct DayActivitySheet: View {
         MangaURLOpener(browserMode: browserMode, openURL: openURL) { safariURL = $0 }.open(urlString)
     }
 
+    @ViewBuilder
+    private var activityPlaceholderIcon: some View {
+        switch ThemeManager.shared.mode {
+        case .ink:
+            RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                .fill(theme.surfaceContainerHighest)
+                .frame(width: 40, height: 40)
+                .overlay {
+                    Image(systemName: "book.closed")
+                        .foregroundStyle(theme.onSurfaceVariant)
+                }
+        case .classic:
+            RoundedRectangle(cornerRadius: 8)
+                .fill(.fill.tertiary)
+                .frame(width: 40, height: 40)
+                .overlay {
+                    Image(systemName: "book.closed")
+                        .foregroundStyle(.secondary)
+                }
+        }
+    }
+
     private var dateTitle: String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ja_JP")
         formatter.dateFormat = "M月d日(E)"
         return formatter.string(from: date)
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
     }
 }
 
