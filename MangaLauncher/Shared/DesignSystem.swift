@@ -76,6 +76,23 @@ struct ThemeStyle {
     /// `colorSchemeOverride == .dark` の簡易アクセス（各Viewのスタイリング分岐用）
     var forceDarkMode: Bool { colorSchemeOverride == .dark }
 
+    // Spacing
+    let spacingSM: CGFloat
+    let spacingMD: CGFloat
+    let spacingLG: CGFloat
+
+    // Tab bar
+    let tabSpacing: CGFloat
+    let tabItemSpacing: CGFloat
+    let tabFont: (_ isSelected: Bool) -> Font
+    let tabItemHeight: CGFloat?
+    let tabUnreadDotSize: CGFloat
+    let tabUnderlineHeight: CGFloat
+    let tabUnderlineCornerRadius: CGFloat
+    let tabSelectedRotation: Double
+    let tabSelectedScale: CGFloat
+    let tabShowsTodayCircle: Bool
+
     // Context-specific colors (where ink mapping ≠ classic system color)
     let badgeColor: Color
     let catchUpReadColor: Color
@@ -115,6 +132,19 @@ extension ThemeStyle {
         toolbarBackgroundVisibility: .automatic,
         usesScreenTone: false,
         hasShadows: true,
+        spacingSM: 8,
+        spacingMD: 16,
+        spacingLG: 24,
+        tabSpacing: 0,
+        tabItemSpacing: 4,
+        tabFont: { _ in .headline },
+        tabItemHeight: nil,
+        tabUnreadDotSize: 5,
+        tabUnderlineHeight: 2,
+        tabUnderlineCornerRadius: 0,
+        tabSelectedRotation: 0,
+        tabSelectedScale: 1.0,
+        tabShowsTodayCircle: true,
         badgeColor: .red,
         catchUpReadColor: .green,
         catchUpSkipColor: .orange,
@@ -152,6 +182,19 @@ extension ThemeStyle {
         toolbarBackgroundVisibility: .visible,
         usesScreenTone: true,
         hasShadows: false,
+        spacingSM: 8,
+        spacingMD: 16,
+        spacingLG: 24,
+        tabSpacing: 2,
+        tabItemSpacing: 2,
+        tabFont: { isSelected in .system(size: isSelected ? 26 : 18, weight: .black) },
+        tabItemHeight: 52,
+        tabUnreadDotSize: 6,
+        tabUnderlineHeight: 3,
+        tabUnderlineCornerRadius: 2,
+        tabSelectedRotation: -3,
+        tabSelectedScale: 1.1,
+        tabShowsTodayCircle: false,
         badgeColor: Color(hex: "ff8d8d"),
         catchUpReadColor: Color(hex: "00eefc"),
         catchUpSkipColor: Color(hex: "ffeb92"),
@@ -178,26 +221,6 @@ final class ThemeManager {
     var style: ThemeStyle { mode.style }
 }
 
-// MARK: - InkTheme Constants (for ink-only structural code)
-
-enum InkTheme {
-    static let surface = Color(hex: "0e0e0e")
-    static let surfaceBright = Color(hex: "1a1a1a")
-    static let surfaceContainerHigh = Color(hex: "212121")
-    static let surfaceContainerHighest = Color(hex: "262626")
-    static let primary = Color(hex: "ff8d8d")
-    static let secondary = Color(hex: "00eefc")
-    static let tertiary = Color(hex: "ffeb92")
-    static let primaryDim = Color(hex: "cc6b6b")
-    static let onSurface = Color.white
-    static let onSurfaceVariant = Color(hex: "a0a0a0")
-    static let onPrimary = Color(hex: "0e0e0e")
-    static let cornerRadius: CGFloat = 4
-    static let cardCornerRadius: CGFloat = 6
-    static let spacingMD: CGFloat = 16
-    static let spacingSM: CGFloat = 8
-    static let spacingLG: CGFloat = 24
-}
 
 // MARK: - Color Hex Extension
 
@@ -251,52 +274,22 @@ extension View {
     }
 }
 
-// MARK: - Drag Preview Cell
-
-struct DragPreviewCell: View {
-    let entry: MangaEntry
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            if let imageData = entry.imageData, let image = imageData.toSwiftUIImage() {
-                image
-                    .resizable()
-                    .scaledToFit()
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-            } else {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.fromName(entry.iconColor))
-                    .aspectRatio(3/4, contentMode: .fit)
-                    .overlay {
-                        Text(entry.name)
-                            .font(.caption.bold())
-                            .foregroundStyle(.white)
-                            .multilineTextAlignment(.center)
-                            .padding(4)
-                    }
-            }
-            Text(entry.name)
-                .font(.caption2)
-                .lineLimit(1)
-        }
-    }
-}
-
 // MARK: - Speech Bubble Button Style
 
 struct SpeechBubbleButtonStyle: ButtonStyle {
     var isPrimary: Bool = true
+    private var ink: ThemeStyle { .ink }
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.headline)
-            .foregroundStyle(isPrimary ? InkTheme.onPrimary : InkTheme.onSurface)
-            .padding(.horizontal, InkTheme.spacingLG)
-            .padding(.vertical, InkTheme.spacingMD)
+            .foregroundStyle(isPrimary ? ink.onPrimary : ink.onSurface)
+            .padding(.horizontal, ink.spacingLG)
+            .padding(.vertical, ink.spacingMD)
             .background(
                 isPrimary
-                    ? AnyShapeStyle(LinearGradient(colors: [InkTheme.primary, InkTheme.primaryDim], startPoint: .top, endPoint: .bottom))
-                    : AnyShapeStyle(InkTheme.surfaceBright)
+                    ? AnyShapeStyle(LinearGradient(colors: [ink.primary, ink.primaryDim], startPoint: .top, endPoint: .bottom))
+                    : AnyShapeStyle(ink.surfaceBright)
             )
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .scaleEffect(configuration.isPressed ? 0.95 : 1.0)

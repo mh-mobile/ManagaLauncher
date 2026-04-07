@@ -41,8 +41,6 @@ struct MangaLauncherApp: App {
     @State private var syncMonitor = CloudSyncMonitor()
     private let notificationDelegate = NotificationDelegate()
 
-    private var theme: ThemeStyle { ThemeManager.shared.style }
-
     init() {
         DataMigration.migrateToAppGroupIfNeeded()
         UNUserNotificationCenter.current().delegate = notificationDelegate

@@ -59,8 +59,8 @@ struct CatchUpCardView: View {
                         .foregroundStyle(theme.onSurfaceVariant)
                 }
             }
-            .padding(.horizontal, InkTheme.spacingMD)
-            .padding(.vertical, InkTheme.spacingSM + 4)
+            .padding(.horizontal, theme.spacingMD)
+            .padding(.vertical, theme.spacingSM + 4)
             .frame(maxWidth: .infinity)
             .background(theme.surfaceContainerHighest)
         }

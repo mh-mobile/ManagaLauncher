@@ -31,7 +31,7 @@ struct EmptyStateView<Content: View>: View {
             case .ink:
                 content()
                     .padding(.top, headerHeight)
-                    .background(InkTheme.surface)
+                    .background(theme.surface)
             }
         }
     }

@@ -13,11 +13,10 @@ struct DayTabBarView: View {
     @State private var dropTargetDay: DayOfWeek?
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
-    private var isInk: Bool { ThemeManager.shared.mode == .ink }
 
     var body: some View {
         let currentDay = paging.currentDay
-        HStack(spacing: isInk ? 2 : 0) {
+        HStack(spacing: theme.tabSpacing) {
             ForEach(orderedDays) { day in
                 Button {
                     paging.isAnimatingPageChange = true
@@ -32,13 +31,14 @@ struct DayTabBarView: View {
                 } label: {
                     let isSelected = currentDay == day
                     let hasUnread = !day.isHiatus && !day.isCompleted && viewModel.unreadCount(for: day) > 0
-                    VStack(spacing: isInk ? 2 : 4) {
+                    VStack(spacing: theme.tabItemSpacing) {
                         Text(day.shortName)
-                            .font(isInk ? .system(size: isSelected ? 26 : 18, weight: .black) : .headline)
+                            .font(theme.tabFont(isSelected))
                             .foregroundStyle(tabTextColor(day: day, isSelected: isSelected))
-                            .frame(width: isInk ? nil : 32, height: isInk ? nil : 32)
+                            .frame(width: theme.tabShowsTodayCircle ? 32 : nil,
+                                   height: theme.tabShowsTodayCircle ? 32 : nil)
                             .background {
-                                if !isInk {
+                                if theme.tabShowsTodayCircle {
                                     if !day.isHiatus && !day.isCompleted && day == .today {
                                         Circle().fill(Color.accentColor)
                                     } else if hasWallpaper && isSelected {
@@ -46,27 +46,27 @@ struct DayTabBarView: View {
                                     }
                                 }
                             }
-                            .rotationEffect(.degrees(isInk && isSelected ? -3 : 0))
-                            .scaleEffect(isInk && isSelected ? 1.1 : 1.0)
+                            .rotationEffect(.degrees(isSelected ? theme.tabSelectedRotation : 0))
+                            .scaleEffect(isSelected ? theme.tabSelectedScale : 1.0)
                         Circle()
-                            .fill(hasUnread ? (isInk ? theme.primary : Color.accentColor) : .clear)
-                            .frame(width: isInk ? 6 : 5, height: isInk ? 6 : 5)
+                            .fill(hasUnread ? theme.primary : .clear)
+                            .frame(width: theme.tabUnreadDotSize, height: theme.tabUnreadDotSize)
                         if isSelected {
-                            RoundedRectangle(cornerRadius: isInk ? 2 : 0)
-                                .fill(isInk ? theme.secondary : Color.accentColor)
-                                .frame(height: isInk ? 3 : 2)
+                            RoundedRectangle(cornerRadius: theme.tabUnderlineCornerRadius)
+                                .fill(theme.secondary)
+                                .frame(height: theme.tabUnderlineHeight)
                                 .matchedGeometryEffect(id: "tabUnderline", in: tabUnderline)
                         } else {
-                            Color.clear.frame(height: isInk ? 3 : 2)
+                            Color.clear.frame(height: theme.tabUnderlineHeight)
                         }
                     }
-                    .frame(height: isInk ? 52 : nil)
+                    .frame(height: theme.tabItemHeight)
                 }
                 .frame(maxWidth: .infinity)
                 .background(
-                    RoundedRectangle(cornerRadius: isInk ? theme.cornerRadius : 8)
-                        .fill(dropTargetDay == day ? (isInk ? theme.secondary : Color.accentColor).opacity(0.3) : .clear)
-                        .padding(.horizontal, isInk ? 0 : 2)
+                    RoundedRectangle(cornerRadius: theme.cornerRadius)
+                        .fill(dropTargetDay == day ? theme.secondary.opacity(0.3) : .clear)
+                        .padding(.horizontal, theme.tabShowsTodayCircle ? 2 : 0)
                 )
                 .onDrop(of: [.text], isTargeted: Binding(
                     get: { dropTargetDay == day },
@@ -101,13 +101,13 @@ struct DayTabBarView: View {
             }
         }
         .padding(.horizontal, 8)
-        .padding(.top, isInk ? 0 : 4)
-        .padding(.vertical, isInk ? 6 : 0)
+        .padding(.top, theme.tabShowsTodayCircle ? 4 : 0)
+        .padding(.vertical, theme.tabShowsTodayCircle ? 0 : 6)
         .animation(.easeInOut(duration: 0.25), value: paging.pageIndex)
     }
 
     private func tabTextColor(day: DayOfWeek, isSelected: Bool) -> Color {
-        if isInk {
+        if theme.forceDarkMode {
             if isSelected { return theme.secondary }
             if !day.isHiatus && !day.isCompleted && day == .today { return theme.primary }
             if day.isHiatus || day.isCompleted { return theme.onSurfaceVariant.opacity(0.5) }

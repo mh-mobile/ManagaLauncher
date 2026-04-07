@@ -10,8 +10,6 @@ struct MangaGridCell: View {
     @Binding var editingEntry: MangaEntry?
     let onOpenURL: (String) -> Void
 
-    private var theme: ThemeStyle { ThemeManager.shared.style }
-
     var body: some View {
         if entry.isDeleted || entry.modelContext == nil {
             EmptyView()
