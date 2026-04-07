@@ -354,7 +354,8 @@ struct CatchUpView: View {
             completionAnimated: $completionAnimated,
             achievementAnimated: $achievementAnimated,
             checkStreak: checkStreakAchievement,
-            checkMilestone: checkMilestoneAchievement
+            checkMilestone: checkMilestoneAchievement,
+            hasGradientBackground: hasGradient
         ) {
             completionAnimated = false
             achievementAnimated = false

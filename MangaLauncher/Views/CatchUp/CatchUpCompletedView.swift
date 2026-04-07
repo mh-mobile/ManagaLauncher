@@ -9,9 +9,11 @@ struct CatchUpCompletedView: View {
     @Binding var achievementAnimated: Bool
     let checkStreak: () -> Int?
     let checkMilestone: () -> Int?
+    var hasGradientBackground: Bool = false
     var onRecheck: (() -> Void)?
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
+    private var textColor: Color { hasGradientBackground ? .white : theme.onSurface }
 
     private var hasAchievement: Bool {
         streakAchievement != nil || milestoneAchievement != nil
@@ -27,7 +29,7 @@ struct CatchUpCompletedView: View {
                 .opacity(completionAnimated ? 1.0 : 0.0)
             Text(message)
                 .font(theme.title2Font)
-                .foregroundStyle(theme.onSurface)
+                .foregroundStyle(textColor)
                 .opacity(completionAnimated ? 1.0 : 0.0)
 
             if hasAchievement {
@@ -107,7 +109,7 @@ struct CatchUpCompletedView: View {
                 .foregroundStyle(iconColor)
             Text(text)
                 .font(theme.headlineFont)
-                .foregroundStyle(theme.onSurface)
+                .foregroundStyle(textColor)
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 14)
