@@ -45,6 +45,21 @@ enum ImageColorExtractor {
         #endif
     }
 
+    /// アイコンカラーからフォールバック用グラデーションを生成する
+    static func gradientFromColor(_ color: Color) -> GradientColors {
+        #if canImport(UIKit)
+        let uiColor = UIColor(color)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        uiColor.getRed(&r, green: &g, blue: &b, alpha: &a)
+        return GradientColors(
+            top: Color(red: r * 0.5, green: g * 0.5, blue: b * 0.5),
+            bottom: Color(red: r * 0.25, green: g * 0.25, blue: b * 0.25)
+        )
+        #else
+        return GradientColors(top: color.opacity(0.5), bottom: color.opacity(0.25))
+        #endif
+    }
+
     private static func averageColor(
         pixels: UnsafeMutablePointer<UInt8>,
         size: Int,

@@ -18,31 +18,32 @@ struct CatchUpCardView: View {
         }
     }
 
+    // MARK: - Card Cover
+
+    @ViewBuilder
+    private var cardCover: some View {
+        if let imageData = entry.imageData, let image = imageData.toSwiftUIImage() {
+            image
+                .resizable()
+                .scaledToFit()
+        } else {
+            Color.fromName(entry.iconColor)
+                .overlay {
+                    Text(entry.name)
+                        .font(theme.forceDarkMode ? .system(size: 28, weight: .black) : .title.bold())
+                        .foregroundStyle(.white)
+                        .multilineTextAlignment(.center)
+                        .padding()
+                }
+                .aspectRatio(4/3, contentMode: .fit)
+        }
+    }
+
     // MARK: - Ink Card
 
     private var inkCard: some View {
         VStack(spacing: 0) {
-            if let imageData = entry.imageData, let image = imageData.toSwiftUIImage() {
-                image
-                    .resizable()
-                    .scaledToFit()
-            } else {
-                Rectangle()
-                    .fill(Color.fromName(entry.iconColor))
-                    .aspectRatio(3/4, contentMode: .fit)
-                    .overlay {
-                        ZStack {
-                            if theme.usesScreenTone {
-                                ScreenTonePattern(opacity: 0.08, spacing: 4)
-                            }
-                            Text(entry.name)
-                                .font(.system(size: 28, weight: .black))
-                                .foregroundStyle(.white)
-                                .multilineTextAlignment(.center)
-                                .padding()
-                        }
-                    }
-            }
+            cardCover
 
             VStack(spacing: 4) {
                 Text(entry.name)
@@ -79,23 +80,8 @@ struct CatchUpCardView: View {
 
     private var classicCard: some View {
         VStack(spacing: 12) {
-            if let imageData = entry.imageData, let image = imageData.toSwiftUIImage() {
-                image
-                    .resizable()
-                    .scaledToFit()
-                    .clipShape(RoundedRectangle(cornerRadius: theme.cardCornerRadius))
-            } else {
-                RoundedRectangle(cornerRadius: theme.cardCornerRadius)
-                    .fill(Color.fromName(entry.iconColor))
-                    .aspectRatio(3/4, contentMode: .fit)
-                    .overlay {
-                        Text(entry.name)
-                            .font(.title.bold())
-                            .foregroundStyle(.white)
-                            .multilineTextAlignment(.center)
-                            .padding()
-                    }
-            }
+            cardCover
+                .clipShape(RoundedRectangle(cornerRadius: theme.cardCornerRadius))
 
             Text(entry.name)
                 .font(theme.title3Font)

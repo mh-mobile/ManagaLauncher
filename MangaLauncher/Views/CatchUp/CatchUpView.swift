@@ -375,9 +375,10 @@ struct CatchUpView: View {
 
     private func updateBackgroundGradient() {
         guard currentIndex < unreadItems.count else { return }
-        guard let imageData = unreadItems[currentIndex].imageData else {
+        let entry = unreadItems[currentIndex]
+        guard let imageData = entry.imageData else {
             withAnimation(.easeInOut(duration: 0.5)) {
-                backgroundGradient = nil
+                backgroundGradient = ImageColorExtractor.gradientFromColor(Color.fromName(entry.iconColor))
             }
             return
         }
