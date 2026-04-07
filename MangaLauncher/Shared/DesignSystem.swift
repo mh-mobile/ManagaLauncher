@@ -14,7 +14,7 @@ enum ThemeMode: String, CaseIterable {
         switch self {
         case .classic: return "クラシック"
         case .ink: return "Kinetic Ink"
-        case .retro: return "劇画エディトリアル"
+        case .retro: return "レトロ"
         }
     }
 
