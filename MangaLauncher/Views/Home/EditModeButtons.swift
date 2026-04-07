@@ -31,6 +31,14 @@ struct EditModeButtons: View {
                         .padding(.vertical, 10)
                         .foregroundStyle(theme.onSurface)
                         .background(theme.surfaceContainerHighest, in: Capsule())
+                case .retro:
+                    Label("壁紙", systemImage: "photo.artframe")
+                        .font(theme.headlineFont)
+                        .fixedSize()
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .foregroundStyle(theme.onSurface)
+                        .background(theme.surfaceContainerHigh, in: Capsule())
                 }
             }
             Button {
@@ -56,6 +64,16 @@ struct EditModeButtons: View {
                         .padding(.vertical, 10)
                         .foregroundStyle(theme.onPrimary)
                         .background(theme.primary, in: Capsule())
+                case .retro:
+                    Text("完了")
+                        .font(theme.headlineFont)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 10)
+                        .foregroundStyle(theme.onPrimary)
+                        .background(
+                            LinearGradient(colors: [theme.primaryDim, theme.primary], startPoint: .leading, endPoint: .trailing),
+                            in: Capsule()
+                        )
                 }
             }
         }

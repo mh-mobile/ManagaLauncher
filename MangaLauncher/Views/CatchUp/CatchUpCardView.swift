@@ -97,6 +97,30 @@ struct CatchUpCardView: View {
                     .fill(.ultraThinMaterial)
                     .shadow(color: .black.opacity(theme.hasShadows ? 0.1 : 0), radius: 8, y: 4)
             )
+
+        case .retro:
+            VStack(spacing: 0) {
+                cardCover
+
+                VStack(spacing: 4) {
+                    Text(entry.name)
+                        .font(theme.title3Font)
+                        .foregroundStyle(theme.onSurface)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.center)
+
+                    if !entry.publisher.isEmpty {
+                        Text(entry.publisher)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(theme.onSurfaceVariant)
+                    }
+                }
+                .padding(.horizontal, theme.spacingMD)
+                .padding(.vertical, theme.spacingSM + 4)
+                .frame(maxWidth: .infinity)
+                .background(theme.surfaceContainerHigh)
+            }
+            .clipShape(UnevenRoundedRectangle(topLeadingRadius: 14, bottomLeadingRadius: 6, bottomTrailingRadius: 14, topTrailingRadius: 6))
         }
     }
 }

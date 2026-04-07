@@ -56,7 +56,7 @@ struct CatchUpView: View {
                     )
                     .ignoresSafeArea()
                     .animation(.easeInOut(duration: 0.5), value: backgroundGradient)
-                } else if theme.forceDarkMode {
+                } else if theme.usesCustomSurface {
                     theme.surface.ignoresSafeArea()
                 }
             }
@@ -354,7 +354,8 @@ struct CatchUpView: View {
             completionAnimated: $completionAnimated,
             achievementAnimated: $achievementAnimated,
             checkStreak: checkStreakAchievement,
-            checkMilestone: checkMilestoneAchievement
+            checkMilestone: checkMilestoneAchievement,
+            hasGradientBackground: hasGradient
         ) {
             completionAnimated = false
             achievementAnimated = false

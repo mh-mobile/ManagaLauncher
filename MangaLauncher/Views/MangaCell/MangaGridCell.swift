@@ -10,6 +10,8 @@ struct MangaGridCell: View {
     @Binding var editingEntry: MangaEntry?
     let onOpenURL: (String) -> Void
 
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+
     var body: some View {
         if entry.isDeleted || entry.modelContext == nil {
             EmptyView()
@@ -33,22 +35,23 @@ struct MangaGridCell: View {
                         }
                 }
 
+                let isRetro = theme.usesCustomSurface && !theme.forceDarkMode
                 HStack(alignment: .top, spacing: 4) {
                     if !entry.isRead {
                         Circle()
-                            .fill(Color.accentColor)
+                            .fill(isRetro ? theme.badgeColor : Color.accentColor)
                             .frame(width: 6, height: 6)
                             .padding(.top, 4)
                     }
                     VStack(alignment: .leading, spacing: 2) {
                         Text(entry.name)
-                            .font(.caption)
-                            .foregroundStyle(.primary)
+                            .font(isRetro ? theme.captionFont : .caption)
+                            .foregroundStyle(isRetro ? theme.onSurface : .primary)
                             .lineLimit(2)
                         if !entry.publisher.isEmpty {
                             Text(entry.publisher)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .font(isRetro ? theme.caption2Font : .caption2)
+                                .foregroundStyle(isRetro ? theme.onSurfaceVariant : .secondary)
                         }
                     }
                     Spacer(minLength: 0)

@@ -163,7 +163,7 @@ struct SettingsView: View {
                 } header: {
                     Text("テーマ")
                 } footer: {
-                    Text("「Kinetic Ink」はマンガ風のダークテーマです。")
+                    Text("「Kinetic Ink」はマンガ風のダークテーマ、「レトロ」は70〜80年代の劇画誌をイメージしたテーマです。")
                 }
 
                 Section {
