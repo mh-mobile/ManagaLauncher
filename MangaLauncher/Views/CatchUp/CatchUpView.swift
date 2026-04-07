@@ -56,7 +56,7 @@ struct CatchUpView: View {
                     )
                     .ignoresSafeArea()
                     .animation(.easeInOut(duration: 0.5), value: backgroundGradient)
-                } else if theme.forceDarkMode {
+                } else if theme.usesCustomSurface {
                     theme.surface.ignoresSafeArea()
                 }
             }
