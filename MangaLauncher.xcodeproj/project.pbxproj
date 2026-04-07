@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C2C5E8A68C5957E075832254 /* ImageColorExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05365AD0D66B41D8C20EDF49 /* ImageColorExtractor.swift */; };
+		C2C5E8A68C5957E075832255 /* ImageColorExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05365AD0D66B41D8C20EDF49 /* ImageColorExtractor.swift */; };
 		ECCE6BE2DD70F34BA69061B3 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC38F4ED01AE0D411DA0C66B /* DesignSystem.swift */; };
 		0F66A6093327A5A5BD16B10F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E7D977DE254FB1F216740BE6 /* Foundation.framework */; };
 		125D8CEEBC201DD7B9C5BCE3 /* ShareExtensionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 358605C94F78CC23682FF911 /* ShareExtensionView.swift */; };
@@ -127,6 +129,7 @@
 
 /* Begin PBXFileReference section */
 		EC38F4ED01AE0D411DA0C66B /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		05365AD0D66B41D8C20EDF49 /* ImageColorExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageColorExtractor.swift; sourceTree = "<group>"; };
 		0557E9481117CB9F8B903947 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0CDE508C489E5FAA3881A522 /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		1CF568E5CBBFA07B55373C73 /* DataMigration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DataMigration.swift; sourceTree = "<group>"; };
@@ -456,6 +459,7 @@
 				ECFEA8202F7E8B9D00CE4DC0 /* UserDefaultsKeys.swift */,
 				ECD61F7CE55EE24A44A02F14 /* AnimationTiming.swift */,
 				EC38F4ED01AE0D411DA0C66B /* DesignSystem.swift */,
+				05365AD0D66B41D8C20EDF49 /* ImageColorExtractor.swift */,
 				EC44DD5EE5561C4C4F99C248 /* ModelContextExtensions.swift */,
 				ECFEA8472F7F6E5700CE4DC0 /* MangaURLOpener.swift */,
 			);
@@ -602,6 +606,7 @@
 				ECFEA8222F7E8B9D00CE4DC0 /* UserDefaultsKeys.swift in Sources */,
 				EC79B98AEA2FF142AA989EF0 /* AnimationTiming.swift in Sources */,
 				ECCE6BE2DD70F34BA69061B3 /* DesignSystem.swift in Sources */,
+				C2C5E8A68C5957E075832254 /* ImageColorExtractor.swift in Sources */,
 				EC440D83EFDF1B4B6F95E82D /* ModelContextExtensions.swift in Sources */,
 				AA000001 /* ReadingActivity.swift in Sources */,
 				ECFEA84A2F7F6E5700CE4DC0 /* MangaURLOpener.swift in Sources */,
@@ -648,6 +653,7 @@
 				ECFEA8232F7E8B9D00CE4DC0 /* UserDefaultsKeys.swift in Sources */,
 				ECFEA8932F7F93AF00CE4DC0 /* AnimationTiming.swift in Sources */,
 				ECCE6BE2DD70F34BA69061B3 /* DesignSystem.swift in Sources */,
+				C2C5E8A68C5957E075832255 /* ImageColorExtractor.swift in Sources */,
 				ECFEA8942F7F93AF00CE4DC0 /* ModelContextExtensions.swift in Sources */,
 				A1000005 /* EditEntryView.swift in Sources */,
 				EC04B7CF2F70D9FE00AEE45F /* CatchUpView.swift in Sources */,

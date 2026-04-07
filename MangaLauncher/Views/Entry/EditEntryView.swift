@@ -417,17 +417,6 @@ struct EditEntryView: View {
     }
 }
 
-private extension View {
-    @ViewBuilder
-    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
-        if condition {
-            transform(self)
-        } else {
-            self
-        }
-    }
-}
-
 #Preview("New Entry") {
     let container = try! ModelContainer(for: MangaEntry.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
     let viewModel = MangaViewModel(modelContext: container.mainContext)
