@@ -20,13 +20,6 @@ struct SettingsView: View {
     @State private var showingSyncError = false
     @State private var currentThemeMode: ThemeMode = ThemeManager.shared.mode
 
-    /// sheet内ではnil（OS準拠）が親の.darkを継承するため、UIKitからOS設定を直接取得
-    private var systemColorScheme: ColorScheme {
-        let style = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?
-            .traitCollection.userInterfaceStyle
-        return style == .dark ? .dark : .light
-    }
-
     private enum UpdateStatus {
         case idle, checking, available(String), upToDate, error
     }
@@ -277,7 +270,7 @@ struct SettingsView: View {
             .scrollContentBackground(.hidden)
             .background(currentThemeMode.style.groupedBackground)
             .toolbarBackground(currentThemeMode.style.toolbarBackgroundVisibility, for: .navigationBar)
-            .toolbarColorScheme(currentThemeMode.style.colorSchemeOverride ?? systemColorScheme, for: .navigationBar)
+            .toolbarColorScheme(currentThemeMode.style.resolvedColorScheme(system: systemColorScheme), for: .navigationBar)
             .navigationTitle("設定")
             #if os(iOS) || os(visionOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -336,7 +329,7 @@ struct SettingsView: View {
                 }
             }
         }
-        .preferredColorScheme(currentThemeMode.style.colorSchemeOverride ?? systemColorScheme)
+        .preferredColorScheme(currentThemeMode.style.resolvedColorScheme(system: systemColorScheme))
         .onChange(of: currentThemeMode) { _, newValue in
             ThemeManager.shared.mode = newValue
         }

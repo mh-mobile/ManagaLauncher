@@ -23,8 +23,10 @@ struct CatchUpView: View {
     @State private var achievementAnimated = false
     @State private var streakAchievement: Int?
     @State private var milestoneAchievement: Int?
+    @State private var backgroundGradient: ImageColorExtractor.GradientColors?
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
+    private var hasGradient: Bool { backgroundGradient != nil }
 
     private enum SwipeAction {
         case read, skip
@@ -45,19 +47,29 @@ struct CatchUpView: View {
                     cardStackView
                 }
             }
-            .if(theme.forceDarkMode) { view in
-                view.background(theme.surface)
+            .background {
+                if let gradient = backgroundGradient {
+                    LinearGradient(
+                        colors: [gradient.top, gradient.bottom],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .ignoresSafeArea()
+                    .animation(.easeInOut(duration: 0.5), value: backgroundGradient)
+                } else if theme.forceDarkMode {
+                    theme.surface.ignoresSafeArea()
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     VStack(spacing: 2) {
                         Text("\(day.displayName)のキャッチアップ")
                             .font(theme.headlineFont)
-                            .foregroundStyle(theme.onSurface)
+                            .foregroundStyle(hasGradient ? .white : theme.onSurface)
                         if let publisher {
                             Text(publisher)
                                 .font(theme.captionFont)
-                                .foregroundStyle(theme.onSurfaceVariant)
+                                .foregroundStyle(hasGradient ? .white.opacity(0.7) : theme.onSurfaceVariant)
                         }
                     }
                 }
@@ -65,13 +77,11 @@ struct CatchUpView: View {
             #if os(iOS) || os(visionOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            .themedNavigationStyle()
+            .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("閉じる") { dismiss() }
-                        .if(theme.forceDarkMode) { view in
-                            view.foregroundStyle(theme.primary)
-                        }
+                        .foregroundStyle(hasGradient ? .white : (theme.forceDarkMode ? theme.primary : Color.accentColor))
                 }
                 if !undoStack.isEmpty {
                     ToolbarItem(placement: .automatic) {
@@ -90,6 +100,12 @@ struct CatchUpView: View {
             }
             if !hasSeenTutorial && !unreadItems.isEmpty {
                 showTutorial = true
+            }
+            updateBackgroundGradient()
+        }
+        .onChange(of: currentIndex) { _, newIndex in
+            if newIndex < unreadItems.count {
+                updateBackgroundGradient()
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .mangaDataDidChange)) { _ in
@@ -113,6 +129,7 @@ struct CatchUpView: View {
                 .ignoresSafeArea()
         }
         #endif
+        .preferredColorScheme(hasGradient ? .dark : theme.resolvedColorScheme(system: systemColorScheme))
     }
 
     // MARK: - Card Stack
@@ -123,12 +140,13 @@ struct CatchUpView: View {
             HStack {
                 Text("\(currentIndex + 1) / \(totalCount)")
                     .font(theme.subheadlineFont)
-                    .foregroundStyle(theme.onSurfaceVariant)
+                    .foregroundStyle(hasGradient ? .white : theme.onSurfaceVariant)
                 Spacer()
                 Text("残り \(remainingCount) 件")
                     .font(theme.subheadlineFont)
-                    .foregroundStyle(theme.onSurfaceVariant)
+                    .foregroundStyle(hasGradient ? .white : theme.onSurfaceVariant)
             }
+            .shadow(color: hasGradient ? .black.opacity(0.5) : .clear, radius: 2, y: 1)
             .padding(.horizontal)
 
             ProgressView(value: Double(currentIndex), total: Double(totalCount))
@@ -139,14 +157,14 @@ struct CatchUpView: View {
 
             ZStack {
                 if currentIndex + 1 < totalCount {
-                    CatchUpCardView(entry: unreadItems[currentIndex + 1], editingEntry: $editingEntry, onOpenURL: openMangaURL)
+                    CatchUpCardView(entry: unreadItems[currentIndex + 1], editingEntry: $editingEntry, onOpenURL: openMangaURL, hasGradientBackground: hasGradient)
                         .id("\(unreadItems[currentIndex + 1].id)-\(reloadCount)")
                         .scaleEffect(0.95)
                         .opacity(0.5)
                         .allowsHitTesting(false)
                 }
 
-                CatchUpCardView(entry: unreadItems[currentIndex], editingEntry: $editingEntry, onOpenURL: openMangaURL)
+                CatchUpCardView(entry: unreadItems[currentIndex], editingEntry: $editingEntry, onOpenURL: openMangaURL, hasGradientBackground: hasGradient)
                     .id("\(unreadItems[currentIndex].id)-\(reloadCount)")
                     .offset(offset)
                     .rotationEffect(.degrees(Double(offset.width) / 20))
@@ -348,18 +366,26 @@ struct CatchUpView: View {
         }
     }
 
+    private func updateBackgroundGradient() {
+        guard currentIndex < unreadItems.count else { return }
+        let entry = unreadItems[currentIndex]
+        guard let imageData = entry.imageData else {
+            withAnimation(.easeInOut(duration: 0.5)) {
+                backgroundGradient = ImageColorExtractor.gradientFromColor(Color.fromName(entry.iconColor))
+            }
+            return
+        }
+        Task.detached(priority: .userInitiated) {
+            let gradient = ImageColorExtractor.extractGradient(from: imageData)
+            await MainActor.run {
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    backgroundGradient = gradient
+                }
+            }
+        }
+    }
+
     private func openMangaURL(_ urlString: String) {
         MangaURLOpener(browserMode: browserMode, openURL: openURL) { safariURL = $0 }.open(urlString)
-    }
-}
-
-private extension View {
-    @ViewBuilder
-    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
-        if condition {
-            transform(self)
-        } else {
-            self
-        }
     }
 }

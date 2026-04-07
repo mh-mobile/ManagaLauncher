@@ -4,6 +4,14 @@ import UserNotifications
 import NotificationKit
 import CloudSyncKit
 
+/// sheet/fullScreenCover内で `.preferredColorScheme(nil)` が親を継承する問題の回避用。
+/// UIKitからOS設定のカラースキームを直接取得する。
+var systemColorScheme: ColorScheme {
+    let style = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?
+        .traitCollection.userInterfaceStyle
+    return style == .dark ? .dark : .light
+}
+
 extension Notification.Name {
     static let mangaDataDidChange = CloudSyncMonitor.dataDidChangeNotification
     static let switchToDay = Notification.Name("switchToDay")

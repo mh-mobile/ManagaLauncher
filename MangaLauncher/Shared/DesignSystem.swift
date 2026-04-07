@@ -76,6 +76,12 @@ struct ThemeStyle {
     /// `colorSchemeOverride == .dark` の簡易アクセス（各Viewのスタイリング分岐用）
     var forceDarkMode: Bool { colorSchemeOverride == .dark }
 
+    /// sheet/fullScreenCover内で安全に使えるカラースキーム。
+    /// `colorSchemeOverride` が `nil`（OS準拠）の場合、`systemColorScheme` で解決する。
+    func resolvedColorScheme(system: ColorScheme) -> ColorScheme {
+        colorSchemeOverride ?? system
+    }
+
     // Spacing
     let spacingSM: CGFloat
     let spacingMD: CGFloat
@@ -107,7 +113,7 @@ extension ThemeStyle {
         surface: .clear,
         surfaceBright: .clear,
         surfaceContainerHigh: Color(.systemFill),
-        surfaceContainerHighest: Color(.darkGray),
+        surfaceContainerHighest: Color(.systemGray4),
         primary: .accentColor,
         secondary: .accentColor,
         tertiary: .yellow,
@@ -296,3 +302,18 @@ struct SpeechBubbleButtonStyle: ButtonStyle {
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }
+
+// MARK: - Conditional View Modifier
+
+extension View {
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
+    }
+}
+
+
