@@ -31,6 +31,8 @@ struct EditEntryView: View {
     @State private var isOnHiatus = false
     @State private var isCompleted = false
 
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+
     private let colorOptions: [(name: String, color: Color)] = [
         ("red", .red),
         ("orange", .orange),
@@ -136,18 +138,18 @@ struct EditEntryView: View {
                         .autocorrectionDisabled()
                     if !url.isEmpty && !isValidURL {
                         Text("有効なURLを入力してください（例: https://...）")
-                            .font(.caption)
-                            .foregroundStyle(.red)
+                            .font(theme.captionFont)
+                            .foregroundStyle(theme.error)
                     }
                     NavigationLink {
                         PublisherPickerView(publisher: $publisher, viewModel: viewModel)
                     } label: {
                         HStack {
                             Text("掲載誌")
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(theme.onSurface)
                             Spacer()
                             Text(publisher.isEmpty ? "未設定" : publisher)
-                                .foregroundStyle(publisher.isEmpty ? .tertiary : .secondary)
+                                .foregroundStyle(publisher.isEmpty ? theme.onSurfaceVariant.opacity(0.5) : theme.onSurfaceVariant)
                         }
                     }
                 }
@@ -218,19 +220,19 @@ struct EditEntryView: View {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
                         ForEach(DayOfWeek.orderedDays) { day in
                             Text(day.shortName)
-                                .font(.subheadline.bold())
+                                .font(theme.subheadlineFont)
                                 .frame(width: 36, height: 36)
                                 .background(
                                     selectedDay == day
-                                        ? Color.accentColor
-                                        : Color.platformGray5
+                                        ? theme.primary
+                                        : theme.surfaceContainerHighest
                                 )
                                 .foregroundStyle(
                                     selectedDay == day
-                                        ? .white
-                                        : .primary
+                                        ? theme.onPrimary
+                                        : theme.onSurface
                                 )
-                                .clipShape(Circle())
+                                .clipShape(theme.chipShape)
                                 .onTapGesture {
                                     selectedDay = day
                                     // nextUpdateCandidatesはselectedDayに依存するので
@@ -319,6 +321,7 @@ struct EditEntryView: View {
                     }
                 }
             }
+            .themedNavigationStyle()
             .navigationTitle(isEditing ? "編集" : "新規登録")
             #if os(iOS) || os(visionOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -328,6 +331,9 @@ struct EditEntryView: View {
                     Button("キャンセル") {
                         dismiss()
                     }
+                    .if(theme.forceDarkMode) { view in
+                        view.foregroundStyle(theme.onSurfaceVariant)
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") {
@@ -335,6 +341,9 @@ struct EditEntryView: View {
                         dismiss()
                     }
                     .disabled(name.isEmpty || url.isEmpty || !isValidURL)
+                    .if(theme.forceDarkMode) { view in
+                        view.foregroundStyle(theme.primary)
+                    }
                 }
             }
             .onAppear {
@@ -404,6 +413,17 @@ struct EditEntryView: View {
             entry.isCompleted = isCompleted
         } else {
             viewModel.addEntry(name: name, url: url, days: [selectedDay], iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval, nextExpectedUpdate: nextUpdateDate, isOnHiatus: isOnHiatus)
+        }
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
         }
     }
 }

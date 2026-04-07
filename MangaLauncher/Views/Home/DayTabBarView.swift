@@ -12,9 +12,11 @@ struct DayTabBarView: View {
 
     @State private var dropTargetDay: DayOfWeek?
 
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+
     var body: some View {
         let currentDay = paging.currentDay
-        HStack(spacing: 0) {
+        HStack(spacing: theme.tabSpacing) {
             ForEach(orderedDays) { day in
                 Button {
                     paging.isAnimatingPageChange = true
@@ -29,47 +31,42 @@ struct DayTabBarView: View {
                 } label: {
                     let isSelected = currentDay == day
                     let hasUnread = !day.isHiatus && !day.isCompleted && viewModel.unreadCount(for: day) > 0
-                    VStack(spacing: 4) {
+                    VStack(spacing: theme.tabItemSpacing) {
                         Text(day.shortName)
-                            .font(.headline)
-                            .foregroundStyle(
-                                !day.isHiatus && !day.isCompleted && day == .today
-                                    ? .white
-                                    : (hasWallpaper && isSelected)
-                                        ? .white
-                                        : isSelected
-                                            ? Color.accentColor
-                                            : (day.isHiatus || day.isCompleted) ? .secondary : .primary
-                            )
-                            .frame(width: 32, height: 32)
+                            .font(theme.tabFont(isSelected))
+                            .foregroundStyle(tabTextColor(day: day, isSelected: isSelected))
+                            .frame(width: theme.tabShowsTodayCircle ? 32 : nil,
+                                   height: theme.tabShowsTodayCircle ? 32 : nil)
                             .background {
-                                if !day.isHiatus && !day.isCompleted && day == .today {
-                                    Circle()
-                                        .fill(Color.accentColor)
-                                } else if hasWallpaper && isSelected {
-                                    Circle()
-                                        .fill(Color.black.opacity(0.3))
+                                if theme.tabShowsTodayCircle {
+                                    if !day.isHiatus && !day.isCompleted && day == .today {
+                                        Circle().fill(Color.accentColor)
+                                    } else if hasWallpaper && isSelected {
+                                        Circle().fill(Color.black.opacity(0.3))
+                                    }
                                 }
                             }
+                            .rotationEffect(.degrees(isSelected ? theme.tabSelectedRotation : 0))
+                            .scaleEffect(isSelected ? theme.tabSelectedScale : 1.0)
                         Circle()
-                            .fill(hasUnread ? Color.accentColor : .clear)
-                            .frame(width: 5, height: 5)
+                            .fill(hasUnread ? theme.primary : .clear)
+                            .frame(width: theme.tabUnreadDotSize, height: theme.tabUnreadDotSize)
                         if isSelected {
-                            Rectangle()
-                                .fill(Color.accentColor)
-                                .frame(height: 2)
+                            RoundedRectangle(cornerRadius: theme.tabUnderlineCornerRadius)
+                                .fill(theme.secondary)
+                                .frame(height: theme.tabUnderlineHeight)
                                 .matchedGeometryEffect(id: "tabUnderline", in: tabUnderline)
                         } else {
-                            Color.clear
-                                .frame(height: 2)
+                            Color.clear.frame(height: theme.tabUnderlineHeight)
                         }
                     }
+                    .frame(height: theme.tabItemHeight)
                 }
                 .frame(maxWidth: .infinity)
                 .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(dropTargetDay == day ? Color.accentColor.opacity(0.3) : .clear)
-                        .padding(.horizontal, 2)
+                    RoundedRectangle(cornerRadius: theme.cornerRadius)
+                        .fill(dropTargetDay == day ? theme.secondary.opacity(0.3) : .clear)
+                        .padding(.horizontal, theme.tabShowsTodayCircle ? 2 : 0)
                 )
                 .onDrop(of: [.text], isTargeted: Binding(
                     get: { dropTargetDay == day },
@@ -104,7 +101,23 @@ struct DayTabBarView: View {
             }
         }
         .padding(.horizontal, 8)
-        .padding(.top, 4)
+        .padding(.top, theme.tabShowsTodayCircle ? 4 : 0)
+        .padding(.vertical, theme.tabShowsTodayCircle ? 0 : 6)
         .animation(.easeInOut(duration: 0.25), value: paging.pageIndex)
+    }
+
+    private func tabTextColor(day: DayOfWeek, isSelected: Bool) -> Color {
+        if theme.forceDarkMode {
+            if isSelected { return theme.secondary }
+            if !day.isHiatus && !day.isCompleted && day == .today { return theme.primary }
+            if day.isHiatus || day.isCompleted { return theme.onSurfaceVariant.opacity(0.5) }
+            return theme.onSurfaceVariant
+        } else {
+            if !day.isHiatus && !day.isCompleted && day == .today { return .white }
+            if hasWallpaper && isSelected { return .white }
+            if isSelected { return Color.accentColor }
+            if day.isHiatus || day.isCompleted { return .secondary }
+            return .primary
+        }
     }
 }

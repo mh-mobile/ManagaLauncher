@@ -12,39 +12,66 @@ struct MangaRowCell: View {
     #endif
     let onOpenURL: (String) -> Void
 
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+
     var body: some View {
         if entry.isDeleted || entry.modelContext == nil {
             EmptyView()
         } else {
             HStack(spacing: 12) {
-                if !entry.isRead {
-                    Circle()
-                        .fill(Color.accentColor)
-                        .frame(width: 8, height: 8)
-                } else {
-                    Color.clear
-                        .frame(width: 8, height: 8)
+                switch ThemeManager.shared.mode {
+                case .ink:
+                    if !entry.isRead {
+                        Text("NEW")
+                            .font(.system(size: 9, weight: .black))
+                            .foregroundStyle(theme.onPrimary)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(theme.primary)
+                            .clipShape(RoundedRectangle(cornerRadius: 2))
+                    } else {
+                        Color.clear
+                            .frame(width: 28, height: 8)
+                    }
+                case .classic:
+                    if !entry.isRead {
+                        Circle()
+                            .fill(theme.badgeColor)
+                            .frame(width: 8, height: 8)
+                    } else {
+                        Color.clear
+                            .frame(width: 8, height: 8)
+                    }
                 }
 
                 EntryIcon(entry: entry, size: 36)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(entry.name)
-                        .font(.body)
+                        .font(theme.bodyFont)
+                        .foregroundStyle(theme.onSurface)
                     if !entry.publisher.isEmpty {
                         Text(entry.publisher)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(theme.captionFont)
+                            .foregroundStyle(theme.onSurfaceVariant)
                     }
                 }
 
                 Spacer()
 
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+                switch ThemeManager.shared.mode {
+                case .ink:
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(theme.onSurfaceVariant.opacity(0.5))
+                case .classic:
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
             }
-            .padding(.vertical, hasWallpaper ? 4 : 0)
+            .padding(.vertical, theme.forceDarkMode ? 8 : (hasWallpaper ? 4 : 0))
+            .padding(.horizontal, theme.forceDarkMode ? 4 : 0)
             .contentShape(Rectangle())
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(entry.name)\(entry.publisher.isEmpty ? "" : "、\(entry.publisher)")\(entry.isRead ? "" : "、未読")")
@@ -54,17 +81,33 @@ struct MangaRowCell: View {
             }
             .listRowBackground(
                 Group {
-                    if hasWallpaper {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color(.systemFill))
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
+                    switch ThemeManager.shared.mode {
+                    case .ink:
+                        if hasWallpaper {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                                    .fill(theme.surfaceContainerHigh)
+                                RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                                    .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
+                            }
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 2)
+                        } else {
+                            theme.surface
                         }
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 2)
-                    } else {
-                        Color.platformBackground
+                    case .classic:
+                        if hasWallpaper {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                                    .fill(theme.surfaceContainerHigh)
+                                RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                                    .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
+                            }
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 2)
+                        } else {
+                            Color.platformBackground
+                        }
                     }
                 }
             )

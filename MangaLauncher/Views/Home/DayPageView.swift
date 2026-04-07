@@ -12,6 +12,8 @@ struct DayPageView: View {
     @Binding var showingAddSheet: Bool
     let onOpenURL: (String) -> Void
 
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+
     var body: some View {
         let _ = viewModel.refreshCounter
         let allEntries = viewModel.fetchEntries(for: day)
@@ -31,24 +33,31 @@ struct DayPageView: View {
                             if day.isCompleted {
                                 ContentUnavailableView {
                                     Label("完結したマンガはありません", systemImage: "checkmark.seal")
+                                        .modifier(ThemedLabelModifier())
                                 } description: {
                                     Text("コンテキストメニューや編集画面から\n「完結にする」でここに移動できます")
+                                        .modifier(ThemedDescriptionModifier())
                                 }
                             } else if day.isHiatus {
                                 ContentUnavailableView {
                                     Label("休載中のマンガはありません", systemImage: "moon.zzz")
+                                        .modifier(ThemedLabelModifier())
                                 } description: {
                                     Text("コンテキストメニューや編集画面から\n「休載中にする」でここに移動できます")
+                                        .modifier(ThemedDescriptionModifier())
                                 }
                             } else {
                                 ContentUnavailableView {
                                     Label("エントリなし", systemImage: "book.closed")
+                                        .modifier(ThemedLabelModifier())
                                 } description: {
                                     Text("\(day.displayName)に登録されたマンガはありません")
+                                        .modifier(ThemedDescriptionModifier())
                                 } actions: {
                                     Button("追加する") {
                                         showingAddSheet = true
                                     }
+                                    .modifier(ThemedActionModifier())
                                 }
                             }
                         }
@@ -58,12 +67,15 @@ struct DayPageView: View {
                         EmptyStateView(hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, headerHeight: headerHeight) {
                             ContentUnavailableView {
                                 Label("該当なし", systemImage: "line.3.horizontal.decrease.circle")
+                                    .modifier(ThemedLabelModifier())
                             } description: {
                                 Text("この掲載誌のマンガはありません")
+                                    .modifier(ThemedDescriptionModifier())
                             } actions: {
                                 Button("フィルター解除") {
                                     selectedPublisher = nil
                                 }
+                                .modifier(ThemedActionModifier())
                             }
                         }
                         .frame(maxWidth: 600)
@@ -123,5 +135,30 @@ struct DayPageView: View {
                 ))
             }
         }
+    }
+}
+
+// MARK: - Themed Modifiers for DayPageView
+
+private struct ThemedLabelModifier: ViewModifier {
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+    func body(content: Content) -> some View {
+        content.foregroundStyle(theme.onSurfaceVariant)
+    }
+}
+
+private struct ThemedDescriptionModifier: ViewModifier {
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+    func body(content: Content) -> some View {
+        content.foregroundStyle(theme.onSurfaceVariant.opacity(0.7))
+    }
+}
+
+private struct ThemedActionModifier: ViewModifier {
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+    func body(content: Content) -> some View {
+        content
+            .fontWeight(.bold)
+            .foregroundStyle(theme.primary)
     }
 }

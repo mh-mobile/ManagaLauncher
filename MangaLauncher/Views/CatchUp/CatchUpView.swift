@@ -24,6 +24,8 @@ struct CatchUpView: View {
     @State private var streakAchievement: Int?
     @State private var milestoneAchievement: Int?
 
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+
     private enum SwipeAction {
         case read, skip
     }
@@ -43,15 +45,19 @@ struct CatchUpView: View {
                     cardStackView
                 }
             }
+            .if(theme.forceDarkMode) { view in
+                view.background(theme.surface)
+            }
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     VStack(spacing: 2) {
                         Text("\(day.displayName)のキャッチアップ")
-                            .font(.headline)
+                            .font(theme.headlineFont)
+                            .foregroundStyle(theme.onSurface)
                         if let publisher {
                             Text(publisher)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .font(theme.captionFont)
+                                .foregroundStyle(theme.onSurfaceVariant)
                         }
                     }
                 }
@@ -59,9 +65,13 @@ struct CatchUpView: View {
             #if os(iOS) || os(visionOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .themedNavigationStyle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("閉じる") { dismiss() }
+                        .if(theme.forceDarkMode) { view in
+                            view.foregroundStyle(theme.primary)
+                        }
                 }
                 if !undoStack.isEmpty {
                     ToolbarItem(placement: .automatic) {
@@ -112,16 +122,19 @@ struct CatchUpView: View {
             Spacer(minLength: 0)
             HStack {
                 Text("\(currentIndex + 1) / \(totalCount)")
-                    .font(.subheadline.bold())
-                    .foregroundStyle(.secondary)
+                    .font(theme.subheadlineFont)
+                    .foregroundStyle(theme.onSurfaceVariant)
                 Spacer()
                 Text("残り \(remainingCount) 件")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(theme.subheadlineFont)
+                    .foregroundStyle(theme.onSurfaceVariant)
             }
             .padding(.horizontal)
 
             ProgressView(value: Double(currentIndex), total: Double(totalCount))
+                .if(theme.forceDarkMode) { view in
+                    view.tint(theme.primary)
+                }
                 .padding(.horizontal)
 
             ZStack {
@@ -155,11 +168,11 @@ struct CatchUpView: View {
                 } label: {
                     VStack(spacing: 4) {
                         Image(systemName: "clock.arrow.circlepath")
-                            .font(.system(size: 44))
+                            .font(theme.forceDarkMode ? .system(size: 44, weight: .bold) : .system(size: 44))
                         Text("あとで")
-                            .font(.caption.bold())
+                            .font(theme.forceDarkMode ? .system(size: 12, weight: .black) : .caption.bold())
                     }
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(theme.catchUpSkipColor)
                 }
 
                 Button {
@@ -172,11 +185,11 @@ struct CatchUpView: View {
                 } label: {
                     VStack(spacing: 4) {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 44))
+                            .font(theme.forceDarkMode ? .system(size: 44, weight: .bold) : .system(size: 44))
                         Text("既読")
-                            .font(.caption.bold())
+                            .font(theme.forceDarkMode ? .system(size: 12, weight: .black) : .caption.bold())
                     }
-                    .foregroundStyle(.green)
+                    .foregroundStyle(theme.catchUpReadColor)
                 }
             }
             .padding(.bottom)
@@ -337,5 +350,16 @@ struct CatchUpView: View {
 
     private func openMangaURL(_ urlString: String) {
         MangaURLOpener(browserMode: browserMode, openURL: openURL) { safariURL = $0 }.open(urlString)
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
     }
 }

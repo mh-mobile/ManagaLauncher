@@ -4,38 +4,40 @@ struct CatchUpTutorialOverlay: View {
     @Binding var hasSeenTutorial: Bool
     @Binding var showTutorial: Bool
 
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+
     var body: some View {
         ZStack {
-            Color.black.opacity(0.6)
+            Color.black.opacity(theme.forceDarkMode ? 0.7 : 0.6)
                 .ignoresSafeArea()
 
             VStack(spacing: 24) {
                 Text("使い方")
-                    .font(.title2.bold())
-                    .foregroundStyle(.white)
+                    .font(theme.title2Font)
+                    .foregroundStyle(theme.forceDarkMode ? theme.onSurface : .white)
 
                 VStack(alignment: .leading, spacing: 16) {
                     tutorialRow(
                         icon: "hand.tap.fill",
-                        color: .blue,
+                        color: theme.tutorialColors.tap,
                         title: "タップで開く",
                         description: "カード画像をタップするとサイトを開けます"
                     )
                     tutorialRow(
                         icon: "arrow.right",
-                        color: .green,
+                        color: theme.tutorialColors.read,
                         title: "右スワイプ → 既読",
                         description: "読み終わったマンガを既読にします"
                     )
                     tutorialRow(
                         icon: "arrow.left",
-                        color: .orange,
+                        color: theme.tutorialColors.skip,
                         title: "左スワイプ → あとで",
                         description: "あとで読むマンガをスキップします"
                     )
                     tutorialRow(
                         icon: "arrow.uturn.backward",
-                        color: .secondary,
+                        color: theme.tutorialColors.undo,
                         title: "元に戻す",
                         description: "ツールバーのボタンで直前の操作を取り消せます"
                     )
@@ -48,19 +50,34 @@ struct CatchUpTutorialOverlay: View {
                     }
                 } label: {
                     Text("OK")
-                        .font(.headline)
+                        .font(theme.headlineFont)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(Color.accentColor)
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .background(theme.primary)
+                        .foregroundStyle(theme.onPrimary)
+                        .clipShape(RoundedRectangle(cornerRadius: theme.cardCornerRadius))
                 }
             }
             .padding(24)
             .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(.ultraThinMaterial)
+                Group {
+                    switch ThemeManager.shared.mode {
+                    case .ink:
+                        RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                            .fill(theme.surfaceContainerHigh)
+                    case .classic:
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(.ultraThinMaterial)
+                    }
+                }
             )
+            .if(theme.forceDarkMode) { view in
+                view.overlay {
+                    RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                        .inset(by: 0.5)
+                        .stroke(theme.surfaceContainerHighest, lineWidth: 1)
+                }
+            }
             .frame(maxWidth: 400)
             .padding(.horizontal, 32)
         }
@@ -70,17 +87,28 @@ struct CatchUpTutorialOverlay: View {
     private func tutorialRow(icon: String, color: Color, title: String, description: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
-                .font(.title3)
+                .font(theme.title3Font)
                 .foregroundStyle(color)
                 .frame(width: 28)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.subheadline.bold())
-                    .foregroundStyle(.white)
+                    .font(theme.subheadlineFont)
+                    .foregroundStyle(theme.forceDarkMode ? theme.onSurface : .white)
                 Text(description)
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.8))
+                    .font(theme.captionFont)
+                    .foregroundStyle(theme.forceDarkMode ? theme.onSurfaceVariant : .white.opacity(0.8))
             }
+        }
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
         }
     }
 }

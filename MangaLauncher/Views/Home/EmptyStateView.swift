@@ -6,6 +6,8 @@ struct EmptyStateView<Content: View>: View {
     let headerHeight: CGFloat
     @ViewBuilder let content: () -> Content
 
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+
     var body: some View {
         if hasWallpaper {
             content()
@@ -13,17 +15,24 @@ struct EmptyStateView<Content: View>: View {
                 .padding(.top, headerHeight)
                 .background {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color(.systemFill))
-                        RoundedRectangle(cornerRadius: 16)
+                        RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                            .fill(theme.surfaceContainerHigh)
+                        RoundedRectangle(cornerRadius: theme.cardCornerRadius)
                             .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
                     }
                     .padding()
                     .padding(.top, headerHeight)
                 }
         } else {
-            content()
-                .padding(.top, headerHeight)
+            switch ThemeManager.shared.mode {
+            case .classic:
+                content()
+                    .padding(.top, headerHeight)
+            case .ink:
+                content()
+                    .padding(.top, headerHeight)
+                    .background(theme.surface)
+            }
         }
     }
 }

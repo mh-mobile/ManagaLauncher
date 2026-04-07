@@ -54,6 +54,11 @@ struct MangaLauncherApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .background {
+                    // Ink background applied OUTSIDE ContentView to avoid breaking drag
+                    ThemeManager.shared.style.groupedBackground.ignoresSafeArea()
+                }
+                .preferredColorScheme(ThemeManager.shared.style.colorSchemeOverride)
                 .environment(syncMonitor)
                 .onOpenURL { url in
                     handleDeepLink(url)

@@ -6,15 +6,17 @@ struct FilterChip: View {
     let isSelected: Bool
     let action: () -> Void
 
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+
     var body: some View {
         Button(action: action) {
             Text(label)
-                .font(.caption)
+                .font(theme.captionFont)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .background(isSelected ? Color.accentColor : Color.platformGray5)
-                .foregroundStyle(isSelected ? .white : .primary)
-                .clipShape(Capsule())
+                .background(isSelected ? theme.primary : theme.surfaceContainerHigh)
+                .foregroundStyle(isSelected ? theme.onPrimary : theme.onSurfaceVariant)
+                .clipShape(theme.chipShape)
         }
         .buttonStyle(.plain)
     }

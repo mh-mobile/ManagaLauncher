@@ -11,6 +11,8 @@ struct CatchUpCompletedView: View {
     let checkMilestone: () -> Int?
     var onRecheck: (() -> Void)?
 
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+
     private var hasAchievement: Bool {
         streakAchievement != nil || milestoneAchievement != nil
     }
@@ -20,20 +22,21 @@ struct CatchUpCompletedView: View {
             Spacer()
             Image(systemName: "checkmark.seal.fill")
                 .font(.system(size: 64))
-                .foregroundStyle(.green)
+                .foregroundStyle(theme.catchUpReadColor)
                 .scaleEffect(completionAnimated ? 1.0 : 0.3)
                 .opacity(completionAnimated ? 1.0 : 0.0)
             Text(message)
-                .font(.title2.bold())
+                .font(theme.title2Font)
+                .foregroundStyle(theme.onSurface)
                 .opacity(completionAnimated ? 1.0 : 0.0)
 
             if hasAchievement {
                 VStack(spacing: 12) {
                     if let streak = streakAchievement {
-                        achievementCard(icon: "flame.fill", iconColor: .orange, text: "\(streak)日連続！")
+                        achievementCard(icon: "flame.fill", iconColor: theme.primary, text: "\(streak)日連続！")
                     }
                     if let milestone = milestoneAchievement {
-                        achievementCard(icon: "trophy.fill", iconColor: .yellow, text: "\(milestone)話達成！")
+                        achievementCard(icon: "trophy.fill", iconColor: theme.tertiary, text: "\(milestone)話達成！")
                     }
                 }
                 .scaleEffect(achievementAnimated ? 1.0 : 0.3)
@@ -41,17 +44,32 @@ struct CatchUpCompletedView: View {
             }
 
             if remainingUnread > 0, let onRecheck {
-                Button {
-                    onRecheck()
-                } label: {
-                    Label("未読を再チェック（\(remainingUnread)件）", systemImage: "arrow.counterclockwise")
+                switch ThemeManager.shared.mode {
+                case .ink:
+                    Button {
+                        onRecheck()
+                    } label: {
+                        Label("未読を再チェック（\(remainingUnread)件）", systemImage: "arrow.counterclockwise")
+                            .font(.system(size: 15, weight: .bold))
+                    }
+                    .buttonStyle(SpeechBubbleButtonStyle(isPrimary: false))
+                    .opacity(completionAnimated ? 1.0 : 0.0)
+                case .classic:
+                    Button {
+                        onRecheck()
+                    } label: {
+                        Label("未読を再チェック（\(remainingUnread)件）", systemImage: "arrow.counterclockwise")
+                    }
+                    .buttonStyle(.bordered)
+                    .opacity(completionAnimated ? 1.0 : 0.0)
                 }
-                .buttonStyle(.bordered)
-                .opacity(completionAnimated ? 1.0 : 0.0)
             }
             Spacer()
         }
         .frame(maxWidth: .infinity)
+        .if(theme.forceDarkMode) { view in
+            view.background(theme.surface)
+        }
         .onAppear {
             completionAnimated = false
             achievementAnimated = false
@@ -76,17 +94,37 @@ struct CatchUpCompletedView: View {
     private func achievementCard(icon: String, iconColor: Color, text: String) -> some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.title2)
+                .font(theme.title2Font)
                 .foregroundStyle(iconColor)
             Text(text)
-                .font(.headline)
+                .font(theme.headlineFont)
+                .foregroundStyle(theme.onSurface)
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 14)
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.ultraThinMaterial)
-                .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+            Group {
+                switch ThemeManager.shared.mode {
+                case .ink:
+                    RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                        .fill(theme.surfaceContainerHighest)
+                case .classic:
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(.ultraThinMaterial)
+                        .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+                }
+            }
         )
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
     }
 }
