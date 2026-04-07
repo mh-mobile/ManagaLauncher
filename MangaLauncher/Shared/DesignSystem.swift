@@ -107,7 +107,7 @@ extension ThemeStyle {
         surface: .clear,
         surfaceBright: .clear,
         surfaceContainerHigh: Color(.systemFill),
-        surfaceContainerHighest: Color(.darkGray),
+        surfaceContainerHighest: Color(.systemGray4),
         primary: .accentColor,
         secondary: .accentColor,
         tertiary: .yellow,
