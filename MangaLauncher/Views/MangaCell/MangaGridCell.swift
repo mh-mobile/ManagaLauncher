@@ -35,22 +35,23 @@ struct MangaGridCell: View {
                         }
                 }
 
+                let isRetro = theme.usesCustomSurface && !theme.forceDarkMode
                 HStack(alignment: .top, spacing: 4) {
                     if !entry.isRead {
                         Circle()
-                            .fill(theme.usesCustomSurface ? theme.badgeColor : Color.accentColor)
+                            .fill(isRetro ? theme.badgeColor : Color.accentColor)
                             .frame(width: 6, height: 6)
                             .padding(.top, 4)
                     }
                     VStack(alignment: .leading, spacing: 2) {
                         Text(entry.name)
-                            .font(theme.captionFont)
-                            .foregroundStyle(theme.usesCustomSurface ? theme.onSurface : .primary)
+                            .font(isRetro ? theme.captionFont : .caption)
+                            .foregroundStyle(isRetro ? theme.onSurface : .primary)
                             .lineLimit(2)
                         if !entry.publisher.isEmpty {
                             Text(entry.publisher)
-                                .font(theme.caption2Font)
-                                .foregroundStyle(theme.usesCustomSurface ? theme.onSurfaceVariant : .secondary)
+                                .font(isRetro ? theme.caption2Font : .caption2)
+                                .foregroundStyle(isRetro ? theme.onSurfaceVariant : .secondary)
                         }
                     }
                     Spacer(minLength: 0)
