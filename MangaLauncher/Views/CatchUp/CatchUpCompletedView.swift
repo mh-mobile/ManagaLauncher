@@ -62,6 +62,18 @@ struct CatchUpCompletedView: View {
                     }
                     .buttonStyle(.bordered)
                     .opacity(completionAnimated ? 1.0 : 0.0)
+                case .retro:
+                    Button {
+                        onRecheck()
+                    } label: {
+                        Label("未読を再チェック（\(remainingUnread)件）", systemImage: "arrow.counterclockwise")
+                            .font(theme.headlineFont)
+                            .foregroundStyle(theme.onSurface)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(theme.surfaceContainerHigh, in: RoundedRectangle(cornerRadius: theme.cornerRadius))
+                    }
+                    .opacity(completionAnimated ? 1.0 : 0.0)
                 }
             }
             Spacer()
@@ -109,6 +121,9 @@ struct CatchUpCompletedView: View {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(.ultraThinMaterial)
                         .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+                case .retro:
+                    RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                        .fill(theme.surfaceContainerHigh)
                 }
             }
         )

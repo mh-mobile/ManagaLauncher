@@ -68,6 +68,9 @@ struct CatchUpTutorialOverlay: View {
                     case .classic:
                         RoundedRectangle(cornerRadius: 20)
                             .fill(.ultraThinMaterial)
+                    case .retro:
+                        RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                            .fill(theme.surface)
                     }
                 }
             )

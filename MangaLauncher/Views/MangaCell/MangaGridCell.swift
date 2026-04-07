@@ -10,6 +10,8 @@ struct MangaGridCell: View {
     @Binding var editingEntry: MangaEntry?
     let onOpenURL: (String) -> Void
 
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+
     var body: some View {
         if entry.isDeleted || entry.modelContext == nil {
             EmptyView()
@@ -36,19 +38,19 @@ struct MangaGridCell: View {
                 HStack(alignment: .top, spacing: 4) {
                     if !entry.isRead {
                         Circle()
-                            .fill(Color.accentColor)
+                            .fill(theme.usesCustomSurface ? theme.badgeColor : Color.accentColor)
                             .frame(width: 6, height: 6)
                             .padding(.top, 4)
                     }
                     VStack(alignment: .leading, spacing: 2) {
                         Text(entry.name)
-                            .font(.caption)
-                            .foregroundStyle(.primary)
+                            .font(theme.captionFont)
+                            .foregroundStyle(theme.usesCustomSurface ? theme.onSurface : .primary)
                             .lineLimit(2)
                         if !entry.publisher.isEmpty {
                             Text(entry.publisher)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .font(theme.caption2Font)
+                                .foregroundStyle(theme.usesCustomSurface ? theme.onSurfaceVariant : .secondary)
                         }
                     }
                     Spacer(minLength: 0)

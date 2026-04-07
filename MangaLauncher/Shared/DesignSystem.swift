@@ -8,11 +8,13 @@ import UIKit
 enum ThemeMode: String, CaseIterable {
     case classic
     case ink
+    case retro
 
     var displayName: String {
         switch self {
         case .classic: return "クラシック"
         case .ink: return "Kinetic Ink"
+        case .retro: return "劇画エディトリアル"
         }
     }
 
@@ -20,6 +22,7 @@ enum ThemeMode: String, CaseIterable {
         switch self {
         case .classic: return "circle.lefthalf.filled"
         case .ink: return "paintbrush.pointed.fill"
+        case .retro: return "book.pages.fill"
         }
     }
 
@@ -27,6 +30,7 @@ enum ThemeMode: String, CaseIterable {
         switch self {
         case .classic: return .classic
         case .ink: return .ink
+        case .retro: return .retro
         }
     }
 }
@@ -75,6 +79,9 @@ struct ThemeStyle {
 
     /// `colorSchemeOverride == .dark` の簡易アクセス（各Viewのスタイリング分岐用）
     var forceDarkMode: Bool { colorSchemeOverride == .dark }
+
+    /// テーマが独自のsurfaceカラーを持つか（ink, retro等）
+    var usesCustomSurface: Bool { colorSchemeOverride != nil }
 
     /// sheet/fullScreenCover内で安全に使えるカラースキーム。
     /// `colorSchemeOverride` が `nil`（OS準拠）の場合、`systemColorScheme` で解決する。
@@ -157,6 +164,56 @@ extension ThemeStyle {
         heatmapColor: .green,
         onboardingColors: [.blue, .green, .orange, .purple],
         tutorialColors: (tap: .blue, read: .green, skip: .orange, undo: .secondary)
+    )
+
+    static let retro = ThemeStyle(
+        surface: Color(hex: "f5efe0"),
+        surfaceBright: Color(hex: "faf6ec"),
+        surfaceContainerHigh: Color(hex: "ebe5d5"),
+        surfaceContainerHighest: Color(hex: "ddd6c4"),
+        primary: Color(hex: "ff6b35"),
+        secondary: Color(hex: "ff6b35"),
+        tertiary: Color(hex: "5d5d69"),
+        primaryDim: Color(hex: "ab3500"),
+        onSurface: Color(hex: "1a1b25"),
+        onSurfaceVariant: Color(hex: "4a4a42"),
+        onPrimary: .white,
+        error: Color(hex: "ba1a1a"),
+        headlineFont: .system(size: 15, weight: .heavy, design: .rounded),
+        bodyFont: .system(size: 15, weight: .medium),
+        captionFont: .system(size: 12, weight: .semibold),
+        caption2Font: .system(size: 10, weight: .medium),
+        subheadlineFont: .system(size: 14, weight: .semibold),
+        title2Font: .system(size: 22, weight: .heavy, design: .rounded),
+        title3Font: .system(size: 18, weight: .heavy, design: .rounded),
+        cornerRadius: 6,
+        cardCornerRadius: 10,
+        chipShape: AnyShape(RoundedRectangle(cornerRadius: 6)),
+        iconFallbackIsCircle: false,
+        colorSchemeOverride: .light,
+        groupedBackground: Color(hex: "f5efe0"),
+        toolbarBackgroundVisibility: .visible,
+        usesScreenTone: true,
+        hasShadows: false,
+        spacingSM: 8,
+        spacingMD: 16,
+        spacingLG: 24,
+        tabSpacing: 2,
+        tabItemSpacing: 2,
+        tabFont: { isSelected in .system(size: isSelected ? 24 : 16, weight: .heavy, design: .rounded) },
+        tabItemHeight: 52,
+        tabUnreadDotSize: 6,
+        tabUnderlineHeight: 3,
+        tabUnderlineCornerRadius: 1,
+        tabSelectedRotation: -2,
+        tabSelectedScale: 1.08,
+        tabShowsTodayCircle: false,
+        badgeColor: Color(hex: "ff6b35"),
+        catchUpReadColor: Color(hex: "ff6b35"),
+        catchUpSkipColor: Color(hex: "ffd167"),
+        heatmapColor: Color(hex: "ff6b35"),
+        onboardingColors: [Color(hex: "ff6b35"), Color(hex: "ffd167"), Color(hex: "ab3500"), Color(hex: "5d5d69")],
+        tutorialColors: (tap: Color(hex: "ff6b35"), read: Color(hex: "ff6b35"), skip: Color(hex: "ffd167"), undo: Color(hex: "5d5d69"))
     )
 
     static let ink = ThemeStyle(
@@ -254,16 +311,22 @@ struct ScreenTonePattern: View {
     var opacity: Double = 0.05
     var dotSize: CGFloat = 2
     var spacing: CGFloat = 6
+    var dotColor: Color = .white
 
     var body: some View {
         Canvas { context, size in
             for x in stride(from: 0, to: size.width, by: spacing) {
                 for y in stride(from: 0, to: size.height, by: spacing) {
                     let rect = CGRect(x: x, y: y, width: dotSize, height: dotSize)
-                    context.fill(Path(ellipseIn: rect), with: .color(.white.opacity(opacity)))
+                    context.fill(Path(ellipseIn: rect), with: .color(dotColor.opacity(opacity)))
                 }
             }
         }
+    }
+
+    /// 劇画テーマ用ハーフトーン（Ben-Day dots）
+    static var halftone: ScreenTonePattern {
+        ScreenTonePattern(opacity: 0.03, dotSize: 2.5, spacing: 5, dotColor: Color(hex: "1a1b25"))
     }
 }
 

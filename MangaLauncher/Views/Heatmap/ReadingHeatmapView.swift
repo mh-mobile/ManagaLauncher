@@ -76,6 +76,8 @@ struct ReadingHeatmapView: View {
                 RoundedRectangle(cornerRadius: theme.cardCornerRadius).fill(theme.surfaceContainerHigh)
             case .classic:
                 RoundedRectangle(cornerRadius: 10).fill(.fill.tertiary)
+            case .retro:
+                RoundedRectangle(cornerRadius: theme.cardCornerRadius).fill(theme.surfaceContainerHigh)
             }
         }
     }
@@ -332,6 +334,14 @@ private struct DayActivitySheet: View {
                 .overlay {
                     Image(systemName: "book.closed")
                         .foregroundStyle(.secondary)
+                }
+        case .retro:
+            RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                .fill(theme.surfaceContainerHigh)
+                .frame(width: 40, height: 40)
+                .overlay {
+                    Image(systemName: "book.closed")
+                        .foregroundStyle(theme.onSurfaceVariant)
                 }
         }
     }

@@ -32,6 +32,10 @@ struct EmptyStateView<Content: View>: View {
                 content()
                     .padding(.top, headerHeight)
                     .background(theme.surface)
+            case .retro:
+                content()
+                    .padding(.top, headerHeight)
+                    .background(theme.surface)
             }
         }
     }
