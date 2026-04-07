@@ -115,6 +115,7 @@ struct DayTabBarView: View {
         } else if theme.usesCustomSurface {
             if isSelected { return theme.primary }
             if hasWallpaper && isSelected { return .white }
+            if !day.isHiatus && !day.isCompleted && day == .today { return theme.primary }
             if day.isHiatus || day.isCompleted { return theme.onSurfaceVariant.opacity(0.5) }
             return theme.onSurface
         } else {
