@@ -73,8 +73,7 @@ struct ContentView: View {
                     paging: homeState.paging,
                     listEditMode: $homeState.edit.listEditMode,
                     selectedPublisher: $homeState.selectedPublisher,
-                    viewModel: viewModel,
-                    hasWallpaper: homeState.wallpaper.hasWallpaper
+                    viewModel: viewModel
                 ) { day, vm in
                     DayPageView(
                         day: day,
@@ -188,23 +187,17 @@ struct ContentView: View {
             }
         }
         .background {
-            let theme = ThemeManager.shared.style
-            Group {
-                if theme.usesCustomSurface && !homeState.wallpaper.hasWallpaper {
-                    Rectangle().fill(theme.surface)
-                } else {
-                    #if canImport(UIKit)
-                    VisualEffectBlur(style: homeState.wallpaper.hasWallpaper
-                        ? (reduceTransparency ? .systemThinMaterial : .systemUltraThinMaterial)
-                        : .systemMaterial)
-                    #else
-                    Rectangle().fill(homeState.wallpaper.hasWallpaper
-                        ? (reduceTransparency ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(.ultraThinMaterial))
-                        : AnyShapeStyle(.regularMaterial))
-                    #endif
-                }
-            }
+            #if canImport(UIKit)
+            VisualEffectBlur(style: homeState.wallpaper.hasWallpaper
+                ? (reduceTransparency ? .systemThinMaterial : .systemUltraThinMaterial)
+                : .systemMaterial)
             .ignoresSafeArea(edges: .top)
+            #else
+            Rectangle().fill(homeState.wallpaper.hasWallpaper
+                ? (reduceTransparency ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(.ultraThinMaterial))
+                : AnyShapeStyle(.regularMaterial))
+            .ignoresSafeArea(edges: .top)
+            #endif
         }
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { newHeight in
             if abs(newHeight - homeState.headerHeight) > 2 {
