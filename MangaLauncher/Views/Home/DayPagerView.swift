@@ -7,7 +7,6 @@ struct DayPagerView<PageContent: View>: View {
     #endif
     @Binding var selectedPublisher: String?
     var viewModel: MangaViewModel
-    let hasWallpaper: Bool
     let pageContent: (DayOfWeek, MangaViewModel) -> PageContent
 
     var body: some View {
@@ -20,9 +19,6 @@ struct DayPagerView<PageContent: View>: View {
             }
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
-        .if(ThemeManager.shared.style.usesCustomSurface && !hasWallpaper) { view in
-            view.background(ThemeManager.shared.style.surface)
-        }
         .onChange(of: paging.pageIndex) { oldValue, newValue in
             let day = paging.dayForPageIndex(newValue)
             if !paging.isAnimatingPageChange {
