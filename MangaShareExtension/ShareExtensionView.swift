@@ -18,6 +18,7 @@ struct ShareExtensionView: View {
     @State private var imageData: Data?
     @State private var saveError: String?
     @State private var isOnHiatus = false
+    @State private var isOneShot = false
 
     private let colorOptions: [(name: String, color: Color)] = [
         ("red", .red),
@@ -123,8 +124,21 @@ struct ShareExtensionView: View {
                         .padding(.vertical, 4)
                     }
 
-                    Section {
-                        Toggle("休載中", isOn: $isOnHiatus)
+                    Section("種類") {
+                        Picker("種類", selection: $isOneShot) {
+                            Text("連載").tag(false)
+                            Text("読み切り").tag(true)
+                        }
+                        .pickerStyle(.segmented)
+                        .onChange(of: isOneShot) { _, newValue in
+                            if newValue { isOnHiatus = false }
+                        }
+                    }
+
+                    if !isOneShot {
+                        Section {
+                            Toggle("休載中", isOn: $isOnHiatus)
+                        }
                     }
 
                     Section("アイコンカラー") {
@@ -329,6 +343,7 @@ struct ShareExtensionView: View {
                 imageData: imageData
             )
             entry.isOnHiatus = isOnHiatus
+            entry.isOneShot = isOneShot
             context.insert(entry)
             try context.save()
 

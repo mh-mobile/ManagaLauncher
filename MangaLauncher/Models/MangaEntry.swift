@@ -62,6 +62,32 @@ enum DayOfWeek: Int, Codable, CaseIterable, Identifiable {
     }
 }
 
+enum MangaType: Int, Codable, CaseIterable {
+    case serial = 0
+    case oneShot = 1
+
+    var displayName: String {
+        switch self {
+        case .serial: "連載"
+        case .oneShot: "読み切り"
+        }
+    }
+}
+
+enum PublicationStatus: Int, Codable, CaseIterable {
+    case active = 0
+    case hiatus = 1
+    case completed = 2
+
+    var displayName: String {
+        switch self {
+        case .active: "連載中"
+        case .hiatus: "休載中"
+        case .completed: "完結"
+        }
+    }
+}
+
 @Model
 final class MangaEntry {
     var id: UUID = UUID()
@@ -77,6 +103,32 @@ final class MangaEntry {
     var nextExpectedUpdate: Date?
     var isOnHiatus: Bool = false
     var isCompleted: Bool = false
+    var isOneShot: Bool = false
+
+    @Transient
+    var mangaType: MangaType {
+        get { isOneShot ? .oneShot : .serial }
+        set {
+            isOneShot = newValue == .oneShot
+            if isOneShot {
+                isOnHiatus = false
+                isCompleted = false
+            }
+        }
+    }
+
+    @Transient
+    var publicationStatus: PublicationStatus {
+        get {
+            if isCompleted { return .completed }
+            if isOnHiatus { return .hiatus }
+            return .active
+        }
+        set {
+            isOnHiatus = newValue == .hiatus
+            isCompleted = newValue == .completed
+        }
+    }
 
     @Transient
     var cachedImageAspectRatio: CGFloat?
@@ -90,6 +142,7 @@ final class MangaEntry {
     @Transient
     var isRead: Bool {
         if isOnHiatus || isCompleted { return true }
+        if isOneShot && lastReadDate != nil { return true }
         guard let lastReadDate else { return false }
         // If next expected update is in the future, stay read
         if let nextUpdate = nextExpectedUpdate, nextUpdate > Date.now {

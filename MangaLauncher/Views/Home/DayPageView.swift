@@ -101,6 +101,7 @@ struct DayPageView: View {
                                 .modifier(WiggleModifier(isActive: edit.isGridEditMode))
                                 .onDrag {
                                     edit.draggingEntryID = entry.id
+                                    edit.draggingIsOneShot = entry.isOneShot
                                     return NSItemProvider(object: entry.id.uuidString as NSString)
                                 } preview: {
                                     MangaGridCell(entry: entry, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, isGridEditMode: $edit.isGridEditMode, editingEntry: $edit.editingEntry, onOpenURL: onOpenURL)

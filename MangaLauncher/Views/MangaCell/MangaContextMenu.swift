@@ -29,16 +29,18 @@ struct MangaContextMenu: View {
         } label: {
             Label("並び替え", systemImage: "arrow.up.arrow.down")
         }
-        Button {
-            viewModel.toggleHiatus(entry)
-        } label: {
-            Label(entry.isOnHiatus ? "連載に戻す" : "休載中にする",
-                  systemImage: entry.isOnHiatus ? "arrow.uturn.left" : "moon.zzz")
+        if !entry.isOneShot {
+            Button {
+                viewModel.toggleHiatus(entry)
+            } label: {
+                Label(entry.isOnHiatus ? "連載に戻す" : "休載中にする",
+                      systemImage: entry.isOnHiatus ? "arrow.uturn.left" : "moon.zzz")
+            }
         }
         Button {
             viewModel.toggleCompleted(entry)
         } label: {
-            Label(entry.isCompleted ? "連載に戻す" : "完結にする",
+            Label(entry.isCompleted ? (entry.isOneShot ? "元の曜日に戻す" : "連載に戻す") : "完結にする",
                   systemImage: entry.isCompleted ? "arrow.uturn.left" : "checkmark.seal")
         }
         Button(role: .destructive) {

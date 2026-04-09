@@ -60,7 +60,7 @@ final class MangaViewModel {
         save()
     }
 
-    func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, isOnHiatus: Bool = false) {
+    func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, isOnHiatus: Bool = false, isOneShot: Bool = false) {
         for day in days {
             let existingEntries = fetchEntries(for: day)
             let maxOrder = existingEntries.map(\.sortOrder).max() ?? -1
@@ -76,6 +76,7 @@ final class MangaViewModel {
             )
             entry.nextExpectedUpdate = nextExpectedUpdate
             entry.isOnHiatus = isOnHiatus
+            entry.isOneShot = isOneShot
             modelContext.insert(entry)
         }
         save()
@@ -143,6 +144,7 @@ final class MangaViewModel {
     }
 
     func moveEntryToDay(_ entry: MangaEntry, to newDay: DayOfWeek, at targetEntry: MangaEntry? = nil) {
+        if entry.isOneShot && newDay.isHiatus { return }
         if newDay.isCompleted {
             entry.isCompleted = true
             entry.isOnHiatus = false
@@ -251,6 +253,7 @@ final class MangaViewModel {
             entry.nextExpectedUpdate = backupEntry.nextExpectedUpdate
             entry.isOnHiatus = backupEntry.isOnHiatus ?? false
             entry.isCompleted = backupEntry.isCompleted ?? false
+            entry.isOneShot = backupEntry.isOneShot ?? false
             modelContext.insert(entry)
             importedCount += 1
         }
@@ -291,18 +294,26 @@ final class MangaViewModel {
 
     func markAsRead(_ entry: MangaEntry) {
         entry.lastReadDate = Date()
-        entry.advanceToNextUpdate()
+        if !entry.isOneShot {
+            entry.advanceToNextUpdate()
+        }
         let activity = ReadingActivity(
             date: Date(),
             mangaName: entry.name,
             mangaEntryID: entry.id
         )
         modelContext.insert(activity)
+        if entry.isOneShot {
+            entry.isCompleted = true
+        }
         save()
     }
 
     func markAsUnread(_ entry: MangaEntry) {
         entry.lastReadDate = nil
+        if entry.isOneShot {
+            entry.isCompleted = false
+        }
         let today = Calendar.current.startOfDay(for: Date())
         let entryID = entry.id
         let descriptor = FetchDescriptor<ReadingActivity>(
