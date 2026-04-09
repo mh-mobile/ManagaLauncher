@@ -29,8 +29,9 @@ struct BackupData: Codable {
         let nextExpectedUpdate: Date?
         let isOnHiatus: Bool?
         let isCompleted: Bool?
+        let isOneShot: Bool?
 
-        init(id: UUID, name: String, url: String, dayOfWeekRawValue: Int, sortOrder: Int, iconColor: String, publisher: String, imageData: Data?, lastReadDate: Date? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, isOnHiatus: Bool = false, isCompleted: Bool = false) {
+        init(id: UUID, name: String, url: String, dayOfWeekRawValue: Int, sortOrder: Int, iconColor: String, publisher: String, imageData: Data?, lastReadDate: Date? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, isOnHiatus: Bool = false, isCompleted: Bool = false, isOneShot: Bool = false) {
             self.id = id
             self.name = name
             self.url = url
@@ -44,6 +45,7 @@ struct BackupData: Codable {
             self.nextExpectedUpdate = nextExpectedUpdate
             self.isOnHiatus = isOnHiatus
             self.isCompleted = isCompleted
+            self.isOneShot = isOneShot
         }
 
         init(from decoder: Decoder) throws {
@@ -61,6 +63,7 @@ struct BackupData: Codable {
             nextExpectedUpdate = try container.decodeIfPresent(Date.self, forKey: .nextExpectedUpdate)
             isOnHiatus = try container.decodeIfPresent(Bool.self, forKey: .isOnHiatus)
             isCompleted = try container.decodeIfPresent(Bool.self, forKey: .isCompleted)
+            isOneShot = try container.decodeIfPresent(Bool.self, forKey: .isOneShot)
         }
     }
 
@@ -82,7 +85,8 @@ struct BackupData: Codable {
                     updateIntervalWeeks: $0.updateIntervalWeeks,
                     nextExpectedUpdate: $0.nextExpectedUpdate,
                     isOnHiatus: $0.isOnHiatus,
-                    isCompleted: $0.isCompleted
+                    isCompleted: $0.isCompleted,
+                    isOneShot: $0.isOneShot
                 )
             },
             activities: activities.map {

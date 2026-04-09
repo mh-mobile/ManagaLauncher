@@ -52,6 +52,7 @@ final class EditState {
     #endif
     var editingEntry: MangaEntry?
     var draggingEntryID: UUID?
+    var draggingIsOneShot = false
 
     var isEditing: Bool {
         #if os(iOS) || os(visionOS)

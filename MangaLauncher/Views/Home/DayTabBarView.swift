@@ -70,7 +70,13 @@ struct DayTabBarView: View {
                 )
                 .onDrop(of: [.text], isTargeted: Binding(
                     get: { dropTargetDay == day },
-                    set: { dropTargetDay = $0 ? day : nil }
+                    set: {
+                        if $0 && day.isHiatus && edit.draggingIsOneShot {
+                            dropTargetDay = nil
+                        } else {
+                            dropTargetDay = $0 ? day : nil
+                        }
+                    }
                 )) { providers in
                     dropTargetDay = nil
                     if let draggingID = edit.draggingEntryID,

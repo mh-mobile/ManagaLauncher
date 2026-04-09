@@ -39,6 +39,7 @@ struct IntentPrefill: Identifiable {
     let publisher: String
     let iconColor: String
     let imageData: Data?
+    let isOneShot: Bool
 }
 
 @main
@@ -82,7 +83,8 @@ struct MangaLauncherApp: App {
                         prefilledDay: prefill.dayOfWeek,
                         prefilledPublisher: prefill.publisher,
                         prefilledColor: prefill.iconColor,
-                        prefilledImageData: prefill.imageData
+                        prefilledImageData: prefill.imageData,
+                        prefilledIsOneShot: prefill.isOneShot
                     )
                 }
                 .onAppear {
@@ -121,7 +123,8 @@ struct MangaLauncherApp: App {
             dayOfWeek: DayOfWeek(rawValue: dayRaw) ?? .today,
             publisher: data["publisher"] ?? "",
             iconColor: data["iconColor"] ?? "blue",
-            imageData: imageData
+            imageData: imageData,
+            isOneShot: data["isOneShot"] == "true"
         )
     }
 

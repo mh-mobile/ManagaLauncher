@@ -30,6 +30,7 @@ struct EditEntryView: View {
     @State private var didLoadEntry = false
     @State private var isOnHiatus = false
     @State private var isCompleted = false
+    @State private var isOneShot = false
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
@@ -111,7 +112,7 @@ struct EditEntryView: View {
         _selectedDay = State(initialValue: day)
     }
 
-    init(viewModel: MangaViewModel, prefilledName: String, prefilledURL: String, prefilledDay: DayOfWeek, prefilledPublisher: String, prefilledColor: String, prefilledImageData: Data? = nil) {
+    init(viewModel: MangaViewModel, prefilledName: String, prefilledURL: String, prefilledDay: DayOfWeek, prefilledPublisher: String, prefilledColor: String, prefilledImageData: Data? = nil, prefilledIsOneShot: Bool = false) {
         self.viewModel = viewModel
         self.entry = nil
         _name = State(initialValue: prefilledName)
@@ -120,6 +121,7 @@ struct EditEntryView: View {
         _publisher = State(initialValue: prefilledPublisher)
         _selectedColor = State(initialValue: prefilledColor)
         _imageData = State(initialValue: prefilledImageData)
+        _isOneShot = State(initialValue: prefilledIsOneShot)
     }
 
     var body: some View {
@@ -248,20 +250,43 @@ struct EditEntryView: View {
                     .padding(.vertical, 4)
                 }
 
-                Section {
-                    Toggle("休載中", isOn: $isOnHiatus)
-                        .onChange(of: isOnHiatus) { _, newValue in
-                            if newValue { isCompleted = false }
+                Section("種類") {
+                    Picker("種類", selection: $isOneShot) {
+                        Text("連載").tag(false)
+                        Text("読み切り").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                    .onChange(of: isOneShot) { oldValue, newValue in
+                        if newValue {
+                            isOnHiatus = false
+                            isCompleted = false
+                        } else if oldValue {
+                            isCompleted = false
                         }
-                    if entry != nil {
-                        Toggle("完結", isOn: $isCompleted)
-                            .onChange(of: isCompleted) { _, newValue in
-                                if newValue { isOnHiatus = false }
-                            }
                     }
                 }
 
-                Section("更新頻度") {
+                if !isOneShot {
+                    Section("掲載状態") {
+                        Picker("状態", selection: Binding(
+                            get: {
+                                if isCompleted { return PublicationStatus.completed }
+                                if isOnHiatus { return PublicationStatus.hiatus }
+                                return PublicationStatus.active
+                            },
+                            set: { newValue in
+                                isOnHiatus = newValue == .hiatus
+                                isCompleted = newValue == .completed
+                            }
+                        )) {
+                            ForEach(PublicationStatus.allCases, id: \.self) { status in
+                                Text(status.displayName).tag(status)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
+
+                    Section("更新頻度") {
                     Picker("頻度", selection: pickerValue) {
                         Text("毎週").tag(1)
                         Text("隔週").tag(2)
@@ -282,6 +307,7 @@ struct EditEntryView: View {
                         }
                     }
                 }
+                } // if !isOneShot
 
                 Section("アイコンカラー") {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 8), spacing: 12) {
@@ -364,6 +390,7 @@ struct EditEntryView: View {
                     }
                     isOnHiatus = entry.isOnHiatus
                     isCompleted = entry.isCompleted
+                    isOneShot = entry.isOneShot
                     didLoadEntry = true
                 } else if entry == nil, !didLoadEntry {
                     nextUpdateDate = nextUpdateCandidates.first ?? nextOccurrence(of: selectedDay)
@@ -411,8 +438,9 @@ struct EditEntryView: View {
             viewModel.updateEntry(entry, name: name, url: url, dayOfWeek: selectedDay, iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval, nextExpectedUpdate: nextUpdateDate)
             entry.isOnHiatus = isOnHiatus
             entry.isCompleted = isCompleted
+            entry.isOneShot = isOneShot
         } else {
-            viewModel.addEntry(name: name, url: url, days: [selectedDay], iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval, nextExpectedUpdate: nextUpdateDate, isOnHiatus: isOnHiatus)
+            viewModel.addEntry(name: name, url: url, days: [selectedDay], iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: isOneShot ? 1 : interval, nextExpectedUpdate: isOneShot ? nil : nextUpdateDate, isOnHiatus: isOnHiatus, isOneShot: isOneShot)
         }
     }
 }

@@ -80,6 +80,9 @@ struct AddMangaIntent: AppIntent {
     @Parameter(title: "画像", supportedContentTypes: [.image])
     var image: IntentFile?
 
+    @Parameter(title: "読み切り", default: false)
+    var isOneShot: Bool
+
     func perform() async throws -> some IntentResult {
         let defaults = UserDefaults(suiteName: SharedModelContainer.appGroupIdentifier)
         let intentData: [String: String] = [
@@ -88,6 +91,7 @@ struct AddMangaIntent: AppIntent {
             "dayOfWeek": String(dayOfWeek.toDayOfWeek.rawValue),
             "publisher": publisher ?? "",
             "iconColor": (iconColor ?? .blue).rawValue,
+            "isOneShot": isOneShot ? "true" : "false",
         ]
         defaults?.set(intentData, forKey: "pendingIntentData")
 
