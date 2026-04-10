@@ -371,8 +371,11 @@ struct CatchUpView: View {
         guard currentIndex < unreadItems.count else { return }
         let entry = unreadItems[currentIndex]
         guard let imageData = entry.imageData else {
-            withAnimation(.easeInOut(duration: 0.5)) {
-                backgroundGradient = ImageColorExtractor.gradientFromColor(Color.fromName(entry.iconColor))
+            let gradient = ImageColorExtractor.gradientFromColor(Color.fromName(entry.iconColor))
+            Task { @MainActor in
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    backgroundGradient = gradient
+                }
             }
             return
         }
