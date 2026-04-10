@@ -74,7 +74,6 @@ struct ThemeStyle {
     let toolbarBackgroundVisibility: Visibility
 
     // Feature flags
-    let usesScreenTone: Bool
     let hasShadows: Bool
 
     /// `colorSchemeOverride == .dark` の簡易アクセス（各Viewのスタイリング分岐用）
@@ -143,7 +142,6 @@ extension ThemeStyle {
         colorSchemeOverride: nil,
         groupedBackground: Color(UIColor.systemGroupedBackground),
         toolbarBackgroundVisibility: .automatic,
-        usesScreenTone: false,
         hasShadows: true,
         spacingSM: 8,
         spacingMD: 16,
@@ -193,7 +191,6 @@ extension ThemeStyle {
         colorSchemeOverride: .light,
         groupedBackground: Color(hex: "f5efe0"),
         toolbarBackgroundVisibility: .visible,
-        usesScreenTone: true,
         hasShadows: false,
         spacingSM: 8,
         spacingMD: 16,
@@ -243,7 +240,6 @@ extension ThemeStyle {
         colorSchemeOverride: .dark,
         groupedBackground: Color(hex: "0e0e0e"),
         toolbarBackgroundVisibility: .visible,
-        usesScreenTone: true,
         hasShadows: false,
         spacingSM: 8,
         spacingMD: 16,
@@ -305,31 +301,6 @@ extension Color {
     }
 }
 
-// MARK: - Screen-Tone Pattern
-
-struct ScreenTonePattern: View {
-    var opacity: Double = 0.05
-    var dotSize: CGFloat = 2
-    var spacing: CGFloat = 6
-    var dotColor: Color = .white
-
-    var body: some View {
-        Canvas { context, size in
-            for x in stride(from: 0, to: size.width, by: spacing) {
-                for y in stride(from: 0, to: size.height, by: spacing) {
-                    let rect = CGRect(x: x, y: y, width: dotSize, height: dotSize)
-                    context.fill(Path(ellipseIn: rect), with: .color(dotColor.opacity(opacity)))
-                }
-            }
-        }
-    }
-
-    /// 劇画テーマ用ハーフトーン（Ben-Day dots）
-    static var halftone: ScreenTonePattern {
-        ScreenTonePattern(opacity: 0.03, dotSize: 2.5, spacing: 5, dotColor: Color(hex: "1a1b25"))
-    }
-}
-
 // MARK: - Themed Navigation Style
 
 extension View {
@@ -346,20 +317,15 @@ extension View {
 // MARK: - Speech Bubble Button Style
 
 struct SpeechBubbleButtonStyle: ButtonStyle {
-    var isPrimary: Bool = true
     private var ink: ThemeStyle { .ink }
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.headline)
-            .foregroundStyle(isPrimary ? ink.onPrimary : ink.onSurface)
+            .foregroundStyle(ink.onSurface)
             .padding(.horizontal, ink.spacingLG)
             .padding(.vertical, ink.spacingMD)
-            .background(
-                isPrimary
-                    ? AnyShapeStyle(LinearGradient(colors: [ink.primary, ink.primaryDim], startPoint: .top, endPoint: .bottom))
-                    : AnyShapeStyle(ink.surfaceBright)
-            )
+            .background(ink.surfaceBright)
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)

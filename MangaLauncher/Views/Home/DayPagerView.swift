@@ -19,7 +19,7 @@ struct DayPagerView<PageContent: View>: View {
             }
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
-        .onChange(of: paging.pageIndex) { oldValue, newValue in
+        .onChange(of: paging.pageIndex) { _, newValue in
             let day = paging.dayForPageIndex(newValue)
             if !paging.isAnimatingPageChange {
                 viewModel.selectedDay = day

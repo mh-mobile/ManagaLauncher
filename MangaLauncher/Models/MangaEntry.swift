@@ -37,14 +37,6 @@ enum DayOfWeek: Int, Codable, CaseIterable, Identifiable {
         }
     }
 
-    var next: DayOfWeek {
-        DayOfWeek(rawValue: (rawValue + 1) % 7)!
-    }
-
-    var previous: DayOfWeek {
-        DayOfWeek(rawValue: (rawValue + 6) % 7)!
-    }
-
     /// Display order: completed first, then weekdays, hiatus last
     static var orderedCases: [DayOfWeek] {
         [.completed, .monday, .tuesday, .wednesday, .thursday, .friday, .saturday, .sunday, .hiatus]
