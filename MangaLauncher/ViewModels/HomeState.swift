@@ -79,6 +79,12 @@ final class WallpaperState {
 
     var hasWallpaper: Bool { WallpaperManager.wallpaperType != .none }
 
+    /// プレビュー中の壁紙も考慮した実効的な壁紙の有無
+    var effectiveHasWallpaper: Bool {
+        if previewActive { return previewSnapshot.wallpaperType != .none }
+        return hasWallpaper
+    }
+
     func loadImage() {
         if WallpaperManager.wallpaperType == .image,
            let data = WallpaperManager.loadImage(),

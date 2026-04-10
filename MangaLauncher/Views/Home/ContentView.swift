@@ -62,6 +62,11 @@ struct ContentView: View {
     private func mainContent(viewModel: MangaViewModel) -> some View {
         ZStack(alignment: .bottom) {
             ZStack(alignment: .top) {
+                if ThemeManager.shared.style.usesCustomSurface && !homeState.wallpaper.effectiveHasWallpaper {
+                    ThemeManager.shared.style.surface
+                        .ignoresSafeArea()
+                }
+
                 WallpaperBackgroundView(
                     wallpaperRefresh: homeState.wallpaper.refresh,
                     wallpaperPreviewActive: homeState.wallpaper.previewActive,
@@ -79,7 +84,7 @@ struct ContentView: View {
                         day: day,
                         viewModel: vm,
                         displayMode: displayMode,
-                        hasWallpaper: homeState.wallpaper.hasWallpaper,
+                        hasWallpaper: homeState.wallpaper.effectiveHasWallpaper,
                         reduceTransparency: reduceTransparency,
                         headerHeight: homeState.headerHeight,
                         edit: homeState.edit,
@@ -177,7 +182,7 @@ struct ContentView: View {
                 paging: homeState.paging,
                 edit: homeState.edit,
                 selectedPublisher: $homeState.selectedPublisher,
-                hasWallpaper: homeState.wallpaper.hasWallpaper,
+                hasWallpaper: homeState.wallpaper.effectiveHasWallpaper,
                 orderedDays: orderedDays,
                 tabUnderline: tabUnderline
             )
@@ -188,12 +193,12 @@ struct ContentView: View {
         }
         .background {
             #if canImport(UIKit)
-            VisualEffectBlur(style: homeState.wallpaper.hasWallpaper
+            VisualEffectBlur(style: homeState.wallpaper.effectiveHasWallpaper
                 ? (reduceTransparency ? .systemThinMaterial : .systemUltraThinMaterial)
                 : .systemMaterial)
             .ignoresSafeArea(edges: .top)
             #else
-            Rectangle().fill(homeState.wallpaper.hasWallpaper
+            Rectangle().fill(homeState.wallpaper.effectiveHasWallpaper
                 ? (reduceTransparency ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(.ultraThinMaterial))
                 : AnyShapeStyle(.regularMaterial))
             .ignoresSafeArea(edges: .top)
