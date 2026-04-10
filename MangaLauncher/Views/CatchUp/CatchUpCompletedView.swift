@@ -54,7 +54,7 @@ struct CatchUpCompletedView: View {
                         Label("未読を再チェック（\(remainingUnread)件）", systemImage: "arrow.counterclockwise")
                             .font(.system(size: 15, weight: .bold))
                     }
-                    .buttonStyle(SpeechBubbleButtonStyle(isPrimary: false))
+                    .buttonStyle(SpeechBubbleButtonStyle())
                     .opacity(completionAnimated ? 1.0 : 0.0)
                 case .classic:
                     Button {
