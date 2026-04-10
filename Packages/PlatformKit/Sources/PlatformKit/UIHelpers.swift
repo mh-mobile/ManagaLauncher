@@ -31,6 +31,14 @@ extension Color {
         #endif
     }
 
+    public static var platformFill: Color {
+        #if canImport(UIKit)
+        Color(.systemFill)
+        #else
+        Color(nsColor: .controlBackgroundColor)
+        #endif
+    }
+
     public static var platformGray5: Color {
         #if canImport(UIKit)
         Color(.systemGray5)

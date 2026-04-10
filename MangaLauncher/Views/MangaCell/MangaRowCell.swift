@@ -99,7 +99,7 @@ struct MangaRowCell: View {
                         if hasWallpaper {
                             ZStack {
                                 RoundedRectangle(cornerRadius: theme.cardCornerRadius)
-                                    .fill(theme.surfaceContainerHigh)
+                                    .fill(Color.platformFill)
                                 RoundedRectangle(cornerRadius: theme.cardCornerRadius)
                                     .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
                             }
@@ -112,7 +112,7 @@ struct MangaRowCell: View {
                         if hasWallpaper {
                             ZStack {
                                 RoundedRectangle(cornerRadius: theme.cardCornerRadius)
-                                    .fill(theme.surfaceContainerHigh)
+                                    .fill(Color.platformFill)
                                 RoundedRectangle(cornerRadius: theme.cardCornerRadius)
                                     .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
                             }
@@ -125,7 +125,7 @@ struct MangaRowCell: View {
                         if hasWallpaper {
                             ZStack {
                                 RoundedRectangle(cornerRadius: theme.cardCornerRadius)
-                                    .fill(theme.surfaceContainerHigh)
+                                    .fill(Color.platformFill)
                                 RoundedRectangle(cornerRadius: theme.cardCornerRadius)
                                     .fill(reduceTransparency ? .thickMaterial : .ultraThinMaterial)
                             }
