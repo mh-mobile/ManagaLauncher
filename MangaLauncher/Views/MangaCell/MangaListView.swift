@@ -30,7 +30,7 @@ struct MangaListView: View {
             .onMove { source, destination in
                 viewModel.moveEntries(for: day, from: source, to: destination)
             }
-            .listRowSeparator(theme.usesCustomSurface ? .hidden : (hasWallpaper ? .hidden : .automatic))
+            .listRowSeparator(.hidden)
             .if(theme.usesCustomSurface) { view in
                 view.listRowInsets(EdgeInsets(top: 2, leading: 12, bottom: 2, trailing: 12))
             }
