@@ -30,7 +30,7 @@ struct MangaListView: View {
             .onMove { source, destination in
                 viewModel.moveEntries(for: day, from: source, to: destination)
             }
-            .listRowSeparator(theme.usesCustomSurface ? .hidden : (hasWallpaper ? .hidden : .automatic))
+            .listRowSeparator(.hidden)
             .if(theme.usesCustomSurface) { view in
                 view.listRowInsets(EdgeInsets(top: 2, leading: 12, bottom: 2, trailing: 12))
             }
@@ -38,7 +38,7 @@ struct MangaListView: View {
         .listStyle(.plain)
         .contentMargins(.top, headerHeight, for: .scrollContent)
         .scrollContentBackground(theme.usesCustomSurface ? .hidden : (hasWallpaper ? .hidden : .automatic))
-        .if(theme.usesCustomSurface) { view in
+        .if(theme.usesCustomSurface && !hasWallpaper) { view in
             view.background(theme.surface)
         }
         .simultaneousGesture(
