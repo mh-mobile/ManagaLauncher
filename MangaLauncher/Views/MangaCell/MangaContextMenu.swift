@@ -18,7 +18,7 @@ struct MangaContextMenu: View {
                 }
             } label: {
                 if entry.readingState == .backlog {
-                    Label(entry.isRead ? "取り消す" : "今日読んだ",
+                    Label(entry.isRead ? "今日読んだを取り消す" : "今日読んだ",
                           systemImage: entry.isRead ? "arrow.uturn.backward" : "checkmark")
                 } else {
                     Label(entry.isRead ? "未読にする" : "既読にする",

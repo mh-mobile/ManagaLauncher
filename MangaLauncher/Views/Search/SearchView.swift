@@ -178,7 +178,7 @@ struct SearchView: View {
             #if os(iOS) || os(visionOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            .searchable(text: $searchText, prompt: "マンガ名・掲載誌で検索")
+            .searchable(text: $searchText, prompt: "マンガ・メモ・コメントを検索")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
