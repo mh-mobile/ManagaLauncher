@@ -48,21 +48,28 @@ struct MangaLauncherApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @State private var intentPrefill: IntentPrefill?
     @State private var syncMonitor = CloudSyncMonitor()
+    /// アプリ全体で共有する単一の MangaViewModel。
+    /// 各タブが独自インスタンスを持つと ModelContext が分散して
+    /// CloudKit sync 時に複数 refresh が走るので、ここで 1 つだけ作る。
+    @State private var viewModel: MangaViewModel
     private let notificationDelegate = NotificationDelegate()
 
     init() {
         DataMigration.migrateToAppGroupIfNeeded()
         UNUserNotificationCenter.current().delegate = notificationDelegate
+        let container: ModelContainer
         do {
             container = try SharedModelContainer.create()
         } catch {
             fatalError("Failed to create ModelContainer: \(error)")
         }
+        self.container = container
+        self._viewModel = State(initialValue: MangaViewModel(modelContext: container.mainContext))
     }
 
     var body: some Scene {
         WindowGroup {
-            RootTabView()
+            RootTabView(viewModel: viewModel)
                 .background {
                     // Ink background applied OUTSIDE ContentView to avoid breaking drag
                     ThemeManager.shared.style.groupedBackground.ignoresSafeArea()
@@ -77,7 +84,7 @@ struct MangaLauncherApp: App {
                     NotificationCenter.default.post(name: .mangaDataDidChange, object: nil)
                 }) { prefill in
                     EditEntryView(
-                        viewModel: MangaViewModel(modelContext: container.mainContext),
+                        viewModel: viewModel,
                         prefilledName: prefill.name,
                         prefilledURL: prefill.url,
                         prefilledDay: prefill.dayOfWeek,
@@ -136,7 +143,6 @@ struct MangaLauncherApp: App {
     }
 
     private func updateBadge() {
-        let viewModel = MangaViewModel(modelContext: container.mainContext)
         let count = viewModel.unreadCount(for: .today)
         BadgeManager.updateBadge(unreadCount: count)
     }

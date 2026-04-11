@@ -1,33 +1,34 @@
 import SwiftUI
 
 struct RootTabView: View {
-    @Environment(\.modelContext) private var modelContext
-    @State private var settingsViewModel: MangaViewModel?
+    var viewModel: MangaViewModel
 
     var body: some View {
         TabView {
             Tab("ホーム", systemImage: "house.fill") {
-                ContentView()
+                ContentView(viewModel: viewModel)
             }
 
             Tab("ライブラリ", systemImage: "books.vertical.fill") {
-                LibraryView()
+                LibraryView(viewModel: viewModel)
             }
 
             Tab("設定", systemImage: "gearshape.fill") {
-                if let settingsViewModel {
-                    SettingsView(viewModel: settingsViewModel, showsCloseButton: false)
-                }
+                SettingsView(viewModel: viewModel, showsCloseButton: false)
             }
 
             Tab(role: .search) {
-                SearchView()
+                SearchView(viewModel: viewModel)
             }
         }
-        .onAppear {
-            if settingsViewModel == nil {
-                settingsViewModel = MangaViewModel(modelContext: modelContext)
+        // どのタブから削除してもトーストが表示されるように全体 overlay で保持
+        .overlay(alignment: .bottom) {
+            if !viewModel.pendingDeleteEntries.isEmpty {
+                DeleteToastView(viewModel: viewModel)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .padding(.bottom, 80) // ボトムタブを避ける
             }
         }
+        .animation(.easeInOut(duration: 0.3), value: viewModel.pendingDeleteEntries.isEmpty)
     }
 }

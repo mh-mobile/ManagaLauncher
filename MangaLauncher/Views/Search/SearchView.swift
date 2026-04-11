@@ -3,10 +3,9 @@ import SwiftData
 import PlatformKit
 
 struct SearchView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.openURL) private var openURL
 
-    @State private var viewModel: MangaViewModel?
+    var viewModel: MangaViewModel
     @State private var searchText: String = ""
     @State private var selectedScope: SearchScope = .all
     @State private var selectedDay: DayOfWeek? = nil
@@ -61,7 +60,6 @@ struct SearchView: View {
     }
 
     private var searchResults: SearchResults {
-        guard let viewModel else { return SearchResults(entries: [], memos: [], comments: []) }
         let allEntries = viewModel.allEntries()
         let scoped = applyScope(to: allEntries)
         let dayFiltered = applyDayFilter(to: scoped)
@@ -211,14 +209,10 @@ struct SearchView: View {
                 }
             }
             .sheet(item: $editingEntry) { entry in
-                if let viewModel {
-                    EditEntryView(viewModel: viewModel, entry: entry)
-                }
+                EditEntryView(viewModel: viewModel, entry: entry)
             }
             .sheet(item: $commentingEntry) { entry in
-                if let viewModel {
-                    CommentListView(entry: entry, viewModel: viewModel)
-                }
+                CommentListView(entry: entry, viewModel: viewModel)
             }
             #if canImport(UIKit)
             .sheet(item: $safariURL) { url in
@@ -227,13 +221,8 @@ struct SearchView: View {
             }
             #endif
         }
-        .onAppear {
-            if viewModel == nil {
-                viewModel = MangaViewModel(modelContext: modelContext)
-            }
-        }
         .onMangaDataChange {
-            viewModel?.refresh()
+            viewModel.refresh()
         }
     }
 
@@ -320,15 +309,11 @@ struct SearchView: View {
 
     @ViewBuilder
     private var content: some View {
-        if viewModel == nil {
-            EmptyView()
+        let results = searchResults
+        if results.isEmpty {
+            emptyState
         } else {
-            let results = searchResults
-            if results.isEmpty {
-                emptyState
-            } else {
-                resultList(results: results)
-            }
+            resultList(results: results)
         }
     }
 
@@ -373,7 +358,7 @@ struct SearchView: View {
                     ForEach(results.entries, id: \.id) { entry in
                         SearchResultRow(
                             entry: entry,
-                            viewModel: viewModel!,
+                            viewModel: viewModel,
                             editingEntry: $editingEntry,
                             commentingEntry: $commentingEntry,
                             onOpenURL: openMangaURL

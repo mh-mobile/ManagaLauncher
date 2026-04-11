@@ -11,11 +11,10 @@ extension URL: @retroactive Identifiable {
 }
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
-    @State private var viewModel: MangaViewModel?
+    var viewModel: MangaViewModel
     @State private var homeState = HomeState()
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
     @AppStorage("displayMode") private var displayMode: DisplayMode = .grid
@@ -32,23 +31,17 @@ struct ContentView: View {
             }
         } else {
             NavigationStack {
-                if let viewModel {
-                    mainContent(viewModel: viewModel)
-                }
+                mainContent(viewModel: viewModel)
             }
             .onAppear {
-                if viewModel == nil {
-                    viewModel = MangaViewModel(modelContext: modelContext)
-                }
                 homeState.wallpaper.loadImage()
             }
             .onMangaDataChange {
-                viewModel?.refresh()
+                viewModel.refresh()
             }
             .onReceive(NotificationCenter.default.publisher(for: .switchToDay)) { notification in
                 if let rawValue = notification.object as? Int,
-                   let day = DayOfWeek(rawValue: rawValue),
-                   let viewModel {
+                   let day = DayOfWeek(rawValue: rawValue) {
                     viewModel.selectedDay = day
                     homeState.paging.pageIndex = homeState.paging.pageIndexForDay(day)
                 }
@@ -108,13 +101,7 @@ struct ContentView: View {
                 )
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
-
-            if !viewModel.pendingDeleteEntries.isEmpty {
-                DeleteToastView(viewModel: viewModel)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
         }
-        .animation(.easeInOut(duration: 0.3), value: viewModel.pendingDeleteEntries.isEmpty)
         .animation(.easeInOut(duration: 0.2), value: homeState.edit.isGridEditMode)
         .animation(.easeInOut(duration: 0.2), value: homeState.edit.listEditMode)
         .toolbar {
@@ -221,6 +208,7 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
-        .modelContainer(for: MangaEntry.self, inMemory: true)
+    let container = try! ModelContainer(for: MangaEntry.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    ContentView(viewModel: MangaViewModel(modelContext: container.mainContext))
+        .modelContainer(container)
 }

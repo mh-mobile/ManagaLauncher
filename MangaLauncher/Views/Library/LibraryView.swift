@@ -3,10 +3,9 @@ import SwiftData
 import PlatformKit
 
 struct LibraryView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.openURL) private var openURL
 
-    @State private var viewModel: MangaViewModel?
+    var viewModel: MangaViewModel
     @State private var editingEntry: MangaEntry?
     @State private var commentingEntry: MangaEntry?
     @State private var safariURL: URL?
@@ -23,9 +22,7 @@ struct LibraryView: View {
                         .ignoresSafeArea()
                 }
 
-                if let viewModel {
-                    content(viewModel: viewModel)
-                }
+                content(viewModel: viewModel)
             }
             .navigationTitle("ライブラリ")
             #if os(iOS) || os(visionOS)
@@ -41,19 +38,13 @@ struct LibraryView: View {
                 }
             }
             .sheet(isPresented: $showingAddSheet) {
-                if let viewModel {
-                    EditEntryView(viewModel: viewModel, day: .today)
-                }
+                EditEntryView(viewModel: viewModel, day: .today)
             }
             .sheet(item: $editingEntry) { entry in
-                if let viewModel {
-                    EditEntryView(viewModel: viewModel, entry: entry)
-                }
+                EditEntryView(viewModel: viewModel, entry: entry)
             }
             .sheet(item: $commentingEntry) { entry in
-                if let viewModel {
-                    CommentListView(entry: entry, viewModel: viewModel)
-                }
+                CommentListView(entry: entry, viewModel: viewModel)
             }
             #if canImport(UIKit)
             .sheet(item: $safariURL) { url in
@@ -62,13 +53,8 @@ struct LibraryView: View {
             }
             #endif
         }
-        .onAppear {
-            if viewModel == nil {
-                viewModel = MangaViewModel(modelContext: modelContext)
-            }
-        }
         .onMangaDataChange {
-            viewModel?.refresh()
+            viewModel.refresh()
         }
     }
 

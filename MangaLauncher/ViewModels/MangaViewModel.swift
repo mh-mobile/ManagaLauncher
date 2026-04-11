@@ -28,7 +28,13 @@ final class MangaViewModel {
         let descriptor = FetchDescriptor<MangaEntry>(
             predicate: #Predicate { $0.stateMigrationVersion < 1 }
         )
-        let pending = (try? modelContext.fetch(descriptor)) ?? []
+        let pending: [MangaEntry]
+        do {
+            pending = try modelContext.fetch(descriptor)
+        } catch {
+            print("[MangaViewModel] state migration fetch failed: \(error)")
+            return
+        }
         guard !pending.isEmpty else { return }
         for entry in pending {
             entry.migrateLegacyStateIfNeeded()
@@ -47,7 +53,13 @@ final class MangaViewModel {
         let descriptor = FetchDescriptor<MangaEntry>(
             predicate: #Predicate { $0.memo != "" && $0.memoUpdatedAt == nil }
         )
-        let pending = (try? modelContext.fetch(descriptor)) ?? []
+        let pending: [MangaEntry]
+        do {
+            pending = try modelContext.fetch(descriptor)
+        } catch {
+            print("[MangaViewModel] memo backfill fetch failed: \(error)")
+            return
+        }
         guard !pending.isEmpty else { return }
         let now = Date()
         for entry in pending {
@@ -65,11 +77,14 @@ final class MangaViewModel {
     func fetchEntries(for day: DayOfWeek) -> [MangaEntry] {
         let _ = refreshCounter
         let dayRawValue = day.rawValue
+        // #Predicate は enum case を直接受け付けないので、ローカル let でキャプチャして意味を明示する
+        let followingRaw = ReadingState.following.rawValue
+        let activeRaw = PublicationStatus.active.rawValue
         let descriptor = FetchDescriptor<MangaEntry>(
             predicate: #Predicate {
                 $0.dayOfWeekRawValue == dayRawValue
-                    && $0.readingStateRawValue == 0  // following only
-                    && $0.publicationStatusRawValue == 0  // active only
+                    && $0.readingStateRawValue == followingRaw
+                    && $0.publicationStatusRawValue == activeRaw
             },
             sortBy: [SortDescriptor(\.sortOrder)]
         )
@@ -121,7 +136,22 @@ final class MangaViewModel {
         save()
     }
 
-    func updateEntry(_ entry: MangaEntry, name: String, url: String, dayOfWeek: DayOfWeek, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil) {
+    func updateEntry(
+        _ entry: MangaEntry,
+        name: String,
+        url: String,
+        dayOfWeek: DayOfWeek,
+        iconColor: String,
+        publisher: String = "",
+        imageData: Data? = nil,
+        updateIntervalWeeks: Int = 1,
+        nextExpectedUpdate: Date? = nil,
+        isOneShot: Bool,
+        publicationStatus: PublicationStatus,
+        readingState: ReadingState,
+        memo: String
+    ) {
+        let memoChanged = entry.memo != memo
         entry.name = name
         entry.url = url
         entry.dayOfWeek = dayOfWeek
@@ -130,6 +160,14 @@ final class MangaViewModel {
         entry.imageData = imageData
         entry.updateIntervalWeeks = updateIntervalWeeks
         entry.nextExpectedUpdate = nextExpectedUpdate
+        entry.isOneShot = isOneShot
+        // 読み切りは掲載状況の概念がないので強制的に active へ
+        entry.publicationStatus = isOneShot ? .active : publicationStatus
+        entry.readingState = readingState
+        entry.memo = memo
+        if memoChanged {
+            entry.memoUpdatedAt = memo.isEmpty ? nil : Date()
+        }
         save()
     }
 
@@ -368,12 +406,21 @@ final class MangaViewModel {
         if !entry.isOneShot {
             entry.advanceToNextUpdate()
         }
-        let activity = ReadingActivity(
-            date: Date(),
-            mangaName: entry.name,
-            mangaEntryID: entry.id
+        // 同日・同エントリのアクティビティが既に存在する場合は再 insert しない
+        let today = Calendar.current.startOfDay(for: Date())
+        let entryID = entry.id
+        let existingDescriptor = FetchDescriptor<ReadingActivity>(
+            predicate: #Predicate { $0.date == today && $0.mangaEntryID == entryID }
         )
-        modelContext.insert(activity)
+        let hasExisting = !modelContext.fetchLogged(existingDescriptor).isEmpty
+        if !hasExisting {
+            let activity = ReadingActivity(
+                date: Date(),
+                mangaName: entry.name,
+                mangaEntryID: entry.id
+            )
+            modelContext.insert(activity)
+        }
         // 読み切りを既読にしたら自動で読了アーカイブへ
         if entry.isOneShot {
             entry.readingState = .archived

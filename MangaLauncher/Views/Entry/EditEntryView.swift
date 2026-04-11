@@ -471,21 +471,36 @@ struct EditEntryView: View {
     private func saveEntry() {
         let interval = actualIntervalWeeks
         if let entry {
-            let memoChanged = entry.memo != memo
-            viewModel.updateEntry(entry, name: name, url: url, dayOfWeek: selectedDay, iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval, nextExpectedUpdate: nextUpdateDate)
-            entry.isOneShot = isOneShot
-            entry.publicationStatus = isOneShot ? .active : publicationStatus
-            entry.readingState = readingState
-            entry.memo = memo
-            if memoChanged {
-                if memo.isEmpty {
-                    entry.memoUpdatedAt = nil
-                } else {
-                    entry.memoUpdatedAt = Date()
-                }
-            }
+            viewModel.updateEntry(
+                entry,
+                name: name,
+                url: url,
+                dayOfWeek: selectedDay,
+                iconColor: selectedColor,
+                publisher: publisher,
+                imageData: imageData,
+                updateIntervalWeeks: interval,
+                nextExpectedUpdate: nextUpdateDate,
+                isOneShot: isOneShot,
+                publicationStatus: publicationStatus,
+                readingState: readingState,
+                memo: memo
+            )
         } else {
-            viewModel.addEntry(name: name, url: url, days: [selectedDay], iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: isOneShot ? 1 : interval, nextExpectedUpdate: isOneShot ? nil : nextUpdateDate, publicationStatus: isOneShot ? .active : publicationStatus, readingState: readingState, isOneShot: isOneShot, memo: memo)
+            viewModel.addEntry(
+                name: name,
+                url: url,
+                days: [selectedDay],
+                iconColor: selectedColor,
+                publisher: publisher,
+                imageData: imageData,
+                updateIntervalWeeks: isOneShot ? 1 : interval,
+                nextExpectedUpdate: isOneShot ? nil : nextUpdateDate,
+                publicationStatus: isOneShot ? .active : publicationStatus,
+                readingState: readingState,
+                isOneShot: isOneShot,
+                memo: memo
+            )
         }
     }
 }
