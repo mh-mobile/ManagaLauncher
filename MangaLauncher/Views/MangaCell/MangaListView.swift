@@ -9,6 +9,7 @@ struct MangaListView: View {
     let reduceTransparency: Bool
     let headerHeight: CGFloat
     @Binding var editingEntry: MangaEntry?
+    @Binding var commentingEntry: MangaEntry?
     #if os(iOS) || os(visionOS)
     @Binding var listEditMode: EditMode
     #endif
@@ -19,7 +20,7 @@ struct MangaListView: View {
     var body: some View {
         List {
             ForEach(entries, id: \.id) { entry in
-                MangaRowCell(entry: entry, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, editingEntry: $editingEntry, listEditMode: $listEditMode, onOpenURL: onOpenURL)
+                MangaRowCell(entry: entry, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, editingEntry: $editingEntry, commentingEntry: $commentingEntry, listEditMode: $listEditMode, onOpenURL: onOpenURL)
             }
             .onDelete { indexSet in
                 let entriesToDelete = indexSet.map { entries[$0] }

@@ -23,7 +23,7 @@ struct ContentView: View {
 
     @Namespace private var tabUnderline
 
-    private let orderedDays = DayOfWeek.orderedCases
+    private let orderedDays = DayOfWeek.orderedDays
 
     var body: some View {
         if !hasSeenOnboarding {
@@ -83,13 +83,16 @@ struct ContentView: View {
                     DayPageView(
                         day: day,
                         viewModel: vm,
-                        displayMode: displayMode,
-                        hasWallpaper: homeState.wallpaper.effectiveHasWallpaper,
-                        reduceTransparency: reduceTransparency,
-                        headerHeight: homeState.headerHeight,
+                        display: DayPageDisplayContext(
+                            displayMode: displayMode,
+                            hasWallpaper: homeState.wallpaper.effectiveHasWallpaper,
+                            reduceTransparency: reduceTransparency,
+                            headerHeight: homeState.headerHeight
+                        ),
                         edit: homeState.edit,
                         selectedPublisher: $homeState.selectedPublisher,
                         showingAddSheet: $homeState.sheets.showingAddSheet,
+                        commentingEntry: $homeState.commentingEntry,
                         onOpenURL: { openMangaURL($0) }
                     )
                 }
@@ -129,8 +132,7 @@ struct ContentView: View {
                         displayMode = displayMode == .list ? .grid : .list
                     }
                 },
-                onAdd: { homeState.sheets.showingAddSheet = true },
-                onSettings: { homeState.sheets.showingSettings = true }
+                onAdd: { homeState.sheets.showingAddSheet = true }
             )
         }
         .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
@@ -149,9 +151,6 @@ struct ContentView: View {
         }
         .sheet(item: $homeState.edit.editingEntry, onDismiss: { homeState.edit.editingEntry = nil }) { entry in
             EditEntryView(viewModel: viewModel, entry: entry)
-        }
-        .sheet(isPresented: $homeState.sheets.showingSettings) {
-            SettingsView(viewModel: viewModel)
         }
         .fullScreenCover(isPresented: $homeState.sheets.showingCatchUp, onDismiss: {
             viewModel.notifyChange()

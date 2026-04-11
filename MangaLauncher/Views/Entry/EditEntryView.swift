@@ -28,9 +28,10 @@ struct EditEntryView: View {
     @State private var ogpFetchFailed = false
     @State private var showingCropView = false
     @State private var didLoadEntry = false
-    @State private var isOnHiatus = false
-    @State private var isCompleted = false
+    @State private var publicationStatus: PublicationStatus = .active
+    @State private var readingState: ReadingState = .following
     @State private var isOneShot = false
+    @State private var memo: String = ""
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
@@ -256,60 +257,83 @@ struct EditEntryView: View {
                         Text("読み切り").tag(true)
                     }
                     .pickerStyle(.segmented)
-                    .onChange(of: isOneShot) { oldValue, newValue in
+                    .onChange(of: isOneShot) { _, newValue in
                         if newValue {
-                            isOnHiatus = false
-                            isCompleted = false
-                        } else if oldValue {
-                            isCompleted = false
+                            publicationStatus = .active
+                            if readingState == .backlog {
+                                readingState = .following
+                            }
                         }
                     }
                 }
 
                 if !isOneShot {
-                    Section("掲載状態") {
-                        Picker("状態", selection: Binding(
-                            get: {
-                                if isCompleted { return PublicationStatus.completed }
-                                if isOnHiatus { return PublicationStatus.hiatus }
-                                return PublicationStatus.active
-                            },
-                            set: { newValue in
-                                isOnHiatus = newValue == .hiatus
-                                isCompleted = newValue == .completed
-                            }
-                        )) {
-                            ForEach(PublicationStatus.allCases, id: \.self) { status in
+                    Section {
+                        Picker("掲載状況", selection: $publicationStatus) {
+                            ForEach(PublicationStatus.allCases) { status in
                                 Text(status.displayName).tag(status)
                             }
                         }
                         .pickerStyle(.segmented)
+                    } header: {
+                        Text("掲載状況")
+                    } footer: {
+                        Text("作品自体の状態。連載中／休載中／完結。")
                     }
+                }
 
+                if !isOneShot {
+                    Section {
+                        Picker("読書状況", selection: $readingState) {
+                            ForEach(ReadingState.allCases) { state in
+                                Text(state.displayName).tag(state)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    } header: {
+                        Text("読書状況")
+                    } footer: {
+                        Text("自分の進捗。追っかけ中／積読／読了。読了にすると常に既読扱いになります。")
+                    }
+                }
+
+                if !isOneShot && publicationStatus == .active && readingState == .following {
                     Section("更新頻度") {
-                    Picker("頻度", selection: pickerValue) {
-                        Text("毎週").tag(1)
-                        Text("隔週").tag(2)
-                        Text("3週ごと").tag(3)
-                        Text("月1回").tag(4)
-                        Text("2ヶ月ごと").tag(8)
-                        Text("カスタム").tag(-1)
-                    }
-                    if isCustomInterval {
-                        Stepper("\(updateIntervalWeeks)週ごと", value: $updateIntervalWeeks, in: 1...52)
-                    }
-                    if actualIntervalWeeks >= 1 {
-                        Picker("次の更新日", selection: $nextUpdateDate) {
-                            ForEach(nextUpdateCandidates, id: \.self) { date in
-                                Text(date.formatted(.dateTime.month().day().weekday()))
-                                    .tag(date)
+                        Picker("頻度", selection: pickerValue) {
+                            Text("毎週").tag(1)
+                            Text("隔週").tag(2)
+                            Text("3週ごと").tag(3)
+                            Text("月1回").tag(4)
+                            Text("2ヶ月ごと").tag(8)
+                            Text("カスタム").tag(-1)
+                        }
+                        if isCustomInterval {
+                            Stepper("\(updateIntervalWeeks)週ごと", value: $updateIntervalWeeks, in: 1...52)
+                        }
+                        if actualIntervalWeeks >= 1 {
+                            Picker("次の更新日", selection: $nextUpdateDate) {
+                                ForEach(nextUpdateCandidates, id: \.self) { date in
+                                    Text(date.formatted(.dateTime.month().day().weekday()))
+                                        .tag(date)
+                                }
                             }
                         }
                     }
                 }
-                } // if !isOneShot
 
-                Section("アイコンカラー") {
+                Section {
+                    TextField("メモ（あらすじ・キャラ相関図など）", text: $memo, axis: .vertical)
+                        .lineLimit(3...10)
+                        #if os(iOS) || os(visionOS)
+                        .textInputAutocapitalization(.none)
+                        #endif
+                } header: {
+                    Text("メモ")
+                } footer: {
+                    Text("作品ごとに 1 つの長文メモを保存できます。コメントとは別物です。")
+                }
+
+                Section {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 8), spacing: 12) {
                         ForEach(colorOptions, id: \.name) { option in
                             Circle()
@@ -328,6 +352,17 @@ struct EditEntryView: View {
                         }
                     }
                     .padding(.vertical, 4)
+                    if let label = ColorLabelStore.shared.label(for: selectedColor) {
+                        HStack {
+                            Text("ラベル")
+                                .foregroundStyle(theme.onSurfaceVariant)
+                            Spacer()
+                            Text(label)
+                                .foregroundStyle(theme.onSurface)
+                        }
+                    }
+                } header: {
+                    Text("アイコンカラー")
                 }
 
                 if isEditing && showsDeleteButton {
@@ -388,9 +423,10 @@ struct EditEntryView: View {
                     } else {
                         nextUpdateDate = candidates.first ?? nextOccurrence(of: entry.dayOfWeek)
                     }
-                    isOnHiatus = entry.isOnHiatus
-                    isCompleted = entry.isCompleted
+                    publicationStatus = entry.publicationStatus
+                    readingState = entry.readingState
                     isOneShot = entry.isOneShot
+                    memo = entry.memo
                     didLoadEntry = true
                 } else if entry == nil, !didLoadEntry {
                     nextUpdateDate = nextUpdateCandidates.first ?? nextOccurrence(of: selectedDay)
@@ -435,12 +471,21 @@ struct EditEntryView: View {
     private func saveEntry() {
         let interval = actualIntervalWeeks
         if let entry {
+            let memoChanged = entry.memo != memo
             viewModel.updateEntry(entry, name: name, url: url, dayOfWeek: selectedDay, iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: interval, nextExpectedUpdate: nextUpdateDate)
-            entry.isOnHiatus = isOnHiatus
-            entry.isCompleted = isCompleted
             entry.isOneShot = isOneShot
+            entry.publicationStatus = isOneShot ? .active : publicationStatus
+            entry.readingState = readingState
+            entry.memo = memo
+            if memoChanged {
+                if memo.isEmpty {
+                    entry.memoUpdatedAt = nil
+                } else {
+                    entry.memoUpdatedAt = Date()
+                }
+            }
         } else {
-            viewModel.addEntry(name: name, url: url, days: [selectedDay], iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: isOneShot ? 1 : interval, nextExpectedUpdate: isOneShot ? nil : nextUpdateDate, isOnHiatus: isOnHiatus, isOneShot: isOneShot)
+            viewModel.addEntry(name: name, url: url, days: [selectedDay], iconColor: selectedColor, publisher: publisher, imageData: imageData, updateIntervalWeeks: isOneShot ? 1 : interval, nextExpectedUpdate: isOneShot ? nil : nextUpdateDate, publicationStatus: isOneShot ? .active : publicationStatus, readingState: readingState, isOneShot: isOneShot, memo: memo)
         }
     }
 }

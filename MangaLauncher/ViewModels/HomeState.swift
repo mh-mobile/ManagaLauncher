@@ -11,7 +11,7 @@ final class HomeState {
     var edit = EditState()
 
     // MARK: - Wallpaper
-    var wallpaper = WallpaperState()
+    var wallpaper = WallpaperState.shared
 
     // MARK: - Sheets
     var sheets = SheetState()
@@ -20,6 +20,7 @@ final class HomeState {
     var headerHeight: CGFloat = 50
     var selectedPublisher: String?
     var safariURL: URL?
+    var commentingEntry: MangaEntry?
 }
 
 @Observable
@@ -27,10 +28,11 @@ final class PagingState {
     var pageIndex: Int = 0
     var isAnimatingPageChange = false
 
-    private let orderedDays = DayOfWeek.orderedCases
+    private let orderedDays = DayOfWeek.orderedDays
 
     func dayForPageIndex(_ index: Int) -> DayOfWeek {
-        let clamped = ((index - 1) % 9 + 9) % 9
+        let count = orderedDays.count
+        let clamped = ((index - 1) % count + count) % count
         return orderedDays[clamped]
     }
 
@@ -52,7 +54,6 @@ final class EditState {
     #endif
     var editingEntry: MangaEntry?
     var draggingEntryID: UUID?
-    var draggingIsOneShot = false
 
     var isEditing: Bool {
         #if os(iOS) || os(visionOS)
@@ -72,6 +73,10 @@ final class EditState {
 
 @Observable
 final class WallpaperState {
+    static let shared = WallpaperState()
+
+    private init() {}
+
     var refresh = false
     var cachedWallpaperImage: Image?
     var previewActive = false

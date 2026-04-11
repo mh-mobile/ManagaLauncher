@@ -7,12 +7,21 @@ struct BackupData: Codable {
     let exportDate: Date
     let entries: [BackupEntry]
     let activities: [BackupActivity]?
+    let comments: [BackupComment]?
 
     struct BackupActivity: Codable {
         let id: UUID
         let date: Date
         let mangaName: String
         let mangaEntryID: UUID
+    }
+
+    struct BackupComment: Codable {
+        let id: UUID
+        let mangaEntryID: UUID
+        let content: String
+        let createdAt: Date
+        let updatedAt: Date?
     }
 
     struct BackupEntry: Codable {
@@ -27,11 +36,20 @@ struct BackupData: Codable {
         let lastReadDate: Date?
         let updateIntervalWeeks: Int
         let nextExpectedUpdate: Date?
+        let isOneShot: Bool?
+        // New schema (v6+)
+        let publicationStatusRawValue: Int?
+        let readingStateRawValue: Int?
+        // v7+
+        let memo: String?
+        // v8+
+        let memoUpdatedAt: Date?
+        // Legacy fields (kept for backward-compat with v5 backups)
         let isOnHiatus: Bool?
         let isCompleted: Bool?
-        let isOneShot: Bool?
+        let isBacklog: Bool?
 
-        init(id: UUID, name: String, url: String, dayOfWeekRawValue: Int, sortOrder: Int, iconColor: String, publisher: String, imageData: Data?, lastReadDate: Date? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, isOnHiatus: Bool = false, isCompleted: Bool = false, isOneShot: Bool = false) {
+        init(id: UUID, name: String, url: String, dayOfWeekRawValue: Int, sortOrder: Int, iconColor: String, publisher: String, imageData: Data?, lastReadDate: Date? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, isOneShot: Bool = false, publicationStatusRawValue: Int = 0, readingStateRawValue: Int = 0, memo: String = "", memoUpdatedAt: Date? = nil) {
             self.id = id
             self.name = name
             self.url = url
@@ -43,9 +61,14 @@ struct BackupData: Codable {
             self.lastReadDate = lastReadDate
             self.updateIntervalWeeks = updateIntervalWeeks
             self.nextExpectedUpdate = nextExpectedUpdate
-            self.isOnHiatus = isOnHiatus
-            self.isCompleted = isCompleted
             self.isOneShot = isOneShot
+            self.publicationStatusRawValue = publicationStatusRawValue
+            self.readingStateRawValue = readingStateRawValue
+            self.memo = memo
+            self.memoUpdatedAt = memoUpdatedAt
+            self.isOnHiatus = nil
+            self.isCompleted = nil
+            self.isBacklog = nil
         }
 
         init(from decoder: Decoder) throws {
@@ -61,15 +84,20 @@ struct BackupData: Codable {
             lastReadDate = try container.decodeIfPresent(Date.self, forKey: .lastReadDate)
             updateIntervalWeeks = try container.decodeIfPresent(Int.self, forKey: .updateIntervalWeeks) ?? 1
             nextExpectedUpdate = try container.decodeIfPresent(Date.self, forKey: .nextExpectedUpdate)
+            isOneShot = try container.decodeIfPresent(Bool.self, forKey: .isOneShot)
+            publicationStatusRawValue = try container.decodeIfPresent(Int.self, forKey: .publicationStatusRawValue)
+            readingStateRawValue = try container.decodeIfPresent(Int.self, forKey: .readingStateRawValue)
+            memo = try container.decodeIfPresent(String.self, forKey: .memo)
+            memoUpdatedAt = try container.decodeIfPresent(Date.self, forKey: .memoUpdatedAt)
             isOnHiatus = try container.decodeIfPresent(Bool.self, forKey: .isOnHiatus)
             isCompleted = try container.decodeIfPresent(Bool.self, forKey: .isCompleted)
-            isOneShot = try container.decodeIfPresent(Bool.self, forKey: .isOneShot)
+            isBacklog = try container.decodeIfPresent(Bool.self, forKey: .isBacklog)
         }
     }
 
-    static func from(_ entries: [MangaEntry], activities: [ReadingActivity] = []) -> BackupData {
+    static func from(_ entries: [MangaEntry], activities: [ReadingActivity] = [], comments: [MangaComment] = []) -> BackupData {
         BackupData(
-            version: 5,
+            version: 8,
             exportDate: Date(),
             entries: entries.map {
                 BackupEntry(
@@ -84,9 +112,11 @@ struct BackupData: Codable {
                     lastReadDate: $0.lastReadDate,
                     updateIntervalWeeks: $0.updateIntervalWeeks,
                     nextExpectedUpdate: $0.nextExpectedUpdate,
-                    isOnHiatus: $0.isOnHiatus,
-                    isCompleted: $0.isCompleted,
-                    isOneShot: $0.isOneShot
+                    isOneShot: $0.isOneShot,
+                    publicationStatusRawValue: $0.publicationStatusRawValue,
+                    readingStateRawValue: $0.readingStateRawValue,
+                    memo: $0.memo,
+                    memoUpdatedAt: $0.memoUpdatedAt
                 )
             },
             activities: activities.map {
@@ -95,6 +125,15 @@ struct BackupData: Codable {
                     date: $0.date,
                     mangaName: $0.mangaName,
                     mangaEntryID: $0.mangaEntryID
+                )
+            },
+            comments: comments.map {
+                BackupComment(
+                    id: $0.id,
+                    mangaEntryID: $0.mangaEntryID,
+                    content: $0.content,
+                    createdAt: $0.createdAt,
+                    updatedAt: $0.updatedAt
                 )
             }
         )

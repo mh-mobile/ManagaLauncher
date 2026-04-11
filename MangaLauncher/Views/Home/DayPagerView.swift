@@ -9,10 +9,13 @@ struct DayPagerView<PageContent: View>: View {
     var viewModel: MangaViewModel
     let pageContent: (DayOfWeek, MangaViewModel) -> PageContent
 
+    private var dayCount: Int { DayOfWeek.orderedDays.count }
+    private var totalPages: Int { dayCount + 2 } // +2 for wraparound
+
     var body: some View {
         #if os(iOS) || os(visionOS)
         TabView(selection: $paging.pageIndex) {
-            ForEach(0..<11, id: \.self) { index in
+            ForEach(0..<totalPages, id: \.self) { index in
                 pageContent(paging.dayForPageIndex(index), viewModel)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .tag(index)
@@ -27,13 +30,14 @@ struct DayPagerView<PageContent: View>: View {
                 selectedPublisher = nil
             }
 
+            // Wraparound: page 0 → last real page, page (count+1) → first real page
             if newValue == 0 {
                 DispatchQueue.main.asyncAfter(deadline: .now() + AnimationTiming.pageLoop) {
                     withAnimation(.none) {
-                        paging.pageIndex = 9
+                        paging.pageIndex = dayCount
                     }
                 }
-            } else if newValue == 10 {
+            } else if newValue == dayCount + 1 {
                 DispatchQueue.main.asyncAfter(deadline: .now() + AnimationTiming.pageLoop) {
                     withAnimation(.none) {
                         paging.pageIndex = 1

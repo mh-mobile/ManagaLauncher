@@ -17,8 +17,47 @@ struct ShareExtensionView: View {
     @State private var selectedColor = "blue"
     @State private var imageData: Data?
     @State private var saveError: String?
-    @State private var isOnHiatus = false
+    @State private var publicationStatus: PublicationStatus = .active
+    @State private var readingState: ReadingState = .following
     @State private var isOneShot = false
+    @State private var updateIntervalWeeks: Int = 1
+    @State private var isCustomInterval = false
+    @State private var nextUpdateDate: Date = Date()
+
+    private static let presetIntervals = [1, 2, 3, 4, 8]
+
+    private var actualIntervalWeeks: Int {
+        isCustomInterval && updateIntervalWeeks == -1 ? 5 : max(updateIntervalWeeks, 1)
+    }
+
+    private var pickerValue: Binding<Int> {
+        Binding(
+            get: { isCustomInterval ? -1 : (Self.presetIntervals.contains(updateIntervalWeeks) ? updateIntervalWeeks : -1) },
+            set: { newValue in
+                if newValue == -1 {
+                    isCustomInterval = true
+                    if Self.presetIntervals.contains(updateIntervalWeeks) {
+                        updateIntervalWeeks = 5
+                    }
+                } else {
+                    isCustomInterval = false
+                    updateIntervalWeeks = newValue
+                }
+            }
+        )
+    }
+
+    private var nextUpdateCandidates: [Date] {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let todayWeekday = calendar.component(.weekday, from: today) - 1
+        let target = selectedDay.rawValue
+        let daysToNext = (target - todayWeekday + 7) % 7
+        let firstDate = daysToNext == 0 ? today : calendar.date(byAdding: .day, value: daysToNext, to: today)!
+        return (0..<8).map { i in
+            calendar.date(byAdding: .day, value: i * 7, to: firstDate)!
+        }
+    }
 
     private let colorOptions: [(name: String, color: Color)] = [
         ("red", .red),
@@ -131,13 +170,66 @@ struct ShareExtensionView: View {
                         }
                         .pickerStyle(.segmented)
                         .onChange(of: isOneShot) { _, newValue in
-                            if newValue { isOnHiatus = false }
+                            if newValue {
+                                publicationStatus = .active
+                                if readingState == .backlog {
+                                    readingState = .following
+                                }
+                            }
                         }
                     }
 
                     if !isOneShot {
                         Section {
-                            Toggle("休載中", isOn: $isOnHiatus)
+                            Picker("掲載状況", selection: $publicationStatus) {
+                                ForEach(PublicationStatus.allCases) { status in
+                                    Text(status.displayName).tag(status)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                        } header: {
+                            Text("掲載状況")
+                        } footer: {
+                            Text("作品自体の状態。連載中／休載中／完結。")
+                        }
+                    }
+
+                    if !isOneShot {
+                        Section {
+                            Picker("読書状況", selection: $readingState) {
+                                ForEach(ReadingState.allCases) { state in
+                                    Text(state.displayName).tag(state)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                        } header: {
+                            Text("読書状況")
+                        } footer: {
+                            Text("自分の進捗。追っかけ中／積読／読了。")
+                        }
+                    }
+
+                    if !isOneShot && publicationStatus == .active && readingState == .following {
+                        Section("更新頻度") {
+                            Picker("頻度", selection: pickerValue) {
+                                Text("毎週").tag(1)
+                                Text("隔週").tag(2)
+                                Text("3週ごと").tag(3)
+                                Text("月1回").tag(4)
+                                Text("2ヶ月ごと").tag(8)
+                                Text("カスタム").tag(-1)
+                            }
+                            if isCustomInterval {
+                                Stepper("\(updateIntervalWeeks)週ごと", value: $updateIntervalWeeks, in: 1...52)
+                            }
+                            if actualIntervalWeeks >= 1 {
+                                Picker("次の更新日", selection: $nextUpdateDate) {
+                                    ForEach(nextUpdateCandidates, id: \.self) { date in
+                                        Text(date.formatted(.dateTime.month().day().weekday()))
+                                            .tag(date)
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -188,6 +280,16 @@ struct ShareExtensionView: View {
         }
         .task {
             await processSharedContent()
+        }
+        .onChange(of: selectedDay) { _, _ in
+            if let first = nextUpdateCandidates.first {
+                nextUpdateDate = first
+            }
+        }
+        .onAppear {
+            if let first = nextUpdateCandidates.first {
+                nextUpdateDate = first
+            }
         }
     }
 
@@ -333,6 +435,7 @@ struct ShareExtensionView: View {
             let existingEntries = (try? context.fetch(descriptor)) ?? []
             let maxOrder = existingEntries.map(\.sortOrder).max() ?? -1
 
+            let interval = isOneShot ? 1 : actualIntervalWeeks
             let entry = MangaEntry(
                 name: name,
                 url: url,
@@ -340,10 +443,13 @@ struct ShareExtensionView: View {
                 sortOrder: maxOrder + 1,
                 iconColor: selectedColor,
                 publisher: publisher,
-                imageData: imageData
+                imageData: imageData,
+                updateIntervalWeeks: interval
             )
-            entry.isOnHiatus = isOnHiatus
             entry.isOneShot = isOneShot
+            entry.publicationStatus = isOneShot ? .active : publicationStatus
+            entry.readingState = readingState
+            entry.nextExpectedUpdate = isOneShot ? nil : nextUpdateDate
             context.insert(entry)
             try context.save()
 

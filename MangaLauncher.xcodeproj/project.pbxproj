@@ -37,6 +37,10 @@
 		AA000002 /* ReadingActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000010 /* ReadingActivity.swift */; };
 		AA000003 /* ReadingActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000010 /* ReadingActivity.swift */; };
 		AA000004 /* ReadingHeatmapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000011 /* ReadingHeatmapView.swift */; };
+		BC000001 /* MangaComment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000010 /* MangaComment.swift */; };
+		BC000002 /* MangaComment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000010 /* MangaComment.swift */; };
+		BC000003 /* MangaComment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000010 /* MangaComment.swift */; };
+		BB000007 /* MangaColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000107 /* MangaColor.swift */; };
 		B26E164ECFAC0FC6A4B39CC6 /* SharedModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C7FA9735199D021E15CEED8 /* SharedModelContainer.swift */; };
 		B31B9EA2FE243CD2D6209258 /* AddMangaIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A55D3FF44BE586A52AAF2B43 /* AddMangaIntent.swift */; };
 		D43D0695E7E3840F3142A594 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CDE508C489E5FAA3881A522 /* SettingsView.swift */; };
@@ -157,6 +161,8 @@
 		A576F9BEFBD3B37AA9275FAB /* MangaWidget.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaWidget.entitlements; sourceTree = "<group>"; };
 		AA000010 /* ReadingActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingActivity.swift; sourceTree = "<group>"; };
 		AA000011 /* ReadingHeatmapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingHeatmapView.swift; sourceTree = "<group>"; };
+		BC000010 /* MangaComment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaComment.swift; sourceTree = "<group>"; };
+		BB000107 /* MangaColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaColor.swift; sourceTree = "<group>"; };
 		BB770326E8D34706AF8B81EC /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = SDKROOT; };
 		BC0276ADB2A6EFEC185148CA /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D899D5F8F3BA6AC39B41C8B4 /* MangaShareExtension.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaShareExtension.entitlements; sourceTree = "<group>"; };
@@ -321,6 +327,7 @@
 				A2000002 /* MangaEntry.swift */,
 				3AFF912AECB7C6B219DD1600 /* BackupData.swift */,
 				AA000010 /* ReadingActivity.swift */,
+				BC000010 /* MangaComment.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -462,6 +469,7 @@
 				05365AD0D66B41D8C20EDF49 /* ImageColorExtractor.swift */,
 				EC44DD5EE5561C4C4F99C248 /* ModelContextExtensions.swift */,
 				ECFEA8472F7F6E5700CE4DC0 /* MangaURLOpener.swift */,
+				BB000107 /* MangaColor.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -609,6 +617,7 @@
 				C2C5E8A68C5957E075832254 /* ImageColorExtractor.swift in Sources */,
 				EC440D83EFDF1B4B6F95E82D /* ModelContextExtensions.swift in Sources */,
 				AA000001 /* ReadingActivity.swift in Sources */,
+				BC000001 /* MangaComment.swift in Sources */,
 				ECFEA84A2F7F6E5700CE4DC0 /* MangaURLOpener.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -626,6 +635,7 @@
 				ECCE6BE2DD70F34BA69061B3 /* DesignSystem.swift in Sources */,
 				ECFEA8962F7F93AF00CE4DC0 /* ModelContextExtensions.swift in Sources */,
 				AA000002 /* ReadingActivity.swift in Sources */,
+				BC000002 /* MangaComment.swift in Sources */,
 				ECFEA8492F7F6E5700CE4DC0 /* MangaURLOpener.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -678,6 +688,8 @@
 				ECFEA8262F7E918E00CE4DC0 /* DeleteToastView.swift in Sources */,
 				ECFEA82E2F7E91BD00CE4DC0 /* EntryIcon.swift in Sources */,
 				AA000003 /* ReadingActivity.swift in Sources */,
+				BC000003 /* MangaComment.swift in Sources */,
+				BB000007 /* MangaColor.swift in Sources */,
 				ECFEA8602F7F7E2000CE4DC0 /* DayPageView.swift in Sources */,
 				AA000004 /* ReadingHeatmapView.swift in Sources */,
 			);

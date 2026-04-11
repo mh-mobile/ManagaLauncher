@@ -11,7 +11,7 @@ enum SharedModelContainer {
     #endif
 
     static func create() throws -> ModelContainer {
-        let schema = Schema([MangaEntry.self, ReadingActivity.self])
+        let schema = Schema([MangaEntry.self, ReadingActivity.self, MangaComment.self])
         let config = ModelConfiguration(
             "MangaLauncher",
             schema: schema,

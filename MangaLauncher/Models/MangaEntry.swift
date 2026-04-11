@@ -2,12 +2,9 @@ import Foundation
 import SwiftData
 
 enum DayOfWeek: Int, Codable, CaseIterable, Identifiable {
-    case sunday = 0, monday, tuesday, wednesday, thursday, friday, saturday, hiatus, completed
+    case sunday = 0, monday, tuesday, wednesday, thursday, friday, saturday
 
     var id: Int { rawValue }
-
-    var isHiatus: Bool { self == .hiatus }
-    var isCompleted: Bool { self == .completed }
 
     var shortName: String {
         switch self {
@@ -18,8 +15,6 @@ enum DayOfWeek: Int, Codable, CaseIterable, Identifiable {
         case .thursday: "木"
         case .friday: "金"
         case .saturday: "土"
-        case .hiatus: "休"
-        case .completed: "完"
         }
     }
 
@@ -32,17 +27,10 @@ enum DayOfWeek: Int, Codable, CaseIterable, Identifiable {
         case .thursday: "木曜日"
         case .friday: "金曜日"
         case .saturday: "土曜日"
-        case .hiatus: "休載中"
-        case .completed: "完結"
         }
     }
 
-    /// Display order: completed first, then weekdays, hiatus last
-    static var orderedCases: [DayOfWeek] {
-        [.completed, .monday, .tuesday, .wednesday, .thursday, .friday, .saturday, .sunday, .hiatus]
-    }
-
-    /// Days only (excludes hiatus)
+    /// Days only (Mon → Sun ordering for tabs)
     static var orderedDays: [DayOfWeek] {
         [.monday, .tuesday, .wednesday, .thursday, .friday, .saturday, .sunday]
     }
@@ -66,16 +54,36 @@ enum MangaType: Int, Codable, CaseIterable {
     }
 }
 
-enum PublicationStatus: Int, Codable, CaseIterable {
-    case active = 0
-    case hiatus = 1
-    case completed = 2
+/// 作品の掲載状況（出版社・作者側の状態）
+enum PublicationStatus: Int, Codable, CaseIterable, Identifiable {
+    case active = 0      // 連載中
+    case hiatus = 1      // 休載中
+    case finished = 2    // 完結
+
+    var id: Int { rawValue }
 
     var displayName: String {
         switch self {
         case .active: "連載中"
         case .hiatus: "休載中"
-        case .completed: "完結"
+        case .finished: "完結"
+        }
+    }
+}
+
+/// 読者の読書状況（ユーザー側の進捗）
+enum ReadingState: Int, Codable, CaseIterable, Identifiable {
+    case following = 0   // 連載追っかけ中
+    case backlog = 1     // 積読中
+    case archived = 2    // 読了（アーカイブ）
+
+    var id: Int { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .following: "追っかけ中"
+        case .backlog: "積読"
+        case .archived: "読了"
         }
     }
 }
@@ -93,9 +101,23 @@ final class MangaEntry {
     var lastReadDate: Date?
     var updateIntervalWeeks: Int = 1
     var nextExpectedUpdate: Date?
+    var isOneShot: Bool = false
+    /// 1作品に1つの長文メモ
+    var memo: String = ""
+    /// メモの最終更新日時。並び替え用。
+    var memoUpdatedAt: Date?
+
+    /// 掲載状況の Int 値（PublicationStatus.rawValue）
+    var publicationStatusRawValue: Int = 0
+    /// 読書状況の Int 値（ReadingState.rawValue）
+    var readingStateRawValue: Int = 0
+    /// マイグレーションバージョン（0=未移行、1=新モデル）
+    var stateMigrationVersion: Int = 0
+
+    // MARK: - Legacy fields (kept for backward-compat / one-time migration only)
     var isOnHiatus: Bool = false
     var isCompleted: Bool = false
-    var isOneShot: Bool = false
+    var isBacklog: Bool = false
 
     @Transient
     var mangaType: MangaType {
@@ -103,23 +125,25 @@ final class MangaEntry {
         set {
             isOneShot = newValue == .oneShot
             if isOneShot {
-                isOnHiatus = false
-                isCompleted = false
+                publicationStatusRawValue = PublicationStatus.active.rawValue
+                // 読み切りは追っかけ概念がないので following or archived
+                if readingState == .backlog {
+                    readingStateRawValue = ReadingState.following.rawValue
+                }
             }
         }
     }
 
     @Transient
     var publicationStatus: PublicationStatus {
-        get {
-            if isCompleted { return .completed }
-            if isOnHiatus { return .hiatus }
-            return .active
-        }
-        set {
-            isOnHiatus = newValue == .hiatus
-            isCompleted = newValue == .completed
-        }
+        get { PublicationStatus(rawValue: publicationStatusRawValue) ?? .active }
+        set { publicationStatusRawValue = newValue.rawValue }
+    }
+
+    @Transient
+    var readingState: ReadingState {
+        get { ReadingState(rawValue: readingStateRawValue) ?? .following }
+        set { readingStateRawValue = newValue.rawValue }
     }
 
     @Transient
@@ -131,12 +155,21 @@ final class MangaEntry {
         set { dayOfWeekRawValue = newValue.rawValue }
     }
 
+    /// 既読扱いか否か（カレンダーベースの未読サイクル含む）
     @Transient
     var isRead: Bool {
-        if isOnHiatus || isCompleted { return true }
-        if isOneShot && lastReadDate != nil { return true }
+        // 読了アーカイブ: 常に既読
+        if readingState == .archived { return true }
+        // 掲載休載中: 次の更新まで既読据え置き
+        if publicationStatus == .hiatus { return true }
+        // 掲載完結: 一度読んだら既読のまま戻らない
+        if publicationStatus == .finished {
+            return lastReadDate != nil
+        }
+        // 読み切り: 1度読んだら既読
+        if isOneShot { return lastReadDate != nil }
+        // 通常: 曜日サイクル
         guard let lastReadDate else { return false }
-        // If next expected update is in the future, stay read
         if let nextUpdate = nextExpectedUpdate, nextUpdate > Date.now {
             return true
         }
@@ -167,6 +200,30 @@ final class MangaEntry {
         nextExpectedUpdate = nextDay
     }
 
+    /// 旧 Bool フィールド（isOnHiatus / isCompleted / isBacklog）から
+    /// 新しい publicationStatus / readingState へ移行する。
+    /// 一度移行されると stateMigrationVersion=1 になり再実行されない。
+    func migrateLegacyStateIfNeeded() {
+        guard stateMigrationVersion < 1 else { return }
+        if isCompleted {
+            // 旧「完結タブ」は実質「読了アーカイブ」として運用されていた
+            readingStateRawValue = ReadingState.archived.rawValue
+            publicationStatusRawValue = PublicationStatus.active.rawValue
+        } else if isBacklog {
+            readingStateRawValue = ReadingState.backlog.rawValue
+            publicationStatusRawValue = isOnHiatus
+                ? PublicationStatus.hiatus.rawValue
+                : PublicationStatus.active.rawValue
+        } else if isOnHiatus {
+            readingStateRawValue = ReadingState.following.rawValue
+            publicationStatusRawValue = PublicationStatus.hiatus.rawValue
+        } else {
+            readingStateRawValue = ReadingState.following.rawValue
+            publicationStatusRawValue = PublicationStatus.active.rawValue
+        }
+        stateMigrationVersion = 1
+    }
+
     init(
         id: UUID = UUID(),
         name: String = "",
@@ -187,5 +244,7 @@ final class MangaEntry {
         self.publisher = publisher
         self.imageData = imageData
         self.updateIntervalWeeks = updateIntervalWeeks
+        // 新規作成時は移行済み扱い
+        self.stateMigrationVersion = 1
     }
 }
