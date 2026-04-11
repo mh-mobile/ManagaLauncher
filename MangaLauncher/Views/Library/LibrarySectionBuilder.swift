@@ -132,12 +132,19 @@ struct LibrarySectionBuilder {
 
 /// 掲載誌ごとの集計を構築する純関数群。
 enum PublisherIndex {
-    /// 登録数の多い順に並べた (掲載誌, 件数) 配列
+    /// 登録数の多い順に並べた (掲載誌, 件数) 配列。
+    /// 同数の場合は掲載誌名の辞書順を tiebreaker に使うことで、
+    /// Dictionary の列挙順の非決定性に左右されない安定した順序を返す。
     static func counts(from entries: [MangaEntry]) -> [(publisher: String, count: Int)] {
         let grouped = Dictionary(grouping: entries.filter { !$0.publisher.isEmpty }) { $0.publisher }
             .mapValues { $0.count }
         return grouped
-            .sorted { $0.value > $1.value }
+            .sorted { lhs, rhs in
+                if lhs.value != rhs.value {
+                    return lhs.value > rhs.value
+                }
+                return lhs.key.localizedStandardCompare(rhs.key) == .orderedAscending
+            }
             .map { (publisher: $0.key, count: $0.value) }
     }
 }
