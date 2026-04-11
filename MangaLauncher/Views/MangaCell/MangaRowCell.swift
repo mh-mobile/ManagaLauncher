@@ -7,7 +7,7 @@ struct MangaRowCell: View {
     let hasWallpaper: Bool
     let reduceTransparency: Bool
     @Binding var editingEntry: MangaEntry?
-    var commentingEntry: Binding<MangaEntry?>? = nil
+    @Binding var commentingEntry: MangaEntry?
     #if os(iOS) || os(visionOS)
     @Binding var listEditMode: EditMode
     #endif
@@ -139,7 +139,7 @@ struct MangaRowCell: View {
                 }
             )
             .contextMenu {
-                MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: commentingEntry) {
+                MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry) {
                     #if os(iOS) || os(visionOS)
                     withAnimation(.easeInOut(duration: 0.2)) {
                         listEditMode = .active

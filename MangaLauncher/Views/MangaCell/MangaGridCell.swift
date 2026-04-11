@@ -8,7 +8,7 @@ struct MangaGridCell: View {
     let reduceTransparency: Bool
     @Binding var isGridEditMode: Bool
     @Binding var editingEntry: MangaEntry?
-    var commentingEntry: Binding<MangaEntry?>? = nil
+    @Binding var commentingEntry: MangaEntry?
     let onOpenURL: (String) -> Void
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
@@ -83,7 +83,7 @@ struct MangaGridCell: View {
                 }
             }
             .contextMenu {
-                MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: commentingEntry) {
+                MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry) {
                     withAnimation(.easeInOut(duration: 0.2)) {
                         isGridEditMode = true
                     }

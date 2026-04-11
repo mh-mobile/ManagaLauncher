@@ -92,7 +92,7 @@ struct DayPageView: View {
                                     edit.draggingEntryID = entry.id
                                     return NSItemProvider(object: entry.id.uuidString as NSString)
                                 } preview: {
-                                    MangaGridCell(entry: entry, viewModel: viewModel, hasWallpaper: display.hasWallpaper, reduceTransparency: display.reduceTransparency, isGridEditMode: $edit.isGridEditMode, editingEntry: $edit.editingEntry, onOpenURL: onOpenURL)
+                                    MangaGridCell(entry: entry, viewModel: viewModel, hasWallpaper: display.hasWallpaper, reduceTransparency: display.reduceTransparency, isGridEditMode: $edit.isGridEditMode, editingEntry: $edit.editingEntry, commentingEntry: $commentingEntry, onOpenURL: onOpenURL)
                                         .frame(width: 120)
                                 }
                                 .onDrop(of: [.text], delegate: GridDropDelegate(

@@ -5,7 +5,7 @@ struct LibraryCard: View {
     let entry: MangaEntry
     var viewModel: MangaViewModel
     @Binding var editingEntry: MangaEntry?
-    var commentingEntry: Binding<MangaEntry?>? = nil
+    @Binding var commentingEntry: MangaEntry?
     let onOpenURL: (String) -> Void
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
@@ -49,7 +49,7 @@ struct LibraryCard: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: commentingEntry)
+            MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry)
         }
     }
 

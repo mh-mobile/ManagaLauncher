@@ -10,14 +10,17 @@ struct ImageCropView: UIViewControllerRepresentable {
     let onCancel: () -> Void
 
     func makeUIViewController(context: Context) -> CropWrapperViewController {
+        let wrapper = CropWrapperViewController()
         guard let uiImage = UIImage(data: imageData) else {
-            fatalError("Invalid image data")
+            // 画像データが破損していた場合はクラッシュせず、空の wrapper を返して即時キャンセル
+            let cancel = onCancel
+            DispatchQueue.main.async { cancel() }
+            return wrapper
         }
 
         let cropVC = Mantis.cropViewController(image: uiImage)
         cropVC.delegate = context.coordinator
 
-        let wrapper = CropWrapperViewController()
         wrapper.addChild(cropVC)
         wrapper.view.addSubview(cropVC.view)
         cropVC.view.translatesAutoresizingMaskIntoConstraints = false

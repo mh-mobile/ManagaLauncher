@@ -28,13 +28,21 @@ public final class CloudSyncMonitor {
     /// Notification name posted when CloudKit import completes.
     public static let dataDidChangeNotification = Notification.Name("mangaDataDidChange")
 
+    private var eventObserver: NSObjectProtocol?
+
     public init() {
         startMonitoring()
         checkAccountStatus()
     }
 
+    deinit {
+        if let eventObserver {
+            NotificationCenter.default.removeObserver(eventObserver)
+        }
+    }
+
     private func startMonitoring() {
-        NotificationCenter.default.addObserver(
+        eventObserver = NotificationCenter.default.addObserver(
             forName: NSNotification.Name("NSPersistentCloudKitContainerEventChangedNotification"),
             object: nil,
             queue: .main

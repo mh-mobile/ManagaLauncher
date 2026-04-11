@@ -4,7 +4,7 @@ struct MangaContextMenu: View {
     let entry: MangaEntry
     var viewModel: MangaViewModel
     @Binding var editingEntry: MangaEntry?
-    var commentingEntry: Binding<MangaEntry?>? = nil
+    @Binding var commentingEntry: MangaEntry?
     var onReorder: (() -> Void)? = nil
 
     var body: some View {
@@ -33,12 +33,10 @@ struct MangaContextMenu: View {
             Label("編集", systemImage: "pencil")
         }
 
-        if let commentingEntry {
-            Button {
-                commentingEntry.wrappedValue = entry
-            } label: {
-                Label("コメント", systemImage: "bubble.left.and.bubble.right")
-            }
+        Button {
+            commentingEntry = entry
+        } label: {
+            Label("コメント", systemImage: "bubble.left.and.bubble.right")
         }
 
         if let onReorder {
