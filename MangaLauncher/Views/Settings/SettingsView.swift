@@ -7,6 +7,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(CloudSyncMonitor.self) private var syncMonitor
     var viewModel: MangaViewModel
+    var showsCloseButton: Bool = true
 
     @State private var showingResetConfirmation = false
     @State private var achievementResetDone = false
@@ -167,6 +168,18 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    NavigationLink {
+                        ColorLabelSettingsView()
+                    } label: {
+                        Label("カラーラベル", systemImage: "tag")
+                    }
+                } header: {
+                    Text("カラーラベル")
+                } footer: {
+                    Text("カラーアイコンに任意の名前を付けると、検索フィルターで使用できます（例：赤=お気に入り）")
+                }
+
+                Section {
                     Picker("ブラウザ", selection: $browserMode) {
                         Text("アプリ内（Safari）").tag("inApp")
                         Text("デフォルトブラウザ").tag("external")
@@ -276,9 +289,11 @@ struct SettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("閉じる") {
-                        dismiss()
+                if showsCloseButton {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("閉じる") {
+                            dismiss()
+                        }
                     }
                 }
             }

@@ -108,7 +108,7 @@ struct CatchUpView: View {
                 updateBackgroundGradient()
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .mangaDataDidChange)) { _ in
+        .onMangaDataChange {
             reloadEntries()
         }
         .overlay {

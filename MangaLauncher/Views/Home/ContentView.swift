@@ -42,7 +42,7 @@ struct ContentView: View {
                 }
                 homeState.wallpaper.loadImage()
             }
-            .onReceive(NotificationCenter.default.publisher(for: .mangaDataDidChange)) { _ in
+            .onMangaDataChange {
                 viewModel?.refresh()
             }
             .onReceive(NotificationCenter.default.publisher(for: .switchToDay)) { notification in
@@ -151,6 +151,9 @@ struct ContentView: View {
         }
         .sheet(item: $homeState.edit.editingEntry, onDismiss: { homeState.edit.editingEntry = nil }) { entry in
             EditEntryView(viewModel: viewModel, entry: entry)
+        }
+        .sheet(item: $homeState.commentingEntry, onDismiss: { homeState.commentingEntry = nil }) { entry in
+            CommentListView(entry: entry, viewModel: viewModel)
         }
         .fullScreenCover(isPresented: $homeState.sheets.showingCatchUp, onDismiss: {
             viewModel.notifyChange()

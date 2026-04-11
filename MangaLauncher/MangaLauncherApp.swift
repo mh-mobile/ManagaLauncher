@@ -62,7 +62,7 @@ struct MangaLauncherApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootTabView()
                 .background {
                     // Ink background applied OUTSIDE ContentView to avoid breaking drag
                     ThemeManager.shared.style.groupedBackground.ignoresSafeArea()
