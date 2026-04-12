@@ -40,5 +40,6 @@ struct CommentMatchRow: View {
         }
         .buttonStyle(.plain)
         .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
     }
 }

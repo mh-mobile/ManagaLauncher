@@ -53,6 +53,7 @@ struct SearchResultRow: View {
         }
         .buttonStyle(.plain)
         .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
         .contextMenu {
             MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry)
         }

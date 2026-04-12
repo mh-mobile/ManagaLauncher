@@ -25,10 +25,21 @@ final class HomeState {
 
 @Observable
 final class PagingState {
-    var pageIndex: Int = 0
+    /// 初期値を今日の曜日に合わせることで、onAppear での pageIndex 変更による
+    /// 不要なタブアニメーションを防止する。
+    var pageIndex: Int
     var isAnimatingPageChange = false
 
     private let orderedDays = DayOfWeek.orderedDays
+
+    init() {
+        let days = DayOfWeek.orderedDays
+        if let index = days.firstIndex(of: .today) {
+            pageIndex = index + 1
+        } else {
+            pageIndex = 1
+        }
+    }
 
     func dayForPageIndex(_ index: Int) -> DayOfWeek {
         let count = orderedDays.count

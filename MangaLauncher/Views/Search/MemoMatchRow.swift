@@ -34,5 +34,6 @@ struct MemoMatchRow: View {
         }
         .buttonStyle(.plain)
         .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
     }
 }
