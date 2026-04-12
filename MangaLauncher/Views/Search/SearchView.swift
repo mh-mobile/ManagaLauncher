@@ -11,7 +11,7 @@ struct SearchView: View {
     // MARK: - 2 軸フィルタ（各グループ内は単一選択）
     @State private var publicationFilter: PublicationStatus? = nil
     @State private var readingFilter: ReadingState? = nil
-    @State private var showOneShotOnly = false
+    @State private var showOneShotOnly = false  // 掲載状況と排他
     @State private var contentMode: SearchContentMode = .entries
 
     @State private var selectedDay: DayOfWeek? = nil
@@ -198,12 +198,24 @@ struct SearchView: View {
     private var stateFilterBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
-                // 掲載状況
+                // 掲載状況 + 読み切り（排他グループ）
                 ForEach(PublicationStatus.allCases) { status in
-                    filterChip(label: status.displayName, isSelected: publicationFilter == status) {
+                    filterChip(label: status.displayName, isSelected: !showOneShotOnly && publicationFilter == status) {
                         withAnimation(.easeInOut(duration: 0.2)) {
                             contentMode = .entries
+                            showOneShotOnly = false
                             publicationFilter = publicationFilter == status ? nil : status
+                        }
+                    }
+                }
+                filterChip(label: "読み切り", isSelected: showOneShotOnly) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        contentMode = .entries
+                        if showOneShotOnly {
+                            showOneShotOnly = false
+                        } else {
+                            showOneShotOnly = true
+                            publicationFilter = nil  // 掲載状況をクリア
                         }
                     }
                 }
@@ -231,14 +243,6 @@ struct SearchView: View {
     private var secondaryFilterBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                // 読み切りトグル
-                filterChip(label: "読み切り", isSelected: showOneShotOnly) {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        contentMode = .entries
-                        showOneShotOnly.toggle()
-                    }
-                }
-
                 // メモ/コメントモード
                 filterChip(label: "メモ", isSelected: contentMode == .memo) {
                     withAnimation(.easeInOut(duration: 0.2)) {
