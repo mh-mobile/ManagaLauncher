@@ -7,7 +7,13 @@ struct SearchView: View {
 
     var viewModel: MangaViewModel
     @State private var searchText: String = ""
-    @State private var selectedScope: SearchScope = .all
+
+    // MARK: - 2 軸フィルタ（各グループ内は単一選択）
+    @State private var publicationFilter: PublicationStatus? = nil
+    @State private var readingFilter: ReadingState? = nil
+    @State private var showOneShotOnly = false
+    @State private var contentMode: SearchContentMode = .entries
+
     @State private var selectedDay: DayOfWeek? = nil
     @State private var selectedColors: Set<String> = []
     @State private var safariURL: URL?
@@ -16,70 +22,40 @@ struct SearchView: View {
     @AppStorage("browserMode") private var browserMode: String = "external"
 
     private let colorLabelStore = ColorLabelStore.shared
-
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
-    enum SearchScope: String, CaseIterable, Identifiable {
-        case all = "すべて"
-        case unread = "未読"
-        case backlog = "積読"
-        case serial = "連載中"
-        case hiatus = "休載"
-        case publicationFinished = "完結"
-        case archived = "読了"
-        case oneShot = "読み切り"
-        case memo = "メモ"
-        case comment = "コメント"
-
-        var id: String { rawValue }
-
-        var systemImage: String {
-            switch self {
-            case .all: "tray.full"
-            case .unread: "envelope.badge"
-            case .backlog: "books.vertical"
-            case .serial: "book"
-            case .hiatus: "moon.zzz"
-            case .publicationFinished: "flag.checkered"
-            case .archived: "checkmark.seal"
-            case .oneShot: "doc.text"
-            case .memo: "note.text"
-            case .comment: "bubble.left.and.bubble.right"
-            }
-        }
+    enum SearchContentMode {
+        case entries, memo, comment
     }
 
-    /// 検索結果を 3 セクション（マンガ / メモ / コメント）に分類
+    // MARK: - Search Results
+
     private struct SearchResults {
         var entries: [MangaEntry]
         var memos: [MangaEntry]
         var comments: [(comment: MangaComment, entry: MangaEntry)]
 
         var isEmpty: Bool { entries.isEmpty && memos.isEmpty && comments.isEmpty }
-        var totalCount: Int { entries.count + memos.count + comments.count }
     }
 
     private var searchResults: SearchResults {
         let allEntries = viewModel.allEntries()
-        let scoped = applyScope(to: allEntries)
-        let dayFiltered = applyDayFilter(to: scoped)
-        let candidates = applyColorFilter(to: dayFiltered)
+        let dayFiltered = applyDayFilter(to: allEntries)
+        let colorFiltered = applyColorFilter(to: dayFiltered)
 
         let trimmed = searchText.trimmingCharacters(in: .whitespaces)
-        let candidateIDs = Set(candidates.map(\.id))
-        let entriesByID = Dictionary(uniqueKeysWithValues: candidates.map { ($0.id, $0) })
 
-        // メモスコープ: メモを持つエントリだけをメモセクションに表示
-        if selectedScope == .memo {
-            let memoMatched = candidates.filter {
+        if contentMode == .memo {
+            let memoMatched = colorFiltered.filter {
                 !$0.memo.isEmpty
                     && (trimmed.isEmpty || $0.memo.localizedCaseInsensitiveContains(trimmed))
             }
             return SearchResults(entries: [], memos: memoMatched, comments: [])
         }
 
-        // コメントスコープ: コメントだけをコメントセクションに表示
-        if selectedScope == .comment {
+        if contentMode == .comment {
+            let candidateIDs = Set(colorFiltered.map(\.id))
+            let entriesByID = Dictionary(uniqueKeysWithValues: colorFiltered.map { ($0.id, $0) })
             let allComments = viewModel.allComments()
             let commentMatched: [(MangaComment, MangaEntry)] = allComments.compactMap { comment in
                 guard candidateIDs.contains(comment.mangaEntryID),
@@ -93,28 +69,25 @@ struct SearchView: View {
             return SearchResults(entries: [], memos: [], comments: commentMatched)
         }
 
-        // クエリ未入力時はマンガセクションだけ
+        let candidates = applyEntryFilters(to: colorFiltered)
+
         guard !trimmed.isEmpty else {
             return SearchResults(entries: candidates, memos: [], comments: [])
         }
 
-        // 通常スコープ: 3 セクションに分類
-        // 1. マンガ名/掲載誌マッチ
         let nameMatched = candidates.filter {
             $0.name.localizedCaseInsensitiveContains(trimmed)
                 || $0.publisher.localizedCaseInsensitiveContains(trimmed)
         }
-
-        // 2. メモマッチ（マンガ名にヒットしていても独立して表示する）
         let memoMatched = candidates.filter {
             !$0.memo.isEmpty
                 && $0.memo.localizedCaseInsensitiveContains(trimmed)
         }
-
-        // 3. コメントマッチ
+        let filteredIDs = Set(candidates.map(\.id))
+        let entriesByID = Dictionary(uniqueKeysWithValues: candidates.map { ($0.id, $0) })
         let allComments = viewModel.allComments()
         let commentMatched: [(MangaComment, MangaEntry)] = allComments.compactMap { comment in
-            guard candidateIDs.contains(comment.mangaEntryID),
+            guard filteredIDs.contains(comment.mangaEntryID),
                   comment.content.localizedCaseInsensitiveContains(trimmed),
                   let entry = entriesByID[comment.mangaEntryID] else { return nil }
             return (comment, entry)
@@ -123,40 +96,33 @@ struct SearchView: View {
         return SearchResults(entries: nameMatched, memos: memoMatched, comments: commentMatched)
     }
 
+    // MARK: - Filter Logic
+
+    private func applyEntryFilters(to entries: [MangaEntry]) -> [MangaEntry] {
+        var filtered = entries
+        if let pub = publicationFilter {
+            filtered = filtered.filter { $0.publicationStatus == pub }
+        }
+        if let read = readingFilter {
+            filtered = filtered.filter { $0.readingState == read }
+        }
+        if showOneShotOnly {
+            filtered = filtered.filter { $0.isOneShot }
+        }
+        return filtered
+    }
+
     private func applyColorFilter(to entries: [MangaEntry]) -> [MangaEntry] {
         guard !selectedColors.isEmpty else { return entries }
         return entries.filter { selectedColors.contains($0.iconColor) }
-    }
-
-    private func applyScope(to entries: [MangaEntry]) -> [MangaEntry] {
-        switch selectedScope {
-        case .all: return entries
-        case .unread: return entries.filter { !$0.isRead }
-        case .backlog: return entries.filter { $0.readingState == .backlog }
-        case .serial: return entries.filter {
-            !$0.isOneShot
-                && $0.publicationStatus == .active
-                && $0.readingState == .following
-        }
-        case .hiatus: return entries.filter {
-            $0.publicationStatus == .hiatus && $0.readingState != .archived
-        }
-        case .publicationFinished: return entries.filter {
-            $0.publicationStatus == .finished && $0.readingState != .archived
-        }
-        case .archived: return entries.filter { $0.readingState == .archived }
-        case .oneShot: return entries.filter {
-            $0.isOneShot && $0.readingState != .archived
-        }
-        // メモ・コメントスコープはエントリ自体は絞り込まない（曜日/カラーのみ）
-        case .memo, .comment: return entries
-        }
     }
 
     private func applyDayFilter(to entries: [MangaEntry]) -> [MangaEntry] {
         guard let day = selectedDay else { return entries }
         return entries.filter { $0.dayOfWeek == day }
     }
+
+    // MARK: - Body
 
     var body: some View {
         NavigationStack {
@@ -167,8 +133,8 @@ struct SearchView: View {
                 }
 
                 VStack(spacing: 0) {
-                    scopeTabBar
-                    colorFilterBar
+                    stateFilterBar
+                    secondaryFilterBar
                     content
                 }
             }
@@ -226,10 +192,76 @@ struct SearchView: View {
         }
     }
 
+    // MARK: - 行 1: 状態フィルタ（2 軸）
+
     @ViewBuilder
-    private var colorFilterBar: some View {
+    private var stateFilterBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                // 掲載状況
+                ForEach(PublicationStatus.allCases) { status in
+                    filterChip(label: status.displayName, isSelected: publicationFilter == status) {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            contentMode = .entries
+                            publicationFilter = publicationFilter == status ? nil : status
+                        }
+                    }
+                }
+
+                Spacer().frame(width: 12)
+
+                // 読書状況
+                ForEach(ReadingState.allCases) { state in
+                    filterChip(label: state.displayName, isSelected: readingFilter == state) {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            contentMode = .entries
+                            readingFilter = readingFilter == state ? nil : state
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+        }
+    }
+
+    // MARK: - 行 2: 種別 + メモ/コメント + カラーフィルタ
+
+    @ViewBuilder
+    private var secondaryFilterBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
+                // 読み切りトグル
+                filterChip(label: "読み切り", isSelected: showOneShotOnly) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        contentMode = .entries
+                        showOneShotOnly.toggle()
+                    }
+                }
+
+                // メモ/コメントモード
+                filterChip(label: "メモ", isSelected: contentMode == .memo) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        if contentMode == .memo {
+                            contentMode = .entries
+                        } else {
+                            contentMode = .memo
+                            clearEntryFilters()
+                        }
+                    }
+                }
+                filterChip(label: "コメント", isSelected: contentMode == .comment) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        if contentMode == .comment {
+                            contentMode = .entries
+                        } else {
+                            contentMode = .comment
+                            clearEntryFilters()
+                        }
+                    }
+                }
+
+                // カラーフィルタ
                 ForEach(MangaColor.all) { mangaColor in
                     let isSelected = selectedColors.contains(mangaColor.name)
                     let label = colorLabelStore.label(for: mangaColor.name)
@@ -273,39 +305,32 @@ struct SearchView: View {
         }
     }
 
-    @ViewBuilder
-    private var scopeTabBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(SearchScope.allCases) { scope in
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            selectedScope = scope
-                        }
-                    } label: {
-                        Text(scope.rawValue)
-                            .font(theme.bodyFont)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(
-                                selectedScope == scope
-                                    ? AnyShapeStyle(theme.primary)
-                                    : AnyShapeStyle(theme.surfaceContainerHigh)
-                            )
-                            .foregroundStyle(
-                                selectedScope == scope
-                                    ? theme.onPrimary
-                                    : theme.onSurface
-                            )
-                            .clipShape(Capsule())
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
+    // MARK: - Helpers
+
+    private func filterChip(label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(theme.bodyFont)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+                .background(
+                    isSelected
+                        ? AnyShapeStyle(theme.primary)
+                        : AnyShapeStyle(theme.surfaceContainerHigh)
+                )
+                .foregroundStyle(isSelected ? theme.onPrimary : theme.onSurface)
+                .clipShape(Capsule())
         }
+        .buttonStyle(.plain)
     }
+
+    private func clearEntryFilters() {
+        publicationFilter = nil
+        readingFilter = nil
+        showOneShotOnly = false
+    }
+
+    // MARK: - Content
 
     @ViewBuilder
     private var content: some View {
@@ -320,15 +345,18 @@ struct SearchView: View {
     @ViewBuilder
     private var emptyState: some View {
         let trimmed = searchText.trimmingCharacters(in: .whitespaces)
-        if trimmed.isEmpty && selectedScope == .all && selectedDay == nil && selectedColors.isEmpty {
+        let hasAnyFilter = publicationFilter != nil || readingFilter != nil
+            || showOneShotOnly || selectedDay != nil || !selectedColors.isEmpty
+
+        if trimmed.isEmpty && !hasAnyFilter && contentMode == .entries {
             ContentUnavailableView {
                 Label("検索", systemImage: "magnifyingglass")
                     .foregroundStyle(theme.onSurfaceVariant)
             } description: {
-                Text("マンガ名・掲載誌・メモ・コメントから検索できます\n下のスコープで絞り込みも可能")
+                Text("マンガ名・掲載誌・メモ・コメントから検索できます\nフィルタで絞り込みも可能")
                     .foregroundStyle(theme.onSurfaceVariant.opacity(0.7))
             }
-        } else if trimmed.isEmpty && selectedScope == .memo {
+        } else if trimmed.isEmpty && contentMode == .memo {
             ContentUnavailableView {
                 Label("メモがありません", systemImage: "note.text")
                     .foregroundStyle(theme.onSurfaceVariant)
@@ -336,7 +364,7 @@ struct SearchView: View {
                 Text("編集画面の「メモ」セクションから書けます")
                     .foregroundStyle(theme.onSurfaceVariant.opacity(0.7))
             }
-        } else if trimmed.isEmpty && selectedScope == .comment {
+        } else if trimmed.isEmpty && contentMode == .comment {
             ContentUnavailableView {
                 Label("コメントがありません", systemImage: "bubble.left.and.bubble.right")
                     .foregroundStyle(theme.onSurfaceVariant)
@@ -348,6 +376,8 @@ struct SearchView: View {
             ContentUnavailableView.search(text: trimmed)
         }
     }
+
+    // MARK: - Result List
 
     @ViewBuilder
     private func resultList(results: SearchResults) -> some View {

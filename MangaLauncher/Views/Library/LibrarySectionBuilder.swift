@@ -81,27 +81,23 @@ struct LibrarySectionBuilder {
         return LibrarySection(title: "連載中", icon: "book", entries: serial)
     }
 
-    /// 読み切り（読了以外）
+    /// 読み切り（読書状況に関係なく全て。読了と重複表示 OK）
     private func oneShotSection() -> LibrarySection? {
-        let oneShot = allEntries.filter { $0.isOneShot && $0.readingState != .archived }
+        let oneShot = allEntries.filter { $0.isOneShot }
         guard !oneShot.isEmpty else { return nil }
         return LibrarySection(title: "読み切り", icon: "doc.text", entries: oneShot)
     }
 
-    /// 休載中
+    /// 休載中（読書状況に関係なく全て。読了と重複表示 OK）
     private func hiatusSection() -> LibrarySection? {
-        let hiatus = allEntries.filter {
-            $0.publicationStatus == .hiatus && $0.readingState != .archived
-        }
+        let hiatus = allEntries.filter { $0.publicationStatus == .hiatus }
         guard !hiatus.isEmpty else { return nil }
         return LibrarySection(title: "休載中", icon: "moon.zzz", entries: hiatus)
     }
 
-    /// 完結（掲載が完結している作品。読了アーカイブとは別軸）
+    /// 完結（読書状況に関係なく全て。読了と重複表示 OK）
     private func publicationFinishedSection() -> LibrarySection? {
-        let finished = allEntries.filter {
-            $0.publicationStatus == .finished && $0.readingState != .archived
-        }
+        let finished = allEntries.filter { $0.publicationStatus == .finished }
         guard !finished.isEmpty else { return nil }
         return LibrarySection(title: "完結", icon: "flag.checkered", entries: finished)
     }
