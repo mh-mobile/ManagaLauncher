@@ -8,7 +8,7 @@ struct MangaContextMenu: View {
     var onReorder: (() -> Void)? = nil
 
     var body: some View {
-        // 既読/未読トグルの表示条件:
+        // MARK: 既読/未読トグル
         //  - 休載中: isRead が常に true 扱いなので未読トグル不要
         //  - 読了 (archived): 常に既読扱い、専用の「読了を取り消す」ボタンから戻す
         //  - 積読 (backlog): 表示する（ラベルを「今日読んだ」に変更して文脈を明示）
@@ -31,6 +31,9 @@ struct MangaContextMenu: View {
             }
         }
 
+        Divider()
+
+        // MARK: 日常操作
         Button {
             editingEntry = entry
         } label: {
@@ -51,48 +54,66 @@ struct MangaContextMenu: View {
             }
         }
 
-        // 積読 → 追っかけ中（追いついた）
-        if entry.readingState == .backlog {
+        Divider()
+
+        // MARK: 状態変更（サブメニュー）
+        // 頻度の低い操作をまとめてトップメニューをすっきりさせる
+        Menu {
+            // 読書状況 (追っかけ ↔ 積読)。読み切り・読了は invariant 上対象外
+            if !entry.isOneShot && entry.readingState != .archived {
+                if entry.readingState == .backlog {
+                    Button {
+                        viewModel.setReadingState(entry, to: .following)
+                    } label: {
+                        Label("追いついた", systemImage: "checkmark.circle")
+                    }
+                } else if entry.readingState == .following {
+                    Button {
+                        viewModel.setReadingState(entry, to: .backlog)
+                    } label: {
+                        Label("積読にする", systemImage: "books.vertical")
+                    }
+                }
+            }
+
+            // 掲載状況の変更（読み切り・読了は対象外）
+            if !entry.isOneShot && entry.readingState != .archived {
+                if entry.publicationStatus != .active {
+                    Button {
+                        viewModel.setPublicationStatus(entry, to: .active)
+                    } label: {
+                        Label("連載に戻す", systemImage: "arrow.uturn.left")
+                    }
+                }
+                if entry.publicationStatus != .hiatus {
+                    Button {
+                        viewModel.setPublicationStatus(entry, to: .hiatus)
+                    } label: {
+                        Label("休載中にする", systemImage: "moon.zzz")
+                    }
+                }
+                if entry.publicationStatus != .finished {
+                    Button {
+                        viewModel.setPublicationStatus(entry, to: .finished)
+                    } label: {
+                        Label("完結にする", systemImage: "flag.checkered")
+                    }
+                }
+            }
+
+            // 読了 ↔ 戻す
             Button {
-                viewModel.setReadingState(entry, to: .following)
+                let newState: ReadingState = entry.readingState == .archived ? .following : .archived
+                viewModel.setReadingState(entry, to: newState)
             } label: {
-                Label("追いついた", systemImage: "checkmark.circle")
+                Label(entry.readingState == .archived ? "読了を取り消す" : "読了にする",
+                      systemImage: entry.readingState == .archived ? "arrow.uturn.left" : "checkmark.seal")
             }
-        }
-
-        // 掲載状況の変更（読み切り・読了は対象外）
-        if !entry.isOneShot && entry.readingState != .archived {
-            if entry.publicationStatus != .active {
-                Button {
-                    viewModel.setPublicationStatus(entry, to: .active)
-                } label: {
-                    Label("連載に戻す", systemImage: "arrow.uturn.left")
-                }
-            }
-            if entry.publicationStatus != .hiatus {
-                Button {
-                    viewModel.setPublicationStatus(entry, to: .hiatus)
-                } label: {
-                    Label("休載中にする", systemImage: "moon.zzz")
-                }
-            }
-            if entry.publicationStatus != .finished {
-                Button {
-                    viewModel.setPublicationStatus(entry, to: .finished)
-                } label: {
-                    Label("完結にする", systemImage: "flag.checkered")
-                }
-            }
-        }
-
-        // 読了 ↔ 戻す
-        Button {
-            let newState: ReadingState = entry.readingState == .archived ? .following : .archived
-            viewModel.setReadingState(entry, to: newState)
         } label: {
-            Label(entry.readingState == .archived ? "読了を取り消す" : "読了にする",
-                  systemImage: entry.readingState == .archived ? "arrow.uturn.left" : "checkmark.seal")
+            Label("状態を変更", systemImage: "slider.horizontal.3")
         }
+
+        Divider()
 
         Button(role: .destructive) {
             viewModel.queueDelete(entry)
