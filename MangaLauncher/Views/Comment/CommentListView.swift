@@ -8,6 +8,7 @@ struct CommentListView: View {
     @State private var draft: String = ""
     @State private var editingComment: MangaComment?
     @State private var editingContent: String = ""
+    @State private var pendingDeleteComment: MangaComment?
     @FocusState private var composerFocused: Bool
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
@@ -58,6 +59,25 @@ struct CommentListView: View {
             .sheet(item: $editingComment) { comment in
                 editSheet(for: comment)
             }
+            .confirmationDialog(
+                "このコメントを削除しますか？",
+                isPresented: Binding(
+                    get: { pendingDeleteComment != nil },
+                    set: { if !$0 { pendingDeleteComment = nil } }
+                ),
+                titleVisibility: .visible,
+                presenting: pendingDeleteComment
+            ) { comment in
+                Button("削除", role: .destructive) {
+                    viewModel.deleteComment(comment)
+                    pendingDeleteComment = nil
+                }
+                Button("キャンセル", role: .cancel) {
+                    pendingDeleteComment = nil
+                }
+            } message: { _ in
+                Text("この操作は取り消せません。")
+            }
         }
     }
 
@@ -80,7 +100,7 @@ struct CommentListView: View {
         .padding(.vertical, 4)
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(role: .destructive) {
-                viewModel.deleteComment(comment)
+                pendingDeleteComment = comment
             } label: {
                 Label("削除", systemImage: "trash")
             }

@@ -8,7 +8,11 @@ struct MangaContextMenu: View {
     var onReorder: (() -> Void)? = nil
 
     var body: some View {
-        // 既読/未読トグル（休載・読了は対象外）
+        // 既読/未読トグルの表示条件:
+        //  - 休載中: isRead が常に true 扱いなので未読トグル不要
+        //  - 読了 (archived): 常に既読扱い、専用の「読了を取り消す」ボタンから戻す
+        //  - 積読 (backlog): 表示する（ラベルを「今日読んだ」に変更して文脈を明示）
+        //  - 完結: 表示する（一度読んだら既読据え置きだが、最初の一読は必要）
         if entry.publicationStatus != .hiatus && entry.readingState != .archived {
             Button {
                 if entry.isRead {

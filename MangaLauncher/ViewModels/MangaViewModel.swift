@@ -127,6 +127,7 @@ final class MangaViewModel {
             entry.publicationStatus = publicationStatus
             entry.readingState = readingState
             entry.isOneShot = isOneShot
+            entry.normalizeOneShotInvariants()
             entry.memo = memo
             if !memo.isEmpty {
                 entry.memoUpdatedAt = Date()
@@ -161,9 +162,10 @@ final class MangaViewModel {
         entry.updateIntervalWeeks = updateIntervalWeeks
         entry.nextExpectedUpdate = nextExpectedUpdate
         entry.isOneShot = isOneShot
-        // 読み切りは掲載状況の概念がないので強制的に active へ
-        entry.publicationStatus = isOneShot ? .active : publicationStatus
+        entry.publicationStatus = publicationStatus
         entry.readingState = readingState
+        // 読み切りの invariants (publicationStatus=.active, readingState != .backlog) を強制
+        entry.normalizeOneShotInvariants()
         entry.memo = memo
         if memoChanged {
             entry.memoUpdatedAt = memo.isEmpty ? nil : Date()
@@ -336,11 +338,15 @@ final class MangaViewModel {
             entry.isOneShot = backupEntry.isOneShot ?? false
             entry.memo = backupEntry.memo ?? ""
             entry.memoUpdatedAt = backupEntry.memoUpdatedAt
-            // 新フィールドが backup に含まれていればそれを使う、無ければ legacy から導出
-            if let pubRaw = backupEntry.publicationStatusRawValue,
-               let readRaw = backupEntry.readingStateRawValue {
-                entry.publicationStatusRawValue = pubRaw
-                entry.readingStateRawValue = readRaw
+            // v6+ バックアップは publicationStatusRawValue / readingStateRawValue を authoritative とする。
+            // どちらか片方しかない場合も新スキーマ側を尊重し、欠けている方だけデフォルトで埋める。
+            // 両方 nil のときだけ v5 以前の legacy Bool から導出する。
+            if backupEntry.publicationStatusRawValue != nil || backupEntry.readingStateRawValue != nil {
+                entry.publicationStatusRawValue = backupEntry.publicationStatusRawValue
+                    ?? PublicationStatus.active.rawValue
+                entry.readingStateRawValue = backupEntry.readingStateRawValue
+                    ?? ReadingState.following.rawValue
+                entry.stateMigrationVersion = 1
             } else {
                 entry.isOnHiatus = backupEntry.isOnHiatus ?? false
                 entry.isCompleted = backupEntry.isCompleted ?? false
@@ -406,7 +412,9 @@ final class MangaViewModel {
         if !entry.isOneShot {
             entry.advanceToNextUpdate()
         }
-        // 同日・同エントリのアクティビティが既に存在する場合は再 insert しない
+        // 同日・同エントリのアクティビティが既に存在する場合は再 insert しない。
+        // ReadingActivity.init は date を startOfDay に正規化するので、
+        // predicate の比較は秒単位の揺らぎなく成立する。
         let today = Calendar.current.startOfDay(for: Date())
         let entryID = entry.id
         let existingDescriptor = FetchDescriptor<ReadingActivity>(
