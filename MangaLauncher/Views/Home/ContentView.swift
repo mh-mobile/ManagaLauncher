@@ -11,11 +11,10 @@ extension URL: @retroactive Identifiable {
 }
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
-    @State private var viewModel: MangaViewModel?
+    var viewModel: MangaViewModel
     @State private var homeState = HomeState()
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
     @AppStorage("displayMode") private var displayMode: DisplayMode = .grid
@@ -23,7 +22,7 @@ struct ContentView: View {
 
     @Namespace private var tabUnderline
 
-    private let orderedDays = DayOfWeek.orderedCases
+    private let orderedDays = DayOfWeek.orderedDays
 
     var body: some View {
         if !hasSeenOnboarding {
@@ -32,23 +31,17 @@ struct ContentView: View {
             }
         } else {
             NavigationStack {
-                if let viewModel {
-                    mainContent(viewModel: viewModel)
-                }
+                mainContent(viewModel: viewModel)
             }
             .onAppear {
-                if viewModel == nil {
-                    viewModel = MangaViewModel(modelContext: modelContext)
-                }
                 homeState.wallpaper.loadImage()
             }
-            .onReceive(NotificationCenter.default.publisher(for: .mangaDataDidChange)) { _ in
-                viewModel?.refresh()
+            .onMangaDataChange {
+                viewModel.refresh()
             }
             .onReceive(NotificationCenter.default.publisher(for: .switchToDay)) { notification in
                 if let rawValue = notification.object as? Int,
-                   let day = DayOfWeek(rawValue: rawValue),
-                   let viewModel {
+                   let day = DayOfWeek(rawValue: rawValue) {
                     viewModel.selectedDay = day
                     homeState.paging.pageIndex = homeState.paging.pageIndexForDay(day)
                 }
@@ -83,13 +76,16 @@ struct ContentView: View {
                     DayPageView(
                         day: day,
                         viewModel: vm,
-                        displayMode: displayMode,
-                        hasWallpaper: homeState.wallpaper.effectiveHasWallpaper,
-                        reduceTransparency: reduceTransparency,
-                        headerHeight: homeState.headerHeight,
+                        display: DayPageDisplayContext(
+                            displayMode: displayMode,
+                            hasWallpaper: homeState.wallpaper.effectiveHasWallpaper,
+                            reduceTransparency: reduceTransparency,
+                            headerHeight: homeState.headerHeight
+                        ),
                         edit: homeState.edit,
                         selectedPublisher: $homeState.selectedPublisher,
                         showingAddSheet: $homeState.sheets.showingAddSheet,
+                        commentingEntry: $homeState.commentingEntry,
                         onOpenURL: { openMangaURL($0) }
                     )
                 }
@@ -105,13 +101,7 @@ struct ContentView: View {
                 )
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
-
-            if !viewModel.pendingDeleteEntries.isEmpty {
-                DeleteToastView(viewModel: viewModel)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
         }
-        .animation(.easeInOut(duration: 0.3), value: viewModel.pendingDeleteEntries.isEmpty)
         .animation(.easeInOut(duration: 0.2), value: homeState.edit.isGridEditMode)
         .animation(.easeInOut(duration: 0.2), value: homeState.edit.listEditMode)
         .toolbar {
@@ -129,8 +119,7 @@ struct ContentView: View {
                         displayMode = displayMode == .list ? .grid : .list
                     }
                 },
-                onAdd: { homeState.sheets.showingAddSheet = true },
-                onSettings: { homeState.sheets.showingSettings = true }
+                onAdd: { homeState.sheets.showingAddSheet = true }
             )
         }
         .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
@@ -150,8 +139,8 @@ struct ContentView: View {
         .sheet(item: $homeState.edit.editingEntry, onDismiss: { homeState.edit.editingEntry = nil }) { entry in
             EditEntryView(viewModel: viewModel, entry: entry)
         }
-        .sheet(isPresented: $homeState.sheets.showingSettings) {
-            SettingsView(viewModel: viewModel)
+        .sheet(item: $homeState.commentingEntry, onDismiss: { homeState.commentingEntry = nil }) { entry in
+            CommentListView(entry: entry, viewModel: viewModel)
         }
         .fullScreenCover(isPresented: $homeState.sheets.showingCatchUp, onDismiss: {
             viewModel.notifyChange()
@@ -219,6 +208,7 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
-        .modelContainer(for: MangaEntry.self, inMemory: true)
+    let container = try! ModelContainer(for: MangaEntry.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    ContentView(viewModel: MangaViewModel(modelContext: container.mainContext))
+        .modelContainer(container)
 }

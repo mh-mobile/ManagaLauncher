@@ -30,7 +30,7 @@ struct DayTabBarView: View {
                     }
                 } label: {
                     let isSelected = currentDay == day
-                    let hasUnread = !day.isHiatus && !day.isCompleted && viewModel.unreadCount(for: day) > 0
+                    let hasUnread = viewModel.unreadCount(for: day) > 0
                     VStack(spacing: theme.tabItemSpacing) {
                         Text(day.shortName)
                             .font(theme.tabFont(isSelected))
@@ -39,7 +39,7 @@ struct DayTabBarView: View {
                                    height: theme.tabShowsTodayCircle ? 32 : nil)
                             .background {
                                 if theme.tabShowsTodayCircle {
-                                    if !day.isHiatus && !day.isCompleted && day == .today {
+                                    if day == .today {
                                         Circle().fill(theme.usesCustomSurface ? theme.primary : Color.accentColor)
                                     } else if hasWallpaper && isSelected {
                                         Circle().fill(Color.black.opacity(0.3))
@@ -70,13 +70,7 @@ struct DayTabBarView: View {
                 )
                 .onDrop(of: [.text], isTargeted: Binding(
                     get: { dropTargetDay == day },
-                    set: {
-                        if $0 && day.isHiatus && edit.draggingIsOneShot {
-                            dropTargetDay = nil
-                        } else {
-                            dropTargetDay = $0 ? day : nil
-                        }
-                    }
+                    set: { dropTargetDay = $0 ? day : nil }
                 )) { providers in
                     dropTargetDay = nil
                     if let draggingID = edit.draggingEntryID,
@@ -115,20 +109,17 @@ struct DayTabBarView: View {
     private func tabTextColor(day: DayOfWeek, isSelected: Bool) -> Color {
         if theme.forceDarkMode {
             if isSelected { return theme.secondary }
-            if !day.isHiatus && !day.isCompleted && day == .today { return theme.primary }
-            if day.isHiatus || day.isCompleted { return theme.onSurfaceVariant.opacity(0.5) }
+            if day == .today { return theme.primary }
             return theme.onSurfaceVariant
         } else if theme.usesCustomSurface {
             if isSelected { return theme.primary }
             if hasWallpaper && isSelected { return .white }
-            if !day.isHiatus && !day.isCompleted && day == .today { return theme.primary }
-            if day.isHiatus || day.isCompleted { return theme.onSurfaceVariant.opacity(0.5) }
+            if day == .today { return theme.primary }
             return theme.onSurface
         } else {
-            if !day.isHiatus && !day.isCompleted && day == .today { return .white }
+            if day == .today { return .white }
             if hasWallpaper && isSelected { return .white }
             if isSelected { return Color.accentColor }
-            if day.isHiatus || day.isCompleted { return .secondary }
             return .primary
         }
     }

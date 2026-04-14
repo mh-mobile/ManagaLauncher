@@ -46,8 +46,15 @@ struct MangaTimelineProvider: TimelineProvider {
         let selectedDay = WidgetDayStore.shared.currentDay
         let dayRaw = selectedDay.rawValue
         let context = ModelContext(container)
+        // 連載中 × 追っかけ中のエントリのみ表示
+        let activeRaw = PublicationStatus.active.rawValue
+        let followingRaw = ReadingState.following.rawValue
         let descriptor = FetchDescriptor<MangaEntry>(
-            predicate: #Predicate { $0.dayOfWeekRawValue == dayRaw && !$0.isOnHiatus && !$0.isCompleted },
+            predicate: #Predicate {
+                $0.dayOfWeekRawValue == dayRaw
+                    && $0.publicationStatusRawValue == activeRaw
+                    && $0.readingStateRawValue == followingRaw
+            },
             sortBy: [SortDescriptor(\.sortOrder)]
         )
         let results = (try? context.fetch(descriptor)) ?? []

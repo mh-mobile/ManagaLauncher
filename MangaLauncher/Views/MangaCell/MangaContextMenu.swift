@@ -4,10 +4,12 @@ struct MangaContextMenu: View {
     let entry: MangaEntry
     var viewModel: MangaViewModel
     @Binding var editingEntry: MangaEntry?
-    var onReorder: () -> Void
+    @Binding var commentingEntry: MangaEntry?
+    var onReorder: (() -> Void)? = nil
 
     var body: some View {
-        if !entry.isOnHiatus {
+        // 既読/未読トグル（休載・読了は対象外）
+        if entry.publicationStatus != .hiatus && entry.readingState != .archived {
             Button {
                 if entry.isRead {
                     viewModel.markAsUnread(entry)
@@ -15,34 +17,79 @@ struct MangaContextMenu: View {
                     viewModel.markAsRead(entry)
                 }
             } label: {
-                Label(entry.isRead ? "未読にする" : "既読にする",
-                      systemImage: entry.isRead ? "envelope.badge" : "envelope.open")
+                if entry.readingState == .backlog {
+                    Label(entry.isRead ? "今日読んだを取り消す" : "今日読んだ",
+                          systemImage: entry.isRead ? "arrow.uturn.backward" : "checkmark")
+                } else {
+                    Label(entry.isRead ? "未読にする" : "既読にする",
+                          systemImage: entry.isRead ? "envelope.badge" : "envelope.open")
+                }
             }
         }
+
         Button {
             editingEntry = entry
         } label: {
             Label("編集", systemImage: "pencil")
         }
+
         Button {
-            onReorder()
+            commentingEntry = entry
         } label: {
-            Label("並び替え", systemImage: "arrow.up.arrow.down")
+            Label("コメント", systemImage: "bubble.left.and.bubble.right")
         }
-        if !entry.isOneShot {
+
+        if let onReorder {
             Button {
-                viewModel.toggleHiatus(entry)
+                onReorder()
             } label: {
-                Label(entry.isOnHiatus ? "連載に戻す" : "休載中にする",
-                      systemImage: entry.isOnHiatus ? "arrow.uturn.left" : "moon.zzz")
+                Label("並び替え", systemImage: "arrow.up.arrow.down")
             }
         }
-        Button {
-            viewModel.toggleCompleted(entry)
-        } label: {
-            Label(entry.isCompleted ? (entry.isOneShot ? "元の曜日に戻す" : "連載に戻す") : "完結にする",
-                  systemImage: entry.isCompleted ? "arrow.uturn.left" : "checkmark.seal")
+
+        // 積読 → 追っかけ中（追いついた）
+        if entry.readingState == .backlog {
+            Button {
+                viewModel.setReadingState(entry, to: .following)
+            } label: {
+                Label("追いついた", systemImage: "checkmark.circle")
+            }
         }
+
+        // 掲載状況の変更（読み切り・読了は対象外）
+        if !entry.isOneShot && entry.readingState != .archived {
+            if entry.publicationStatus != .active {
+                Button {
+                    viewModel.setPublicationStatus(entry, to: .active)
+                } label: {
+                    Label("連載に戻す", systemImage: "arrow.uturn.left")
+                }
+            }
+            if entry.publicationStatus != .hiatus {
+                Button {
+                    viewModel.setPublicationStatus(entry, to: .hiatus)
+                } label: {
+                    Label("休載中にする", systemImage: "moon.zzz")
+                }
+            }
+            if entry.publicationStatus != .finished {
+                Button {
+                    viewModel.setPublicationStatus(entry, to: .finished)
+                } label: {
+                    Label("完結にする", systemImage: "flag.checkered")
+                }
+            }
+        }
+
+        // 読了 ↔ 戻す
+        Button {
+            let newState: ReadingState = entry.readingState == .archived ? .following : .archived
+            viewModel.setReadingState(entry, to: newState)
+        } label: {
+            Label(entry.readingState == .archived ? "読了を取り消す" : "読了にする",
+                  systemImage: entry.readingState == .archived ? "arrow.uturn.left" : "checkmark.seal")
+        }
+
         Button(role: .destructive) {
             viewModel.queueDelete(entry)
         } label: {

@@ -10,7 +10,6 @@ struct ContentToolbar: ToolbarContent {
     var onCatchUp: () -> Void
     var onToggleDisplayMode: () -> Void
     var onAdd: () -> Void
-    var onSettings: () -> Void
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
@@ -38,7 +37,7 @@ struct ContentToolbar: ToolbarContent {
                     }
                 }
             }
-            .disabled(unreadCount == 0 || edit.isEditing || paging.currentDay.isHiatus || paging.currentDay.isCompleted)
+            .disabled(unreadCount == 0 || edit.isEditing)
         }
         ToolbarItem(placement: .automatic) {
             Button {
@@ -53,14 +52,6 @@ struct ContentToolbar: ToolbarContent {
                 onAdd()
             } label: {
                 Image(systemName: "plus")
-            }
-            .disabled(edit.isEditing || paging.currentDay.isHiatus || paging.currentDay.isCompleted)
-        }
-        ToolbarItem(placement: .automatic) {
-            Button {
-                onSettings()
-            } label: {
-                Image(systemName: "gearshape")
             }
             .disabled(edit.isEditing)
         }

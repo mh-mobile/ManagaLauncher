@@ -1,15 +1,22 @@
 import SwiftUI
 
-struct DayPageView: View {
-    let day: DayOfWeek
-    var viewModel: MangaViewModel
+/// DayPageView の表示構成・装飾系の値をひとまとめにした context。
+/// 親 View からの props drilling を 1 つの引数に集約するためのもの。
+struct DayPageDisplayContext {
     let displayMode: DisplayMode
     let hasWallpaper: Bool
     let reduceTransparency: Bool
     let headerHeight: CGFloat
+}
+
+struct DayPageView: View {
+    let day: DayOfWeek
+    var viewModel: MangaViewModel
+    let display: DayPageDisplayContext
     @Bindable var edit: EditState
     @Binding var selectedPublisher: String?
     @Binding var showingAddSheet: Bool
+    @Binding var commentingEntry: MangaEntry?
     let onOpenURL: (String) -> Void
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
@@ -23,48 +30,30 @@ struct DayPageView: View {
             allEntries
         }
 
-        if displayMode == .list && !allEntries.isEmpty && !entries.isEmpty {
-            MangaListView(entries: entries, day: day, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, headerHeight: headerHeight, editingEntry: $edit.editingEntry, listEditMode: $edit.listEditMode, onOpenURL: onOpenURL)
+        if display.displayMode == .list && !allEntries.isEmpty && !entries.isEmpty {
+            MangaListView(entries: entries, day: day, viewModel: viewModel, hasWallpaper: display.hasWallpaper, reduceTransparency: display.reduceTransparency, headerHeight: display.headerHeight, editingEntry: $edit.editingEntry, commentingEntry: $commentingEntry, listEditMode: $edit.listEditMode, onOpenURL: onOpenURL)
         } else {
             GeometryReader { geo in
                 ScrollView {
                     if allEntries.isEmpty {
-                        EmptyStateView(hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, headerHeight: headerHeight) {
-                            if day.isCompleted {
-                                ContentUnavailableView {
-                                    Label("完結したマンガはありません", systemImage: "checkmark.seal")
-                                        .modifier(ThemedLabelModifier())
-                                } description: {
-                                    Text("コンテキストメニューや編集画面から\n「完結にする」でここに移動できます")
-                                        .modifier(ThemedDescriptionModifier())
+                        EmptyStateView(hasWallpaper: display.hasWallpaper, reduceTransparency: display.reduceTransparency, headerHeight: display.headerHeight) {
+                            ContentUnavailableView {
+                                Label("エントリなし", systemImage: "book.closed")
+                                    .modifier(ThemedLabelModifier())
+                            } description: {
+                                Text("\(day.displayName)に登録されたマンガはありません")
+                                    .modifier(ThemedDescriptionModifier())
+                            } actions: {
+                                Button("追加する") {
+                                    showingAddSheet = true
                                 }
-                            } else if day.isHiatus {
-                                ContentUnavailableView {
-                                    Label("休載中のマンガはありません", systemImage: "moon.zzz")
-                                        .modifier(ThemedLabelModifier())
-                                } description: {
-                                    Text("コンテキストメニューや編集画面から\n「休載中にする」でここに移動できます")
-                                        .modifier(ThemedDescriptionModifier())
-                                }
-                            } else {
-                                ContentUnavailableView {
-                                    Label("エントリなし", systemImage: "book.closed")
-                                        .modifier(ThemedLabelModifier())
-                                } description: {
-                                    Text("\(day.displayName)に登録されたマンガはありません")
-                                        .modifier(ThemedDescriptionModifier())
-                                } actions: {
-                                    Button("追加する") {
-                                        showingAddSheet = true
-                                    }
-                                    .modifier(ThemedActionModifier())
-                                }
+                                .modifier(ThemedActionModifier())
                             }
                         }
                         .frame(maxWidth: 600)
-                        .frame(maxWidth: .infinity, minHeight: geo.size.height - headerHeight)
+                        .frame(maxWidth: .infinity, minHeight: geo.size.height - display.headerHeight)
                     } else if entries.isEmpty {
-                        EmptyStateView(hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, headerHeight: headerHeight) {
+                        EmptyStateView(hasWallpaper: display.hasWallpaper, reduceTransparency: display.reduceTransparency, headerHeight: display.headerHeight) {
                             ContentUnavailableView {
                                 Label("該当なし", systemImage: "line.3.horizontal.decrease.circle")
                                     .modifier(ThemedLabelModifier())
@@ -79,10 +68,10 @@ struct DayPageView: View {
                             }
                         }
                         .frame(maxWidth: 600)
-                        .frame(maxWidth: .infinity, minHeight: geo.size.height - headerHeight)
+                        .frame(maxWidth: .infinity, minHeight: geo.size.height - display.headerHeight)
                     } else {
                         MasonryLayout(entries: entries, availableWidth: geo.size.width - 32) { entry in
-                            MangaGridCell(entry: entry, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, isGridEditMode: $edit.isGridEditMode, editingEntry: $edit.editingEntry, onOpenURL: onOpenURL)
+                            MangaGridCell(entry: entry, viewModel: viewModel, hasWallpaper: display.hasWallpaper, reduceTransparency: display.reduceTransparency, isGridEditMode: $edit.isGridEditMode, editingEntry: $edit.editingEntry, commentingEntry: $commentingEntry, onOpenURL: onOpenURL)
                                 .overlay(alignment: .topLeading) {
                                     if edit.isGridEditMode {
                                         Button {
@@ -101,10 +90,9 @@ struct DayPageView: View {
                                 .modifier(WiggleModifier(isActive: edit.isGridEditMode))
                                 .onDrag {
                                     edit.draggingEntryID = entry.id
-                                    edit.draggingIsOneShot = entry.isOneShot
                                     return NSItemProvider(object: entry.id.uuidString as NSString)
                                 } preview: {
-                                    MangaGridCell(entry: entry, viewModel: viewModel, hasWallpaper: hasWallpaper, reduceTransparency: reduceTransparency, isGridEditMode: $edit.isGridEditMode, editingEntry: $edit.editingEntry, onOpenURL: onOpenURL)
+                                    MangaGridCell(entry: entry, viewModel: viewModel, hasWallpaper: display.hasWallpaper, reduceTransparency: display.reduceTransparency, isGridEditMode: $edit.isGridEditMode, editingEntry: $edit.editingEntry, commentingEntry: $commentingEntry, onOpenURL: onOpenURL)
                                         .frame(width: 120)
                                 }
                                 .onDrop(of: [.text], delegate: GridDropDelegate(
@@ -118,7 +106,7 @@ struct DayPageView: View {
                         .padding()
                     }
                 }
-                .contentMargins(.top, headerHeight, for: .scrollContent)
+                .contentMargins(.top, display.headerHeight, for: .scrollContent)
                 .scrollContentBackground(.hidden)
                 .contentShape(Rectangle())
                 .simultaneousGesture(
