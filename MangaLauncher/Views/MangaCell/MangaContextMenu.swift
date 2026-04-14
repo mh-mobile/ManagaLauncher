@@ -57,32 +57,40 @@ struct MangaContextMenu: View {
         Divider()
 
         // MARK: 状態変更（サブメニュー）
-        // 頻度の低い操作をまとめてトップメニューをすっきりさせる
+        // 現在の状態から遷移可能な選択肢のみを表示する。
+        // 「取り消す」のような曖昧なトグルを持たず、ユーザーが行き先を明示する。
         Menu {
-            // 読書状況 (追っかけ ↔ 積読)。読み切り・読了は invariant 上対象外
-            if !entry.isOneShot && entry.readingState != .archived {
-                if entry.readingState == .backlog {
-                    Button {
-                        viewModel.setReadingState(entry, to: .following)
-                    } label: {
-                        Label("追いついた", systemImage: "checkmark.circle")
-                    }
-                } else if entry.readingState == .following {
-                    Button {
-                        viewModel.setReadingState(entry, to: .backlog)
-                    } label: {
-                        Label("積読にする", systemImage: "books.vertical")
-                    }
+            // 読書状況の遷移
+            if entry.readingState != .following {
+                Button {
+                    viewModel.setReadingState(entry, to: .following)
+                } label: {
+                    Label("追っかけ中にする", systemImage: "eyes")
+                }
+            }
+            // 読み切りは invariant 上 backlog 不可
+            if !entry.isOneShot && entry.readingState != .backlog {
+                Button {
+                    viewModel.setReadingState(entry, to: .backlog)
+                } label: {
+                    Label("積読にする", systemImage: "books.vertical")
+                }
+            }
+            if entry.readingState != .archived {
+                Button {
+                    viewModel.setReadingState(entry, to: .archived)
+                } label: {
+                    Label("読了にする", systemImage: "checkmark.seal")
                 }
             }
 
-            // 掲載状況の変更（読み切り・読了は対象外）
+            // 掲載状況の遷移（読み切り・読了は対象外）
             if !entry.isOneShot && entry.readingState != .archived {
                 if entry.publicationStatus != .active {
                     Button {
                         viewModel.setPublicationStatus(entry, to: .active)
                     } label: {
-                        Label("連載に戻す", systemImage: "arrow.uturn.left")
+                        Label("連載中にする", systemImage: "book")
                     }
                 }
                 if entry.publicationStatus != .hiatus {
@@ -99,15 +107,6 @@ struct MangaContextMenu: View {
                         Label("完結にする", systemImage: "flag.checkered")
                     }
                 }
-            }
-
-            // 読了 ↔ 戻す
-            Button {
-                let newState: ReadingState = entry.readingState == .archived ? .following : .archived
-                viewModel.setReadingState(entry, to: newState)
-            } label: {
-                Label(entry.readingState == .archived ? "読了を取り消す" : "読了にする",
-                      systemImage: entry.readingState == .archived ? "arrow.uturn.left" : "checkmark.seal")
             }
         } label: {
             Label("状態を変更", systemImage: "slider.horizontal.3")
