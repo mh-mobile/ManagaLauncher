@@ -152,8 +152,9 @@ MANIFEST
     done
 
     # Generate index.html with all builds
+    # sort -V でバージョン順 (1.9 < 1.10)、-r で新しい順
     local BUILD_ROWS=""
-    for BUILD_DIR in $(ls -1dr "$BUILDS_DIR"/*/); do
+    for BUILD_DIR in $(ls -1d "$BUILDS_DIR"/*/ | sort -Vr); do
         [ -d "$BUILD_DIR" ] || continue
         local BUILD_KEY=$(basename "$BUILD_DIR")
         local INFO_FILE="${BUILD_DIR}info.json"

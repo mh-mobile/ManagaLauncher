@@ -457,21 +457,9 @@ final class MangaViewModel {
         fetchEntries(for: day).filter { !$0.isRead }
     }
 
-    // MARK: - Memo
-
-    func updateMemo(_ entry: MangaEntry, memo: String) {
-        let changed = entry.memo != memo
-        entry.memo = memo
-        if changed && !memo.isEmpty {
-            entry.memoUpdatedAt = Date()
-        } else if memo.isEmpty {
-            entry.memoUpdatedAt = nil
-        }
-        save()
-    }
-
     // 注意: アクティビティ・メモ集約は ActivityBuilder に移譲。
     // ここに recentActivity / allActivity / memoEntryCount などを置かないこと（N+1 fetch の温床になる）。
+    // メモの更新は updateEntry() に統合済み。
 
     // MARK: - Comments
 
@@ -503,15 +491,6 @@ final class MangaViewModel {
             predicate: #Predicate { $0.mangaEntryID == entryID },
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
-        return modelContext.fetchLogged(descriptor)
-    }
-
-    func recentComments(limit: Int = 10) -> [MangaComment] {
-        let _ = refreshCounter
-        var descriptor = FetchDescriptor<MangaComment>(
-            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
-        )
-        descriptor.fetchLimit = limit
         return modelContext.fetchLogged(descriptor)
     }
 
