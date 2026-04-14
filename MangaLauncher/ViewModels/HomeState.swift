@@ -115,7 +115,6 @@ final class WallpaperState {
 @Observable
 final class SheetState {
     var showingAddSheet = false
-    var showingSettings = false
     var showingCatchUp = false
     var showingWallpaperPicker = false
 }

@@ -7,7 +7,7 @@ struct MangaStatusBadgeView: View {
     enum Style {
         /// "読" "完" "休" "積" "切" などの 1 文字
         case short
-        /// "読了" "完結" "休載" "積読" "読切" などの全名
+        /// "読了" "完結" "休載" "積読" "読み切り" などの全名
         case full
     }
 
@@ -41,7 +41,7 @@ struct MangaStatusBadgeView: View {
             return (style == .short ? "積" : "積読", ThemeManager.shared.style.primary)
         }
         if entry.isOneShot {
-            return (style == .short ? "切" : "読切", .purple)
+            return (style == .short ? "切" : "読み切り", .purple)
         }
         return nil
     }

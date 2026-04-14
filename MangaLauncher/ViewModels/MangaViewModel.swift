@@ -127,6 +127,7 @@ final class MangaViewModel {
             entry.publicationStatus = publicationStatus
             entry.readingState = readingState
             entry.isOneShot = isOneShot
+            entry.normalizeOneShotInvariants()
             entry.memo = memo
             if !memo.isEmpty {
                 entry.memoUpdatedAt = Date()
@@ -161,9 +162,10 @@ final class MangaViewModel {
         entry.updateIntervalWeeks = updateIntervalWeeks
         entry.nextExpectedUpdate = nextExpectedUpdate
         entry.isOneShot = isOneShot
-        // 読み切りは掲載状況の概念がないので強制的に active へ
-        entry.publicationStatus = isOneShot ? .active : publicationStatus
+        entry.publicationStatus = publicationStatus
         entry.readingState = readingState
+        // 読み切りの invariants (publicationStatus=.active, readingState != .backlog) を強制
+        entry.normalizeOneShotInvariants()
         entry.memo = memo
         if memoChanged {
             entry.memoUpdatedAt = memo.isEmpty ? nil : Date()
@@ -336,11 +338,16 @@ final class MangaViewModel {
             entry.isOneShot = backupEntry.isOneShot ?? false
             entry.memo = backupEntry.memo ?? ""
             entry.memoUpdatedAt = backupEntry.memoUpdatedAt
-            // 新フィールドが backup に含まれていればそれを使う、無ければ legacy から導出
-            if let pubRaw = backupEntry.publicationStatusRawValue,
-               let readRaw = backupEntry.readingStateRawValue {
-                entry.publicationStatusRawValue = pubRaw
-                entry.readingStateRawValue = readRaw
+            // v6+ バックアップは publicationStatusRawValue / readingStateRawValue を authoritative とする。
+            // 両方 nil のときだけ v5 以前の legacy Bool から導出する。
+            // 通常 export 側は両方を必ず書くので片方 nil は現実にはほぼ起こらないが、
+            // 手動編集や他実装からの破損対策として欠けた側はデフォルトで補っておく。
+            if backupEntry.publicationStatusRawValue != nil || backupEntry.readingStateRawValue != nil {
+                entry.publicationStatusRawValue = backupEntry.publicationStatusRawValue
+                    ?? PublicationStatus.active.rawValue
+                entry.readingStateRawValue = backupEntry.readingStateRawValue
+                    ?? ReadingState.following.rawValue
+                entry.stateMigrationVersion = 1
             } else {
                 entry.isOnHiatus = backupEntry.isOnHiatus ?? false
                 entry.isCompleted = backupEntry.isCompleted ?? false
@@ -406,7 +413,9 @@ final class MangaViewModel {
         if !entry.isOneShot {
             entry.advanceToNextUpdate()
         }
-        // 同日・同エントリのアクティビティが既に存在する場合は再 insert しない
+        // 同日・同エントリのアクティビティが既に存在する場合は再 insert しない。
+        // ReadingActivity.init は date を startOfDay に正規化するので、
+        // predicate の比較は秒単位の揺らぎなく成立する。
         let today = Calendar.current.startOfDay(for: Date())
         let entryID = entry.id
         let existingDescriptor = FetchDescriptor<ReadingActivity>(
@@ -449,21 +458,9 @@ final class MangaViewModel {
         fetchEntries(for: day).filter { !$0.isRead }
     }
 
-    // MARK: - Memo
-
-    func updateMemo(_ entry: MangaEntry, memo: String) {
-        let changed = entry.memo != memo
-        entry.memo = memo
-        if changed && !memo.isEmpty {
-            entry.memoUpdatedAt = Date()
-        } else if memo.isEmpty {
-            entry.memoUpdatedAt = nil
-        }
-        save()
-    }
-
     // 注意: アクティビティ・メモ集約は ActivityBuilder に移譲。
     // ここに recentActivity / allActivity / memoEntryCount などを置かないこと（N+1 fetch の温床になる）。
+    // メモの更新は updateEntry() に統合済み。
 
     // MARK: - Comments
 
@@ -495,15 +492,6 @@ final class MangaViewModel {
             predicate: #Predicate { $0.mangaEntryID == entryID },
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
-        return modelContext.fetchLogged(descriptor)
-    }
-
-    func recentComments(limit: Int = 10) -> [MangaComment] {
-        let _ = refreshCounter
-        var descriptor = FetchDescriptor<MangaComment>(
-            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
-        )
-        descriptor.fetchLimit = limit
         return modelContext.fetchLogged(descriptor)
     }
 

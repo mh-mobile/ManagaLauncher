@@ -88,6 +88,11 @@ enum ReadingState: Int, Codable, CaseIterable, Identifiable {
     }
 }
 
+/// 状態の invariants:
+/// - `isOneShot == true` のとき `publicationStatus == .active` かつ `readingState != .backlog`
+///   （読み切りは掲載状況の概念がなく、積読とも不整合。`.following` か `.archived` のみ）
+/// - `readingState == .archived` のとき `isRead` は常に true
+/// これらは `MangaViewModel.addEntry` / `updateEntry` / `MangaEntry.normalizeOneShotInvariants()` で強制される。
 @Model
 final class MangaEntry {
     var id: UUID = UUID()
@@ -124,13 +129,19 @@ final class MangaEntry {
         get { isOneShot ? .oneShot : .serial }
         set {
             isOneShot = newValue == .oneShot
-            if isOneShot {
-                publicationStatusRawValue = PublicationStatus.active.rawValue
-                // 読み切りは追っかけ概念がないので following or archived
-                if readingState == .backlog {
-                    readingStateRawValue = ReadingState.following.rawValue
-                }
-            }
+            normalizeOneShotInvariants()
+        }
+    }
+
+    /// 読み切りのときに不整合な状態 (hiatus/finished、backlog) を矯正する。
+    /// ViewModel / mangaType setter から共通に呼ばれる。
+    func normalizeOneShotInvariants() {
+        guard isOneShot else { return }
+        if publicationStatusRawValue != PublicationStatus.active.rawValue {
+            publicationStatusRawValue = PublicationStatus.active.rawValue
+        }
+        if readingStateRawValue == ReadingState.backlog.rawValue {
+            readingStateRawValue = ReadingState.following.rawValue
         }
     }
 
@@ -221,6 +232,8 @@ final class MangaEntry {
             readingStateRawValue = ReadingState.following.rawValue
             publicationStatusRawValue = PublicationStatus.active.rawValue
         }
+        // 旧データで one-shot + backlog/hiatus/finished の矛盾があった場合の最終矯正
+        normalizeOneShotInvariants()
         stateMigrationVersion = 1
     }
 

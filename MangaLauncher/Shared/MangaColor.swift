@@ -52,9 +52,4 @@ final class ColorLabelStore {
     func label(for colorName: String) -> String? {
         labels[colorName]
     }
-
-    /// ラベルがあればラベル、なければカラー名（赤、青等）を返す
-    func displayLabel(for colorName: String) -> String {
-        labels[colorName] ?? MangaColor.displayName(for: colorName)
-    }
 }
