@@ -339,8 +339,9 @@ final class MangaViewModel {
             entry.memo = backupEntry.memo ?? ""
             entry.memoUpdatedAt = backupEntry.memoUpdatedAt
             // v6+ バックアップは publicationStatusRawValue / readingStateRawValue を authoritative とする。
-            // どちらか片方しかない場合も新スキーマ側を尊重し、欠けている方だけデフォルトで埋める。
             // 両方 nil のときだけ v5 以前の legacy Bool から導出する。
+            // 通常 export 側は両方を必ず書くので片方 nil は現実にはほぼ起こらないが、
+            // 手動編集や他実装からの破損対策として欠けた側はデフォルトで補っておく。
             if backupEntry.publicationStatusRawValue != nil || backupEntry.readingStateRawValue != nil {
                 entry.publicationStatusRawValue = backupEntry.publicationStatusRawValue
                     ?? PublicationStatus.active.rawValue
