@@ -24,9 +24,12 @@ struct RootTabView: View {
         // どのタブから削除してもトーストが表示されるように全体 overlay で保持
         .overlay(alignment: .bottom) {
             if !viewModel.pendingDeleteEntries.isEmpty {
-                DeleteToastView(viewModel: viewModel)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .padding(.bottom, 80) // ボトムタブを避ける
+                DeleteToastView(
+                    count: viewModel.pendingDeleteEntries.count,
+                    onUndo: { viewModel.undoPendingDeletes() }
+                )
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .padding(.bottom, 80) // ボトムタブを避ける
             }
         }
         .animation(.easeInOut(duration: 0.3), value: viewModel.pendingDeleteEntries.isEmpty)

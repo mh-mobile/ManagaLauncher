@@ -13,6 +13,8 @@ final class MangaViewModel {
     private(set) var refreshCounter = 0
     var pendingDeleteEntries: [MangaEntry] = []
     private var deleteTimer: Timer?
+    var pendingDeleteComments: [MangaComment] = []
+    private var commentDeleteTimer: Timer?
 
     private(set) var modelContext: ModelContext
 
@@ -485,6 +487,41 @@ final class MangaViewModel {
         save()
     }
 
+    // MARK: - Comment Undo Delete
+
+    /// コメントを削除キューに入れる。entry の queueDelete と同じ「5 秒後に commit / 間に undo 可」仕様。
+    func queueDeleteComment(_ comment: MangaComment) {
+        pendingDeleteComments.append(comment)
+        refreshCounter += 1
+        restartCommentDeleteTimer()
+    }
+
+    func undoPendingCommentDeletes() {
+        commentDeleteTimer?.invalidate()
+        commentDeleteTimer = nil
+        pendingDeleteComments.removeAll()
+        refreshCounter += 1
+    }
+
+    func commitPendingCommentDeletes() {
+        commentDeleteTimer?.invalidate()
+        commentDeleteTimer = nil
+        for comment in pendingDeleteComments {
+            modelContext.delete(comment)
+        }
+        pendingDeleteComments.removeAll()
+        save()
+    }
+
+    private func restartCommentDeleteTimer() {
+        commentDeleteTimer?.invalidate()
+        commentDeleteTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                self?.commitPendingCommentDeletes()
+            }
+        }
+    }
+
     func fetchComments(for entry: MangaEntry) -> [MangaComment] {
         let _ = refreshCounter
         let entryID = entry.id
@@ -492,7 +529,8 @@ final class MangaViewModel {
             predicate: #Predicate { $0.mangaEntryID == entryID },
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
-        return modelContext.fetchLogged(descriptor)
+        let pendingIDs = Set(pendingDeleteComments.map(\.id))
+        return modelContext.fetchLogged(descriptor).filter { !pendingIDs.contains($0.id) }
     }
 
     func allComments() -> [MangaComment] {
@@ -500,7 +538,8 @@ final class MangaViewModel {
         let descriptor = FetchDescriptor<MangaComment>(
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
-        return modelContext.fetchLogged(descriptor)
+        let pendingIDs = Set(pendingDeleteComments.map(\.id))
+        return modelContext.fetchLogged(descriptor).filter { !pendingIDs.contains($0.id) }
     }
 
     func unreadCount(for day: DayOfWeek) -> Int {
