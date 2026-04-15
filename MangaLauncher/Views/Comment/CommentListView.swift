@@ -69,6 +69,11 @@ struct CommentListView: View {
                 }
             }
             .animation(.easeInOut(duration: 0.3), value: viewModel.pendingDeleteComments.isEmpty)
+            .onDisappear {
+                // シートを閉じた時点で pending を確定させる。
+                // 閉じる前に undo していなければユーザーは削除を確定したものとみなす。
+                viewModel.commitPendingCommentDeletes()
+            }
         }
     }
 

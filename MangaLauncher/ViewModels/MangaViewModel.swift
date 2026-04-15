@@ -506,7 +506,6 @@ final class MangaViewModel {
     func commitPendingCommentDeletes() {
         commentDeleteTimer?.invalidate()
         commentDeleteTimer = nil
-        guard !pendingDeleteComments.isEmpty else { return }
         for comment in pendingDeleteComments {
             modelContext.delete(comment)
         }
