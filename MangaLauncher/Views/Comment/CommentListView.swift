@@ -8,7 +8,6 @@ struct CommentListView: View {
     @State private var draft: String = ""
     @State private var editingComment: MangaComment?
     @State private var editingContent: String = ""
-    @State private var pendingDeleteComment: MangaComment?
     @FocusState private var composerFocused: Bool
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
@@ -59,25 +58,17 @@ struct CommentListView: View {
             .sheet(item: $editingComment) { comment in
                 editSheet(for: comment)
             }
-            .confirmationDialog(
-                "このコメントを削除しますか？",
-                isPresented: Binding(
-                    get: { pendingDeleteComment != nil },
-                    set: { if !$0 { pendingDeleteComment = nil } }
-                ),
-                titleVisibility: .visible,
-                presenting: pendingDeleteComment
-            ) { comment in
-                Button("削除", role: .destructive) {
-                    viewModel.deleteComment(comment)
-                    pendingDeleteComment = nil
+            .overlay(alignment: .bottom) {
+                if !viewModel.pendingDeleteComments.isEmpty {
+                    DeleteToastView(
+                        count: viewModel.pendingDeleteComments.count,
+                        onUndo: { viewModel.undoPendingCommentDeletes() }
+                    )
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .padding(.bottom, 80) // composer を避ける
                 }
-                Button("キャンセル", role: .cancel) {
-                    pendingDeleteComment = nil
-                }
-            } message: { _ in
-                Text("この操作は取り消せません。")
             }
+            .animation(.easeInOut(duration: 0.3), value: viewModel.pendingDeleteComments.isEmpty)
         }
     }
 
@@ -100,7 +91,7 @@ struct CommentListView: View {
         .padding(.vertical, 4)
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(role: .destructive) {
-                pendingDeleteComment = comment
+                viewModel.queueDeleteComment(comment)
             } label: {
                 Label("削除", systemImage: "trash")
             }

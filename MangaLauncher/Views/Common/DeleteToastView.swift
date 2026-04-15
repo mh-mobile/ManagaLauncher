@@ -1,19 +1,19 @@
 import SwiftUI
 
 struct DeleteToastView: View {
-    var viewModel: MangaViewModel
+    let count: Int
+    let onUndo: () -> Void
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
     var body: some View {
-        let count = viewModel.pendingDeleteEntries.count
         HStack {
             Text("\(count)件削除しました")
                 .font(theme.subheadlineFont)
                 .foregroundStyle(theme.onSurface)
             Spacer()
             Button {
-                viewModel.undoPendingDeletes()
+                onUndo()
             } label: {
                 Text("元に戻す")
                     .font(theme.subheadlineFont.bold())
