@@ -46,6 +46,9 @@ struct ContentView: View {
                     homeState.paging.pageIndex = homeState.paging.pageIndexForDay(day)
                 }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .openCatchUp)) { _ in
+                homeState.sheets.showingCatchUp = true
+            }
         }
     }
 

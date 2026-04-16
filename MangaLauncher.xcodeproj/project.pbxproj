@@ -15,6 +15,11 @@
 		1299E093C31E1C940DD2CAC4 /* ImageCropView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC07D90615785B81C2E71C8 /* ImageCropView.swift */; };
 		2AA2BDFC2D4CFE5BF3F85D4A /* DataMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CF568E5CBBFA07B55373C73 /* DataMigration.swift */; };
 		3650352634B47DCA879C45C1 /* ChangeDayIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4117777580B33705902FA67A /* ChangeDayIntent.swift */; };
+		AB1001FF00112233AA000001 /* OpenAddEntryIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1001FF00112233AA000002 /* OpenAddEntryIntent.swift */; };
+		AB1001FF00112233AA000003 /* MangaControlWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1001FF00112233AA000004 /* MangaControlWidget.swift */; };
+		AB1001FF00112233AA000005 /* OpenAddEntryIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1001FF00112233AA000002 /* OpenAddEntryIntent.swift */; };
+		AB1001FF00112233AA000011 /* ControlIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1001FF00112233AA000012 /* ControlIntents.swift */; };
+		AB1001FF00112233AA000013 /* ControlIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1001FF00112233AA000012 /* ControlIntents.swift */; };
 		39725E0E00E8E4FE9F2A7FF2 /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB770326E8D34706AF8B81EC /* UniformTypeIdentifiers.framework */; };
 		3E27882FDDEB43FF0F253020 /* BackupData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AFF912AECB7C6B219DD1600 /* BackupData.swift */; };
 		4064491CAC92BFC4CAEA647C /* MangaWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EFDC883F33BA3C119960C0B /* MangaWidget.swift */; };
@@ -162,6 +167,9 @@
 		3AFF912AECB7C6B219DD1600 /* BackupData.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackupData.swift; sourceTree = "<group>"; };
 		40221490621705DE4B77F085 /* MangaShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MangaShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		4117777580B33705902FA67A /* ChangeDayIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChangeDayIntent.swift; sourceTree = "<group>"; };
+		AB1001FF00112233AA000002 /* OpenAddEntryIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OpenAddEntryIntent.swift; sourceTree = "<group>"; };
+		AB1001FF00112233AA000004 /* MangaControlWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MangaControlWidget.swift; sourceTree = "<group>"; };
+		AB1001FF00112233AA000012 /* ControlIntents.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ControlIntents.swift; sourceTree = "<group>"; };
 		501DFBA332C24E2F563C81D7 /* MangaWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MangaWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		68E247987CED890FF8E2D6A1 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		7EFDC883F33BA3C119960C0B /* MangaWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MangaWidget.swift; sourceTree = "<group>"; };
@@ -325,6 +333,7 @@
 			isa = PBXGroup;
 			children = (
 				A55D3FF44BE586A52AAF2B43 /* AddMangaIntent.swift */,
+				AB1001FF00112233AA000012 /* ControlIntents.swift */,
 			);
 			path = Intents;
 			sourceTree = "<group>";
@@ -452,6 +461,8 @@
 				EC04B7E62F78E50F00AEE45F /* MangaWidgetAdhoc.entitlements */,
 				BC0276ADB2A6EFEC185148CA /* Info.plist */,
 				4117777580B33705902FA67A /* ChangeDayIntent.swift */,
+				AB1001FF00112233AA000002 /* OpenAddEntryIntent.swift */,
+				AB1001FF00112233AA000004 /* MangaControlWidget.swift */,
 			);
 			path = MangaWidget;
 			sourceTree = "<group>";
@@ -692,6 +703,9 @@
 				431F2DADE5A1315BB2611590 /* MangaEntry.swift in Sources */,
 				E79C1EBA2299356887386C0C /* SharedModelContainer.swift in Sources */,
 				3650352634B47DCA879C45C1 /* ChangeDayIntent.swift in Sources */,
+				AB1001FF00112233AA000001 /* OpenAddEntryIntent.swift in Sources */,
+				AB1001FF00112233AA000003 /* MangaControlWidget.swift in Sources */,
+				AB1001FF00112233AA000013 /* ControlIntents.swift in Sources */,
 				ECFEA8222F7E8B9D00CE4DC0 /* UserDefaultsKeys.swift in Sources */,
 				EC79B98AEA2FF142AA989EF0 /* AnimationTiming.swift in Sources */,
 				ECCE6BE2DD70F34BA69061B3 /* DesignSystem.swift in Sources */,
@@ -779,6 +793,8 @@
 				ECFEA8502F7F755F00CE4DC0 /* GridHelpers.swift in Sources */,
 				A1A8B2ACB18D6E541985F304 /* MasonryLayout.swift in Sources */,
 				B31B9EA2FE243CD2D6209258 /* AddMangaIntent.swift in Sources */,
+				AB1001FF00112233AA000005 /* OpenAddEntryIntent.swift in Sources */,
+				AB1001FF00112233AA000011 /* ControlIntents.swift in Sources */,
 				ECFEA8542F7F78B400CE4DC0 /* DayPagerView.swift in Sources */,
 				ECFEA8282F7E919A00CE4DC0 /* MangaContextMenu.swift in Sources */,
 				1299E093C31E1C940DD2CAC4 /* ImageCropView.swift in Sources */,

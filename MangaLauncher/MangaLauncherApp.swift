@@ -14,7 +14,7 @@ var systemColorScheme: ColorScheme {
 
 extension Notification.Name {
     static let mangaDataDidChange = CloudSyncMonitor.dataDidChangeNotification
-    static let switchToDay = Notification.Name("switchToDay")
+    // .switchToDay / .openCatchUp は ControlIntents.swift (widget extension とも共有) で定義
 }
 
 class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
@@ -97,11 +97,13 @@ struct MangaLauncherApp: App {
                 .onAppear {
                     checkPendingIntent()
                     checkPendingOpenDay()
+                    checkPendingOpenCatchUp()
                 }
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
                         checkPendingIntent()
                         checkPendingOpenDay()
+                        checkPendingOpenCatchUp()
                         NotificationCenter.default.post(name: .mangaDataDidChange, object: nil)
                         updateBadge()
                     }
@@ -140,6 +142,13 @@ struct MangaLauncherApp: App {
         guard let rawValue = defaults?.object(forKey: "pendingOpenDay") as? Int else { return }
         defaults?.removeObject(forKey: "pendingOpenDay")
         NotificationCenter.default.post(name: .switchToDay, object: rawValue)
+    }
+
+    private func checkPendingOpenCatchUp() {
+        let defaults = UserDefaults(suiteName: SharedModelContainer.appGroupIdentifier)
+        guard defaults?.bool(forKey: "pendingOpenCatchUp") == true else { return }
+        defaults?.removeObject(forKey: "pendingOpenCatchUp")
+        NotificationCenter.default.post(name: .openCatchUp, object: nil)
     }
 
     private func updateBadge() {

@@ -141,7 +141,25 @@ struct MangaWidgetEntryView: View {
             Text("\(entry.items.count)件")
                 .font(.system(size: 9))
                 .foregroundStyle(.secondary)
+
+            // 表示中の曜日に未読があれば右端にキャッチアップボタンを出す
+            if unreadCount > 0 {
+                Button(intent: OpenCatchUpForDayIntent(dayOfWeek: entry.dayOfWeek.appEnum)) {
+                    Image(systemName: "rectangle.stack.fill")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 20, height: 20)
+                        .background(Color.accentColor, in: Circle())
+                        .padding(.leading, 6)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
         }
+    }
+
+    private var unreadCount: Int {
+        entry.items.filter { !$0.isRead }.count
     }
 
     // MARK: - Small Widget (2x2)
@@ -350,9 +368,21 @@ struct MangaWidgetEntryView: View {
 
 }
 
-// MARK: - Widget Declaration
+// MARK: - Widget Bundle
 
 @main
+struct MangaLauncherWidgetBundle: WidgetBundle {
+    var body: some Widget {
+        MangaLauncherWidget()
+        MangaAddControl()
+        MangaTodayControl()
+        MangaCatchUpControl()
+        MangaDayControl()
+    }
+}
+
+// MARK: - Widget Declaration
+
 struct MangaLauncherWidget: Widget {
     let kind = "MangaWidget"
 
