@@ -16,6 +16,17 @@ final class MangaViewModel {
     var pendingDeleteComments: [MangaComment] = []
     private var commentDeleteTimer: Timer?
 
+    /// allEntries / allComments / allActivities の N+1 fetch を避けるため、
+    /// refreshCounter に紐付けた簡易キャッシュ。
+    /// refreshCounter が変わるとキャッシュは無効化される。
+    @ObservationIgnored private var cacheVersion = -1
+    @ObservationIgnored private var cachedEntries: [MangaEntry]?
+    @ObservationIgnored private var cachedComments: [MangaComment]?
+    @ObservationIgnored private var cachedActivities: [ReadingActivity]?
+
+    /// 直近の重大エラー（移行/インポート/同期）。View 側で alert 表示する用。
+    var lastError: AppError?
+
     private(set) var modelContext: ModelContext
 
     init(modelContext: ModelContext) {
@@ -35,6 +46,7 @@ final class MangaViewModel {
             pending = try modelContext.fetch(descriptor)
         } catch {
             print("[MangaViewModel] state migration fetch failed: \(error)")
+            lastError = .migration(error)
             return
         }
         guard !pending.isEmpty else { return }
@@ -45,6 +57,7 @@ final class MangaViewModel {
             try modelContext.save()
         } catch {
             print("[MangaViewModel] state migration save failed: \(error)")
+            lastError = .migration(error)
         }
     }
 
@@ -181,16 +194,19 @@ final class MangaViewModel {
     }
 
     func allEntries() -> [MangaEntry] {
-        let _ = refreshCounter
+        invalidateCacheIfStale()
+        if let cached = cachedEntries { return cached }
         let descriptor = FetchDescriptor<MangaEntry>(
             sortBy: [SortDescriptor(\.lastReadDate, order: .reverse), SortDescriptor(\.name)]
         )
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
         var seenIDs = Set<UUID>()
-        return modelContext.fetchLogged(descriptor).filter { entry in
+        let result = modelContext.fetchLogged(descriptor).filter { entry in
             guard !pendingIDs.contains(entry.id) else { return false }
             return seenIDs.insert(entry.id).inserted
         }
+        cachedEntries = result
+        return result
     }
 
     func allPublishers() -> [String] {
@@ -538,23 +554,41 @@ final class MangaViewModel {
     }
 
     func allComments() -> [MangaComment] {
-        let _ = refreshCounter
+        invalidateCacheIfStale()
+        if let cached = cachedComments { return cached }
         let descriptor = FetchDescriptor<MangaComment>(
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
         let pendingIDs = Set(pendingDeleteComments.map(\.id))
-        return modelContext.fetchLogged(descriptor).filter { !pendingIDs.contains($0.id) }
+        let result = modelContext.fetchLogged(descriptor).filter { !pendingIDs.contains($0.id) }
+        cachedComments = result
+        return result
     }
 
     /// タイムラインのアクティビティドットや日別集計に使う全 ReadingActivity。
     /// ReadingStatsProvider.fetchActivityCounts は日付→件数のマップで情報が
     /// 抜けるため、個々の record が欲しい用途はこちらを使う。
     func allActivities() -> [ReadingActivity] {
-        let _ = refreshCounter
+        invalidateCacheIfStale()
+        if let cached = cachedActivities { return cached }
         let descriptor = FetchDescriptor<ReadingActivity>(
             sortBy: [SortDescriptor(\.date, order: .reverse)]
         )
-        return modelContext.fetchLogged(descriptor)
+        let result = modelContext.fetchLogged(descriptor)
+        cachedActivities = result
+        return result
+    }
+
+    /// refreshCounter が変わっていたらキャッシュを破棄。
+    /// これにより同一 render 内の複数呼び出しは 1 回の fetch で済む。
+    private func invalidateCacheIfStale() {
+        let _ = refreshCounter
+        if cacheVersion != refreshCounter {
+            cacheVersion = refreshCounter
+            cachedEntries = nil
+            cachedComments = nil
+            cachedActivities = nil
+        }
     }
 
     func unreadCount(for day: DayOfWeek) -> Int {
