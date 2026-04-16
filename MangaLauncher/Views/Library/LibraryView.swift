@@ -79,6 +79,7 @@ struct LibraryView: View {
         } else {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 24) {
+                    timelineLink
                     if !recentActivity.isEmpty {
                         recentActivitySection(items: recentActivity, totalCount: totalActivityCount)
                     }
@@ -110,7 +111,37 @@ struct LibraryView: View {
                 commentingEntry: $commentingEntry,
                 onOpenURL: { openMangaURL($0) }
             )
+        case .timeline:
+            TimelineView(viewModel: viewModel)
         }
+    }
+
+    @ViewBuilder
+    private var timelineLink: some View {
+        NavigationLink(value: LibraryDestination.timeline) {
+            HStack(spacing: 10) {
+                Image(systemName: "chart.bar.doc.horizontal.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 28, height: 28)
+                    .background(Color.indigo, in: RoundedRectangle(cornerRadius: 6))
+                Text("タイムライン")
+                    .font(theme.subheadlineFont.weight(.semibold))
+                    .foregroundStyle(theme.onSurface)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(theme.onSurfaceVariant)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(theme.surfaceContainerHigh)
+            )
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal)
     }
 
     @ViewBuilder
