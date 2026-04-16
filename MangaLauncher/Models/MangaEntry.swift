@@ -214,8 +214,26 @@ final class MangaEntry {
     /// 旧 Bool フィールド（isOnHiatus / isCompleted / isBacklog）から
     /// 新しい publicationStatus / readingState へ移行する。
     /// 一度移行されると stateMigrationVersion=1 になり再実行されない。
+    ///
+    /// 重要: 別端末ですでに移行済みのレコードが CloudKit 経由で同期されてきた場合、
+    /// 受信側 (例: Vision Pro 初回起動) では legacy フィールドが false (デフォルト)
+    /// で stateMigrationVersion = 0 になっていることがある。その状態で
+    /// `else` 分岐の「全部 default にする」ロジックを実行すると、cloud から
+    /// 来た正しい publicationStatus / readingState を上書きしてしまう。
+    /// → legacy が完全 false かつ新フィールドが既に non-default なら、
+    ///   write を一切行わず version だけ進める。
     func migrateLegacyStateIfNeeded() {
         guard stateMigrationVersion < 1 else { return }
+
+        let hasLegacyState = isCompleted || isBacklog || isOnHiatus
+        let hasNewState = readingStateRawValue != 0 || publicationStatusRawValue != 0
+
+        if !hasLegacyState && hasNewState {
+            // 別端末で移行済みの値が同期されてきたケース。何も書き換えない。
+            stateMigrationVersion = 1
+            return
+        }
+
         if isCompleted {
             // 旧「完結タブ」は実質「読了アーカイブ」として運用されていた
             readingStateRawValue = ReadingState.archived.rawValue
@@ -229,10 +247,10 @@ final class MangaEntry {
             readingStateRawValue = ReadingState.following.rawValue
             publicationStatusRawValue = PublicationStatus.hiatus.rawValue
         } else {
+            // legacy も新フィールドも未設定 = 真の新規 / 初回起動。デフォルトで OK。
             readingStateRawValue = ReadingState.following.rawValue
             publicationStatusRawValue = PublicationStatus.active.rawValue
         }
-        // 旧データで one-shot + backlog/hiatus/finished の矛盾があった場合の最終矯正
         normalizeOneShotInvariants()
         stateMigrationVersion = 1
     }

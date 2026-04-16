@@ -161,4 +161,21 @@ struct MangaEntryMigrationTests {
 
         #expect(e.publicationStatus == .finished) // 変わらない
     }
+
+    @Test("CloudKit 同期で来た新フィールドを上書きしない (legacy 全 false の場合)")
+    func preservesCloudSyncedNewState() {
+        // 別端末で .finished に設定された値が cloud から同期されてきた状態を想定
+        let e = MangaEntry(name: "x")
+        e.stateMigrationVersion = 0
+        e.publicationStatus = .finished
+        e.readingState = .archived
+        // legacy フィールドはすべて false (cloud 経由なので未設定)
+
+        e.migrateLegacyStateIfNeeded()
+
+        // 値は保持され、version だけ進む
+        #expect(e.publicationStatus == .finished)
+        #expect(e.readingState == .archived)
+        #expect(e.stateMigrationVersion == 1)
+    }
 }

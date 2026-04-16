@@ -21,6 +21,20 @@ enum SharedModelContainer {
         return try ModelContainer(for: schema, configurations: [config])
     }
 
+    /// CloudKit 設定が原因で create() が失敗した場合のフォールバック。
+    /// CloudKit を切ってローカル only で起動を試みる。
+    /// 同期は止まるが、最低限アプリが立ち上がりデータ閲覧/編集ができる状態を保つ。
+    static func createLocalOnly() throws -> ModelContainer {
+        let schema = Schema([MangaEntry.self, ReadingActivity.self, MangaComment.self])
+        let config = ModelConfiguration(
+            "MangaLauncher",
+            schema: schema,
+            url: storeURL,
+            cloudKitDatabase: .none
+        )
+        return try ModelContainer(for: schema, configurations: [config])
+    }
+
     static var storeURL: URL {
         let directory = appGroupContainerURL ?? fallbackURL
         return directory.appendingPathComponent("MangaLauncher.store")

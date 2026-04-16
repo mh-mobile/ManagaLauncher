@@ -61,7 +61,16 @@ struct MangaLauncherApp: App {
         do {
             container = try SharedModelContainer.create()
         } catch {
-            fatalError("Failed to create ModelContainer: \(error)")
+            // CloudKit 設定不整合などで初期化に失敗するケースを fatalError で
+            // 落とすと TestFlight でクラッシュ報告に直結する。ローカル only に
+            // 切り替えてアプリは起動させ、syncMonitor 側で sync 不可状態を
+            // 表示することで graceful degradation する。
+            print("[MangaLauncherApp] CloudKit container failed: \(error). Falling back to local-only.")
+            do {
+                container = try SharedModelContainer.createLocalOnly()
+            } catch {
+                fatalError("Failed to create ModelContainer (even local-only): \(error)")
+            }
         }
         self.container = container
         self._viewModel = State(initialValue: MangaViewModel(modelContext: container.mainContext))
@@ -95,12 +104,18 @@ struct MangaLauncherApp: App {
                     )
                 }
                 .onAppear {
+                    // CloudKit 同期がある程度落ち着いてから migration を走らせる
+                    // (init で同期前に走らせるとローカルのデフォルト値で上書きされるリスクあり)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        viewModel.runStartupMigrationsIfNeeded()
+                    }
                     checkPendingIntent()
                     checkPendingOpenDay()
                     checkPendingOpenCatchUp()
                 }
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
+                        viewModel.runStartupMigrationsIfNeeded()
                         checkPendingIntent()
                         checkPendingOpenDay()
                         checkPendingOpenCatchUp()
