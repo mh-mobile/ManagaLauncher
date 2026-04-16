@@ -2,38 +2,6 @@ import AppIntents
 import SwiftData
 import PlatformKit
 
-enum DayOfWeekAppEnum: String, AppEnum {
-    case sunday, monday, tuesday, wednesday, thursday, friday, saturday
-
-    static var typeDisplayRepresentation: TypeDisplayRepresentation {
-        "曜日"
-    }
-
-    static var caseDisplayRepresentations: [DayOfWeekAppEnum: DisplayRepresentation] {
-        [
-            .sunday: "日曜日",
-            .monday: "月曜日",
-            .tuesday: "火曜日",
-            .wednesday: "水曜日",
-            .thursday: "木曜日",
-            .friday: "金曜日",
-            .saturday: "土曜日",
-        ]
-    }
-
-    var toDayOfWeek: DayOfWeek {
-        switch self {
-        case .sunday: .sunday
-        case .monday: .monday
-        case .tuesday: .tuesday
-        case .wednesday: .wednesday
-        case .thursday: .thursday
-        case .friday: .friday
-        case .saturday: .saturday
-        }
-    }
-}
-
 enum IconColorAppEnum: String, AppEnum {
     case red, orange, yellow, green, blue, purple, pink, teal
 
@@ -104,29 +72,6 @@ struct AddMangaIntent: AppIntent {
             }
         }
 
-        return .result()
-    }
-}
-
-// MARK: - Open Day Intent
-
-struct OpenDayIntent: AppIntent {
-    static var title: LocalizedStringResource = "曜日を開く"
-    static var description: IntentDescription = "マンガ曜日で指定した曜日のタブを開きます"
-    static var openAppWhenRun = true
-
-    @Parameter(title: "曜日")
-    var dayOfWeek: DayOfWeekAppEnum
-
-    func perform() async throws -> some IntentResult {
-        let rawValue = dayOfWeek.toDayOfWeek.rawValue
-        // For when app needs to launch
-        let defaults = UserDefaults(suiteName: SharedModelContainer.appGroupIdentifier)
-        defaults?.set(rawValue, forKey: "pendingOpenDay")
-        // For when app is already running
-        await MainActor.run {
-            NotificationCenter.default.post(name: .switchToDay, object: rawValue)
-        }
         return .result()
     }
 }

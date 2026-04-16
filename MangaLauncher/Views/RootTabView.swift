@@ -1,25 +1,37 @@
 import SwiftUI
 
+enum RootTab: Hashable {
+    case home, library, settings, search
+}
+
 struct RootTabView: View {
     var viewModel: MangaViewModel
+    @State private var selectedTab: RootTab = .home
 
     var body: some View {
-        TabView {
-            Tab("ホーム", systemImage: "house.fill") {
+        TabView(selection: $selectedTab) {
+            Tab("ホーム", systemImage: "house.fill", value: RootTab.home) {
                 ContentView(viewModel: viewModel)
             }
 
-            Tab("ライブラリ", systemImage: "books.vertical.fill") {
+            Tab("ライブラリ", systemImage: "books.vertical.fill", value: RootTab.library) {
                 LibraryView(viewModel: viewModel)
             }
 
-            Tab("設定", systemImage: "gearshape.fill") {
+            Tab("設定", systemImage: "gearshape.fill", value: RootTab.settings) {
                 SettingsView(viewModel: viewModel, showsCloseButton: false)
             }
 
-            Tab(role: .search) {
+            Tab(value: RootTab.search, role: .search) {
                 SearchView(viewModel: viewModel)
             }
+        }
+        // コントロールセンターからの曜日切替・キャッチアップは Home タブに切り替えてから反映する
+        .onReceive(NotificationCenter.default.publisher(for: .switchToDay)) { _ in
+            selectedTab = .home
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .openCatchUp)) { _ in
+            selectedTab = .home
         }
         // どのタブから削除してもトーストが表示されるように全体 overlay で保持
         .overlay(alignment: .bottom) {
