@@ -3,7 +3,7 @@ import SwiftData
 
 /// マンガに紐付くタイムスタンプ付きコメント（投稿型）
 @Model
-final class MangaComment {
+final class MangaComment: Identifiable {
     var id: UUID = UUID()
     var mangaEntryID: UUID = UUID()
     var content: String = ""

@@ -1,11 +1,35 @@
 import Foundation
 
+/// TimelineItem のタイプを表す軽量タグ。Swift Charts での集計など
+/// enum 本体の associated value 無しで扱いたい場面で使う。
+enum TimelineItemKind: String, CaseIterable, Identifiable {
+    case comment, memo, read
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .comment: "コメント"
+        case .memo: "メモ"
+        case .read: "既読"
+        }
+    }
+}
+
 /// 1 日のアクティビティタイムラインを構成する単一アイテム。
 /// コメント / メモ更新 / 読んだ記録 を統一的に並べるための sum type。
 enum TimelineItem: Identifiable {
     case comment(MangaComment, MangaEntry)
     case memo(MangaEntry)
     case read(ReadingActivity, MangaEntry?)
+
+    var kind: TimelineItemKind {
+        switch self {
+        case .comment: .comment
+        case .memo: .memo
+        case .read: .read
+        }
+    }
 
     var id: String {
         switch self {
@@ -78,16 +102,52 @@ enum TimelineFilter: String, CaseIterable, Hashable, Identifiable {
         }
     }
 
-    func apply(to items: [TimelineItem]) -> [TimelineItem] {
+    /// フィルタが単一種別を指す場合の TimelineItemKind。.all のとき nil。
+    /// チャートのフィルタ連動などで使う。
+    var kind: TimelineItemKind? {
         switch self {
-        case .all:
-            return items
-        case .comment:
-            return items.filter { if case .comment = $0 { true } else { false } }
-        case .memo:
-            return items.filter { if case .memo = $0 { true } else { false } }
-        case .read:
-            return items.filter { if case .read = $0 { true } else { false } }
+        case .all: nil
+        case .comment: .comment
+        case .memo: .memo
+        case .read: .read
+        }
+    }
+
+    func apply(to items: [TimelineItem]) -> [TimelineItem] {
+        guard let kind else { return items }
+        return items.filter { $0.kind == kind }
+    }
+}
+
+// MARK: - Chart granularity
+
+/// タイムラインチャートの期間粒度。週 (7 日) / 月 (30 日前後)。
+enum TimelineChartGranularity: String, CaseIterable, Hashable, Identifiable {
+    case week, month
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .week: "週"
+        case .month: "月"
+        }
+    }
+
+    /// 指定日を含む期間の日付配列。月曜はじまりの週 / 月の 1 日はじまりの月。
+    func days(containing date: Date) -> [Date] {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.firstWeekday = 2
+        switch self {
+        case .week:
+            let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
+            let start = calendar.date(from: components) ?? date
+            return (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: start) }
+        case .month:
+            let components = calendar.dateComponents([.year, .month], from: date)
+            guard let start = calendar.date(from: components),
+                  let range = calendar.range(of: .day, in: .month, for: start) else { return [] }
+            return range.compactMap { calendar.date(byAdding: .day, value: $0 - 1, to: start) }
         }
     }
 }
@@ -159,4 +219,31 @@ enum TimelineBuilder {
         }
         return days
     }
+
+    /// 指定した日付集合の、タイプ別件数を返す。Swift Charts の棒グラフ用。
+    /// 日付 × 種別 の全組合せで 0 件もエントリを作ることで、グラフが
+    /// 日付方向に途切れないようにする。
+    static func dailyCounts(
+        days: [Date],
+        entries: [MangaEntry],
+        comments: [MangaComment],
+        activities: [ReadingActivity]
+    ) -> [TimelineDailyCount] {
+        days.flatMap { day in
+            let items = items(for: day, entries: entries, comments: comments, activities: activities)
+            let byKind = Dictionary(grouping: items, by: \.kind).mapValues(\.count)
+            return TimelineItemKind.allCases.map { kind in
+                TimelineDailyCount(date: day, kind: kind, count: byKind[kind] ?? 0)
+            }
+        }
+    }
+}
+
+/// Swift Charts に渡す集計単位。
+struct TimelineDailyCount: Identifiable, Hashable {
+    let date: Date
+    let kind: TimelineItemKind
+    let count: Int
+
+    var id: String { "\(date.timeIntervalSince1970)-\(kind.rawValue)" }
 }

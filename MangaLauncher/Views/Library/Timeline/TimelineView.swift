@@ -12,6 +12,7 @@ struct TimelineView: View {
     @State private var safariURL: URL?
     @State private var filter: TimelineFilter = .all
     @State private var showingMonthPicker = false
+    @State private var chartGranularity: TimelineChartGranularity = .week
     @AppStorage("browserMode") private var browserMode: String = "external"
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
@@ -39,6 +40,7 @@ struct TimelineView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     header
+                    chartBlock(entries: allEntries, comments: allComments, activities: allActivities)
                     filterChips
                     timelineSection(entries: allEntries, comments: allComments, activities: allActivities)
                 }
@@ -219,6 +221,44 @@ struct TimelineView: View {
             guard let entry else { return }
             MangaURLOpener(browserMode: browserMode, openURL: openURL) { safariURL = $0 }.open(entry.url)
         }
+    }
+
+    // MARK: - Chart block
+
+    /// 期間トグル + 棒グラフをまとめたブロック。
+    /// フィルタが .all 以外ならその kind だけに絞った counts を渡す。
+    @ViewBuilder
+    private func chartBlock(
+        entries: [MangaEntry],
+        comments: [MangaComment],
+        activities: [ReadingActivity]
+    ) -> some View {
+        let allCounts = TimelineBuilder.dailyCounts(
+            days: chartGranularity.days(containing: selectedDate),
+            entries: entries,
+            comments: comments,
+            activities: activities
+        )
+        let counts = filter.kind.map { kind in allCounts.filter { $0.kind == kind } } ?? allCounts
+        VStack(alignment: .leading, spacing: 8) {
+            granularityPicker
+            TimelineChartView(
+                selectedDate: $selectedDate,
+                granularity: chartGranularity,
+                counts: counts
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var granularityPicker: some View {
+        Picker("期間", selection: $chartGranularity) {
+            ForEach(TimelineChartGranularity.allCases) { g in
+                Text(g.displayName).tag(g)
+            }
+        }
+        .pickerStyle(.segmented)
+        .frame(maxWidth: 160)
     }
 
     // MARK: - Formatters
