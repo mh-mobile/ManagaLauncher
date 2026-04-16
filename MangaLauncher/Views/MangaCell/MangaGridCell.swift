@@ -11,13 +11,16 @@ struct MangaGridCell: View {
     @Binding var commentingEntry: MangaEntry?
     let onOpenURL: (String) -> Void
 
+    @AppStorage(UserDefaultsKeys.showsNextUpdateBadge) private var showsNextUpdateBadge: Bool = true
+
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
     private var accessibilityLabel: String {
         var parts = [entry.name]
         if !entry.publisher.isEmpty { parts.append(entry.publisher) }
         if !entry.isRead { parts.append("未読") }
-        if let next = NextUpdateFormatter.format(entry.nextExpectedUpdate, style: .compact) {
+        if showsNextUpdateBadge,
+           let next = NextUpdateFormatter.format(entry.nextExpectedUpdate, style: .compact) {
             parts.append(next.accessibilityText)
         }
         return parts.joined(separator: "、")
@@ -47,7 +50,8 @@ struct MangaGridCell: View {
                             }
                     }
 
-                    if let result = NextUpdateFormatter.format(entry.nextExpectedUpdate, style: .compact) {
+                    if showsNextUpdateBadge,
+                       let result = NextUpdateFormatter.format(entry.nextExpectedUpdate, style: .compact) {
                         NextUpdateBadgeView(result: result)
                             .padding(.horizontal, 5)
                             .padding(.vertical, 2)
