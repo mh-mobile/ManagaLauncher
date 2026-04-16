@@ -14,6 +14,7 @@ struct SettingsView: View {
     @State private var showingImporter = false
     @State private var importResult: ImportResult?
     @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
+    @AppStorage(UserDefaultsKeys.showsNextUpdateBadge) private var showsNextUpdateBadge: Bool = true
     @State private var updateStatus: UpdateStatus = .idle
     @State private var showingOnboarding = false
     @State private var showingSyncError = false
@@ -176,6 +177,14 @@ struct SettingsView: View {
                     Text("カラーラベル")
                 } footer: {
                     Text("カラーアイコンに任意の名前を付けると、検索フィルターで使用できます（例：赤=お気に入り）")
+                }
+
+                Section {
+                    Toggle("次回更新日を表示", isOn: $showsNextUpdateBadge)
+                } header: {
+                    Text("表示")
+                } footer: {
+                    Text("ホーム画面のセルに次回更新までの日数を表示します。")
                 }
 
                 Section {

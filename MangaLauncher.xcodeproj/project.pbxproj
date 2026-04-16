@@ -64,6 +64,8 @@
 		AB4001FF00112233AA000001 /* SearchFilterBars.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4001FF00112233AA000002 /* SearchFilterBars.swift */; };
 		AB4001FF00112233AA000003 /* EditEntryStatusSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4001FF00112233AA000004 /* EditEntryStatusSection.swift */; };
 		AB4001FF00112233AA000005 /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4001FF00112233AA000006 /* AppError.swift */; };
+		AB5001FF00112233AA000001 /* NextUpdateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB5001FF00112233AA000002 /* NextUpdateFormatter.swift */; };
+		AB5001FF00112233AA000003 /* NextUpdateBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB5001FF00112233AA000004 /* NextUpdateBadgeView.swift */; };
 		BC000401 /* MangaStatusBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000410 /* MangaStatusBadgeView.swift */; };
 		BC000501 /* SectionHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000510 /* SectionHeaderView.swift */; };
 		BC000801 /* MangaDataChangeModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000810 /* MangaDataChangeModifier.swift */; };
@@ -220,6 +222,8 @@
 		AB4001FF00112233AA000002 /* SearchFilterBars.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchFilterBars.swift; sourceTree = "<group>"; };
 		AB4001FF00112233AA000004 /* EditEntryStatusSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditEntryStatusSection.swift; sourceTree = "<group>"; };
 		AB4001FF00112233AA000006 /* AppError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppError.swift; sourceTree = "<group>"; };
+		AB5001FF00112233AA000002 /* NextUpdateFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextUpdateFormatter.swift; sourceTree = "<group>"; };
+		AB5001FF00112233AA000004 /* NextUpdateBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextUpdateBadgeView.swift; sourceTree = "<group>"; };
 		BC000410 /* MangaStatusBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaStatusBadgeView.swift; sourceTree = "<group>"; };
 		BC000510 /* SectionHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionHeaderView.swift; sourceTree = "<group>"; };
 		BC000810 /* MangaDataChangeModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaDataChangeModifier.swift; sourceTree = "<group>"; };
@@ -614,6 +618,8 @@
 				BC000410 /* MangaStatusBadgeView.swift */,
 				BC000510 /* SectionHeaderView.swift */,
 				BC000810 /* MangaDataChangeModifier.swift */,
+				AB5001FF00112233AA000002 /* NextUpdateFormatter.swift */,
+				AB5001FF00112233AA000004 /* NextUpdateBadgeView.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -810,6 +816,8 @@
 				AB4001FF00112233AA000001 /* SearchFilterBars.swift in Sources */,
 				AB4001FF00112233AA000003 /* EditEntryStatusSection.swift in Sources */,
 				AB4001FF00112233AA000005 /* AppError.swift in Sources */,
+				AB5001FF00112233AA000001 /* NextUpdateFormatter.swift in Sources */,
+				AB5001FF00112233AA000003 /* NextUpdateBadgeView.swift in Sources */,
 				BC000701 /* SearchResultRow.swift in Sources */,
 				BC000702 /* MemoMatchRow.swift in Sources */,
 				BC000703 /* CommentMatchRow.swift in Sources */,

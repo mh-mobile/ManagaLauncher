@@ -13,7 +13,20 @@ struct MangaRowCell: View {
     #endif
     let onOpenURL: (String) -> Void
 
+    @AppStorage(UserDefaultsKeys.showsNextUpdateBadge) private var showsNextUpdateBadge: Bool = true
+
     private var theme: ThemeStyle { ThemeManager.shared.style }
+
+    private var accessibilityLabel: String {
+        var parts = [entry.name]
+        if !entry.publisher.isEmpty { parts.append(entry.publisher) }
+        if !entry.isRead { parts.append("未読") }
+        if showsNextUpdateBadge,
+           let next = NextUpdateFormatter.format(entry.nextExpectedUpdate, style: .full) {
+            parts.append(next.accessibilityText)
+        }
+        return parts.joined(separator: "、")
+    }
 
     var body: some View {
         if entry.isDeleted || entry.modelContext == nil {
@@ -69,6 +82,12 @@ struct MangaRowCell: View {
 
                 Spacer()
 
+                if showsNextUpdateBadge,
+                   let result = NextUpdateFormatter.format(entry.nextExpectedUpdate, style: .full) {
+                    NextUpdateBadgeView(result: result)
+                        .padding(.trailing, 4)
+                }
+
                 switch ThemeManager.shared.mode {
                 case .ink:
                     Image(systemName: "chevron.right")
@@ -88,7 +107,7 @@ struct MangaRowCell: View {
             .padding(.horizontal, theme.usesCustomSurface ? 4 : 0)
             .contentShape(Rectangle())
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(entry.name)\(entry.publisher.isEmpty ? "" : "、\(entry.publisher)")\(entry.isRead ? "" : "、未読")")
+            .accessibilityLabel(accessibilityLabel)
             .accessibilityHint("タップでサイトを開く")
             .onTapGesture {
                 onOpenURL(entry.url)
