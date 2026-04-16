@@ -13,27 +13,51 @@ struct MangaGridCell: View {
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
+    private var accessibilityLabel: String {
+        var parts = [entry.name]
+        if !entry.publisher.isEmpty { parts.append(entry.publisher) }
+        if !entry.isRead { parts.append("未読") }
+        if let next = NextUpdateFormatter.format(entry.nextExpectedUpdate, style: .compact) {
+            parts.append(next.accessibilityText)
+        }
+        return parts.joined(separator: "、")
+    }
+
     var body: some View {
         if entry.isDeleted || entry.modelContext == nil {
             EmptyView()
         } else {
             VStack(alignment: .leading, spacing: 6) {
-                if let imageData = entry.imageData, let image = imageData.toSwiftUIImage() {
-                    image
-                        .resizable()
-                        .scaledToFit()
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                } else {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.fromName(entry.iconColor))
-                        .aspectRatio(3/4, contentMode: .fit)
-                        .overlay {
-                            Text(entry.name)
-                                .font(.title2.bold())
-                                .foregroundStyle(.white)
-                                .multilineTextAlignment(.center)
-                                .padding(8)
-                        }
+                ZStack(alignment: .topTrailing) {
+                    if let imageData = entry.imageData, let image = imageData.toSwiftUIImage() {
+                        image
+                            .resizable()
+                            .scaledToFit()
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    } else {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.fromName(entry.iconColor))
+                            .aspectRatio(3/4, contentMode: .fit)
+                            .overlay {
+                                Text(entry.name)
+                                    .font(.title2.bold())
+                                    .foregroundStyle(.white)
+                                    .multilineTextAlignment(.center)
+                                    .padding(8)
+                            }
+                    }
+
+                    if let result = NextUpdateFormatter.format(entry.nextExpectedUpdate, style: .compact) {
+                        NextUpdateBadgeView(result: result)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            // テーマに沿った塗り。`.ultraThinMaterial` だと
+                            // Ink / Retro の独自背景と整合せず浮いて見える。
+                            .background(
+                                Capsule().fill(theme.surfaceContainerHighest.opacity(0.85))
+                            )
+                            .padding(4)
+                    }
                 }
 
                 HStack(alignment: .top, spacing: 4) {
@@ -71,7 +95,7 @@ struct MangaGridCell: View {
             }
             .contentShape(Rectangle())
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(entry.name)\(entry.publisher.isEmpty ? "" : "、\(entry.publisher)")\(entry.isRead ? "" : "、未読")")
+            .accessibilityLabel(accessibilityLabel)
             .accessibilityHint("タップでサイトを開く")
             .onTapGesture {
                 if isGridEditMode {
