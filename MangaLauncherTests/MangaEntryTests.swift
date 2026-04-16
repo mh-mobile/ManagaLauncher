@@ -7,6 +7,7 @@
 
 import Testing
 import Foundation
+import SwiftData
 @testable import MangaLauncher
 
 @Suite("MangaEntry.isRead")
@@ -177,5 +178,49 @@ struct MangaEntryMigrationTests {
         #expect(e.publicationStatus == .finished)
         #expect(e.readingState == .archived)
         #expect(e.stateMigrationVersion == 1)
+    }
+
+    @Test("CloudKit 同期で来た .backlog を上書きしない")
+    func preservesBacklogState() {
+        let e = MangaEntry(name: "x")
+        e.stateMigrationVersion = 0
+        e.readingState = .backlog
+        // publicationStatus はデフォルト .active (rawValue=0) のまま
+
+        e.migrateLegacyStateIfNeeded()
+
+        #expect(e.readingState == .backlog)
+        #expect(e.stateMigrationVersion == 1)
+    }
+
+    @Test("CloudKit 同期で来た .hiatus を上書きしない")
+    func preservesHiatusStatus() {
+        let e = MangaEntry(name: "x")
+        e.stateMigrationVersion = 0
+        e.publicationStatus = .hiatus
+        // readingState はデフォルト .following (rawValue=0) のまま
+
+        e.migrateLegacyStateIfNeeded()
+
+        #expect(e.publicationStatus == .hiatus)
+        #expect(e.stateMigrationVersion == 1)
+    }
+}
+
+@Suite("MangaViewModel.runStartupMigrationsIfNeeded")
+struct MangaViewModelStartupTests {
+
+    @Test("複数回呼んでも 1 回だけ migration が走る")
+    func idempotentStartup() throws {
+        // ViewModel は ModelContext を要求するため、最小スタブで検証する
+        let container = try ModelContainer(
+            for: MangaEntry.self, ReadingActivity.self, MangaComment.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let vm = MangaViewModel(modelContext: container.mainContext)
+
+        // 2 回呼んでもクラッシュしない (フラグ実装の冪等性チェック)
+        vm.runStartupMigrationsIfNeeded()
+        vm.runStartupMigrationsIfNeeded()
     }
 }

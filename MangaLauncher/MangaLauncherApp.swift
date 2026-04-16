@@ -52,20 +52,25 @@ struct MangaLauncherApp: App {
     /// 各タブが独自インスタンスを持つと ModelContext が分散して
     /// CloudKit sync 時に複数 refresh が走るので、ここで 1 つだけ作る。
     @State private var viewModel: MangaViewModel
+    /// CloudKit 接続失敗時に local-only にフォールバックしたとき、
+    /// ユーザーに通知するための Error を一時保持する。次回 onAppear で
+    /// viewModel.lastError に渡して alert 表示する。
+    @State private var pendingContainerFallbackError: Error?
     private let notificationDelegate = NotificationDelegate()
 
     init() {
         DataMigration.migrateToAppGroupIfNeeded()
         UNUserNotificationCenter.current().delegate = notificationDelegate
         let container: ModelContainer
+        var fallbackError: Error?
         do {
             container = try SharedModelContainer.create()
         } catch {
             // CloudKit 設定不整合などで初期化に失敗するケースを fatalError で
             // 落とすと TestFlight でクラッシュ報告に直結する。ローカル only に
-            // 切り替えてアプリは起動させ、syncMonitor 側で sync 不可状態を
-            // 表示することで graceful degradation する。
+            // 切り替えてアプリは起動させ、後続でユーザーに alert で通知する。
             print("[MangaLauncherApp] CloudKit container failed: \(error). Falling back to local-only.")
+            fallbackError = error
             do {
                 container = try SharedModelContainer.createLocalOnly()
             } catch {
@@ -74,6 +79,7 @@ struct MangaLauncherApp: App {
         }
         self.container = container
         self._viewModel = State(initialValue: MangaViewModel(modelContext: container.mainContext))
+        self._pendingContainerFallbackError = State(initialValue: fallbackError)
     }
 
     var body: some Scene {
@@ -104,9 +110,16 @@ struct MangaLauncherApp: App {
                     )
                 }
                 .onAppear {
-                    // CloudKit 同期がある程度落ち着いてから migration を走らせる
-                    // (init で同期前に走らせるとローカルのデフォルト値で上書きされるリスクあり)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    // local-only fallback で起動した場合、ユーザーに警告
+                    if let error = pendingContainerFallbackError {
+                        viewModel.lastError = .cloudKitDisabled(error)
+                        pendingContainerFallbackError = nil
+                    }
+                    Task { @MainActor in
+                        // CloudKit sync が落ち着いてから migration を走らせる。
+                        // 固定 sleep より syncStatus を見るほうが堅実 (Vision Pro 等で
+                        // 初回データ受信中の write を防ぐ)。
+                        await waitForCloudSyncSettle()
                         viewModel.runStartupMigrationsIfNeeded()
                     }
                     checkPendingIntent()
@@ -115,7 +128,10 @@ struct MangaLauncherApp: App {
                 }
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
-                        viewModel.runStartupMigrationsIfNeeded()
+                        Task { @MainActor in
+                            await waitForCloudSyncSettle()
+                            viewModel.runStartupMigrationsIfNeeded()
+                        }
                         checkPendingIntent()
                         checkPendingOpenDay()
                         checkPendingOpenCatchUp()
@@ -125,6 +141,32 @@ struct MangaLauncherApp: App {
                 }
         }
         .modelContainer(container)
+    }
+
+    /// CloudKit sync が落ち着くのを待ってから true を返す。
+    /// - 初期 .idle で 1 秒待っても sync が始まらなければそのまま return (cold start で
+    ///   syncing event が来ないケース、初回データ無しのケース)
+    /// - .syncing になったら .idle / .failed / .notAvailable に変わるまで待つ
+    /// - 最大タイムアウト 10 秒
+    @MainActor
+    private func waitForCloudSyncSettle() async {
+        let timeout: TimeInterval = 10
+        let pollNanoseconds: UInt64 = 200_000_000 // 0.2s
+        let start = Date()
+        var sawSyncing = false
+
+        while Date().timeIntervalSince(start) < timeout {
+            switch syncMonitor.syncStatus {
+            case .syncing:
+                sawSyncing = true
+            case .failed, .notAvailable:
+                return
+            case .idle:
+                if sawSyncing { return }
+                if Date().timeIntervalSince(start) > 1.0 { return }
+            }
+            try? await Task.sleep(nanoseconds: pollNanoseconds)
+        }
     }
 
     private func checkPendingIntent() {

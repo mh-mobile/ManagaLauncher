@@ -24,6 +24,10 @@ enum SharedModelContainer {
     /// CloudKit 設定が原因で create() が失敗した場合のフォールバック。
     /// CloudKit を切ってローカル only で起動を試みる。
     /// 同期は止まるが、最低限アプリが立ち上がりデータ閲覧/編集ができる状態を保つ。
+    ///
+    /// 注: store URL は通常版と同じ (App Group 内 MangaLauncher.store) なので
+    /// データ連続性は保たれる。次回起動で CloudKit が回復していれば create() に
+    /// 戻り、ローカル更新分も sync される (SwiftData が変更を検出して push)。
     static func createLocalOnly() throws -> ModelContainer {
         let schema = Schema([MangaEntry.self, ReadingActivity.self, MangaComment.self])
         let config = ModelConfiguration(
