@@ -12,7 +12,7 @@ struct OpenAddEntryIntent: AppIntent {
         // App 側 checkPendingIntent が空 dict を受け取るとデフォルト値で
         // EditEntryView を開くので、空 dict を設定するだけで十分。
         let defaults = UserDefaults(suiteName: SharedModelContainer.appGroupIdentifier)
-        defaults?.set([String: String](), forKey: "pendingIntentData")
+        defaults?.set([String: String](), forKey: UserDefaultsKeys.pendingIntentData)
         return .result()
     }
 }

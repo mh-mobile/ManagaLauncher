@@ -4,7 +4,7 @@ import PlatformKit
 struct CatchUpView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
-    @AppStorage("browserMode") private var browserMode: String = "external"
+    @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
 
     var viewModel: MangaViewModel
     let day: DayOfWeek
@@ -16,7 +16,7 @@ struct CatchUpView: View {
     @State private var undoStack: [(entry: MangaEntry, action: SwipeAction)] = []
     @State private var completionAnimated = false
     @State private var safariURL: URL?
-    @AppStorage("hasSeenCatchUpTutorial") private var hasSeenTutorial = false
+    @AppStorage(UserDefaultsKeys.hasSeenCatchUpTutorial) private var hasSeenTutorial = false
     @State private var showTutorial = false
     @State private var editingEntry: MangaEntry?
     @State private var reloadCount: Int = 0

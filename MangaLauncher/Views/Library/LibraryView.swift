@@ -10,7 +10,7 @@ struct LibraryView: View {
     @State private var commentingEntry: MangaEntry?
     @State private var safariURL: URL?
     @State private var showingAddSheet = false
-    @AppStorage("browserMode") private var browserMode: String = "external"
+    @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 

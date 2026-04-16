@@ -1,7 +1,5 @@
 import SwiftUI
-import AppIntents
 import UniformTypeIdentifiers
-import NotificationKit
 import CloudSyncKit
 
 struct SettingsView: View {
@@ -15,8 +13,7 @@ struct SettingsView: View {
     @State private var showingExporter = false
     @State private var showingImporter = false
     @State private var importResult: ImportResult?
-    @AppStorage("browserMode") private var browserMode: String = "external"
-    @State private var badgeEnabled = BadgeManager.isEnabled
+    @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
     @State private var updateStatus: UpdateStatus = .idle
     @State private var showingOnboarding = false
     @State private var showingSyncError = false
@@ -25,13 +22,6 @@ struct SettingsView: View {
     private enum UpdateStatus {
         case idle, checking, available(String), upToDate, error
     }
-    @State private var notificationEnabled = NotificationManager.isEnabled
-    @State private var notificationTime: Date = {
-        var components = DateComponents()
-        components.hour = NotificationManager.notificationHour
-        components.minute = NotificationManager.notificationMinute
-        return Calendar.current.date(from: components) ?? Date()
-    }()
 
     private enum ImportResult: Identifiable {
         case success(Int)
@@ -47,12 +37,6 @@ struct SettingsView: View {
 
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "-"
-    }
-
-    private var appDisplayName: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
-            ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-            ?? ""
     }
 
     var body: some View {
@@ -205,103 +189,9 @@ struct SettingsView: View {
                     Text("「アプリ内」はSafariベースのブラウザで表示します。「デフォルトブラウザ」はiOSで設定したブラウザで開きます。")
                 }
 
-                Section {
-                    Toggle("未読バッジ", isOn: $badgeEnabled)
-                        .onChange(of: badgeEnabled) { _, newValue in
-                            if newValue {
-                                Task {
-                                    let granted = await BadgeManager.requestPermissionAndEnable()
-                                    if !granted {
-                                        badgeEnabled = false
-                                    } else {
-                                        let count = viewModel.unreadCount(for: .today)
-                                        BadgeManager.updateBadge(unreadCount: count)
-                                    }
-                                }
-                            } else {
-                                BadgeManager.isEnabled = false
-                                BadgeManager.clearBadge()
-                            }
-                        }
-                    Toggle("更新通知", isOn: $notificationEnabled)
-                        .onChange(of: notificationEnabled) { _, newValue in
-                            if newValue {
-                                Task {
-                                    let granted = await NotificationManager.requestPermissionAndEnable()
-                                    if !granted {
-                                        notificationEnabled = false
-                                    } else {
-                                        viewModel.rescheduleNotifications()
-                                    }
-                                }
-                            } else {
-                                NotificationManager.isEnabled = false
-                                NotificationManager.cancelAllNotifications()
-                            }
-                        }
-                    if notificationEnabled {
-                        DatePicker("通知時間", selection: $notificationTime, displayedComponents: .hourAndMinute)
-                            .onChange(of: notificationTime) { _, newValue in
-                                let components = Calendar.current.dateComponents([.hour, .minute], from: newValue)
-                                NotificationManager.notificationHour = components.hour ?? 9
-                                NotificationManager.notificationMinute = components.minute ?? 0
-                                viewModel.rescheduleNotifications()
-                            }
-                    }
-                } header: {
-                    Text("通知")
-                } footer: {
-                    Text("未読バッジはアプリアイコンに未読数を表示します。更新通知は登録がある曜日の指定時間にリマインドします。")
-                }
+                NotificationSection(viewModel: viewModel)
 
-                Section {
-                    // ShortcutsLink のラベルは CFBundleName 固定で変更不可のため、
-                    // ZStack で上に自前ラベルを重ね、下の ShortcutsLink がタップを受ける方式の workaround。
-                    // 将来 iOS 側でラベル指定 API が入ったら通常の ShortcutsLink に戻す。
-                    //
-                    // アクセシビリティ:
-                    //  - ShortcutsLink 内蔵の英語 "MangaLauncher のショートカット" が VoiceOver に読まれないよう、
-                    //    ZStack 全体を 1 つの要素にまとめて自前のラベルを提供する
-                    //  - hit-testing は ShortcutsLink がそのまま受けるので VoiceOver の double-tap も機能する
-                    ZStack {
-                        ShortcutsLink()
-                            .frame(maxWidth: .infinity, minHeight: 44)
-                            .opacity(0.01)
-                        HStack(spacing: 10) {
-                            Image(systemName: "square.2.layers.3d.fill")
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundStyle(
-                                    LinearGradient(
-                                        colors: [
-                                            Color(red: 1.0, green: 0.30, blue: 0.60), // ピンク
-                                            Color(red: 0.55, green: 0.35, blue: 0.95), // 紫
-                                            Color(red: 0.25, green: 0.55, blue: 1.0)   // 青
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .frame(width: 28, height: 28)
-                            Text("\(appDisplayName)のショートカット")
-                                .font(.body.weight(.semibold))
-                                .foregroundStyle(.white)
-                            Spacer()
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 8)
-                        .frame(maxWidth: .infinity)
-                        .background(Color.black, in: RoundedRectangle(cornerRadius: 10))
-                        .allowsHitTesting(false)
-                    }
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("\(appDisplayName)のショートカット")
-                    .accessibilityAddTraits(.isButton)
-                    .accessibilityHint("ショートカットアプリを開きます")
-                } header: {
-                    Text("ショートカット")
-                } footer: {
-                    Text("ショートカットアプリからマンガの登録や曜日の切替をオートメーション化できます。")
-                }
+                ShortcutsSection()
 
                 Section {
                     Button("アプリについて") {
@@ -479,60 +369,6 @@ struct SettingsView: View {
     private func exportDocument() -> BackupDocument {
         let data = viewModel.exportBackupData() ?? Data()
         return BackupDocument(data: data)
-    }
-
-    private struct LicenseListView: View {
-        private let licenses: [(name: String, text: String)] = [
-            (
-                "Mantis",
-                """
-                MIT License
-
-                Copyright (c) 2018 Yingtao Guo
-
-                Permission is hereby granted, free of charge, to any person obtaining a copy \
-                of this software and associated documentation files (the "Software"), to deal \
-                in the Software without restriction, including without limitation the rights \
-                to use, copy, modify, merge, publish, distribute, sublicense, and/or sell \
-                copies of the Software, and to permit persons to whom the Software is \
-                furnished to do so, subject to the following conditions:
-
-                The above copyright notice and this permission notice shall be included in all \
-                copies or substantial portions of the Software.
-
-                THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR \
-                IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, \
-                FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE \
-                AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER \
-                LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, \
-                OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE \
-                SOFTWARE.
-                """
-            ),
-        ]
-
-        var body: some View {
-            List(licenses, id: \.name) { license in
-                NavigationLink(license.name) {
-                    ScrollView {
-                        Text(license.text)
-                            .font(.caption)
-                            .monospaced()
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .navigationTitle(license.name)
-                    #if os(iOS) || os(visionOS)
-                    .navigationBarTitleDisplayMode(.inline)
-                    #endif
-                }
-            }
-            .themedNavigationStyle()
-            .navigationTitle("ライセンス")
-            #if os(iOS) || os(visionOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-        }
     }
 
     private func handleImport(_ result: Result<URL, Error>) {

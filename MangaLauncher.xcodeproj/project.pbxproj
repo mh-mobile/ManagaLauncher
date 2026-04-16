@@ -58,6 +58,9 @@
 		AB2001FF00112233AA000008 /* WeekStripView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2001FF00112233AA000009 /* WeekStripView.swift */; };
 		AB2001FF00112233AA00000A /* ActivityCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2001FF00112233AA00000B /* ActivityCalendarView.swift */; };
 		AB2001FF00112233AA00000C /* TimelineChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2001FF00112233AA00000D /* TimelineChartView.swift */; };
+		AB3001FF00112233AA000001 /* ShortcutsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3001FF00112233AA000002 /* ShortcutsSection.swift */; };
+		AB3001FF00112233AA000003 /* NotificationSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3001FF00112233AA000004 /* NotificationSection.swift */; };
+		AB3001FF00112233AA000005 /* LicenseListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3001FF00112233AA000006 /* LicenseListView.swift */; };
 		BC000401 /* MangaStatusBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000410 /* MangaStatusBadgeView.swift */; };
 		BC000501 /* SectionHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000510 /* SectionHeaderView.swift */; };
 		BC000801 /* MangaDataChangeModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000810 /* MangaDataChangeModifier.swift */; };
@@ -208,6 +211,9 @@
 		AB2001FF00112233AA000009 /* WeekStripView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekStripView.swift; sourceTree = "<group>"; };
 		AB2001FF00112233AA00000B /* ActivityCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityCalendarView.swift; sourceTree = "<group>"; };
 		AB2001FF00112233AA00000D /* TimelineChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineChartView.swift; sourceTree = "<group>"; };
+		AB3001FF00112233AA000002 /* ShortcutsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsSection.swift; sourceTree = "<group>"; };
+		AB3001FF00112233AA000004 /* NotificationSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSection.swift; sourceTree = "<group>"; };
+		AB3001FF00112233AA000006 /* LicenseListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseListView.swift; sourceTree = "<group>"; };
 		BC000410 /* MangaStatusBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaStatusBadgeView.swift; sourceTree = "<group>"; };
 		BC000510 /* SectionHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionHeaderView.swift; sourceTree = "<group>"; };
 		BC000810 /* MangaDataChangeModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaDataChangeModifier.swift; sourceTree = "<group>"; };
@@ -551,8 +557,19 @@
 			children = (
 				0CDE508C489E5FAA3881A522 /* SettingsView.swift */,
 				BB000108 /* ColorLabelSettingsView.swift */,
+				AB3001FF00112233AA000006 /* LicenseListView.swift */,
+				AB3001FF00112233AA000007 /* Sections */,
 			);
 			path = Settings;
+			sourceTree = "<group>";
+		};
+		AB3001FF00112233AA000007 /* Sections */ = {
+			isa = PBXGroup;
+			children = (
+				AB3001FF00112233AA000002 /* ShortcutsSection.swift */,
+				AB3001FF00112233AA000004 /* NotificationSection.swift */,
+			);
+			path = Sections;
 			sourceTree = "<group>";
 		};
 		ECFEA86F2F7F87F600CE4DC0 /* Heatmap */ = {
@@ -801,6 +818,9 @@
 				AB2001FF00112233AA000008 /* WeekStripView.swift in Sources */,
 				AB2001FF00112233AA00000A /* ActivityCalendarView.swift in Sources */,
 				AB2001FF00112233AA00000C /* TimelineChartView.swift in Sources */,
+				AB3001FF00112233AA000001 /* ShortcutsSection.swift in Sources */,
+				AB3001FF00112233AA000003 /* NotificationSection.swift in Sources */,
+				AB3001FF00112233AA000005 /* LicenseListView.swift in Sources */,
 				BC000401 /* MangaStatusBadgeView.swift in Sources */,
 				BC000501 /* SectionHeaderView.swift in Sources */,
 				BC000801 /* MangaDataChangeModifier.swift in Sources */,
