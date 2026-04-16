@@ -262,7 +262,17 @@ struct SettingsView: View {
                         HStack(spacing: 10) {
                             Image(systemName: "square.2.layers.3d.fill")
                                 .font(.system(size: 20, weight: .semibold))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [
+                                            Color(red: 1.0, green: 0.30, blue: 0.60), // ピンク
+                                            Color(red: 0.55, green: 0.35, blue: 0.95), // 紫
+                                            Color(red: 0.25, green: 0.55, blue: 1.0)   // 青
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
                                 .frame(width: 28, height: 28)
                             Text("\(appDisplayName)のショートカット")
                                 .font(.body.weight(.semibold))
