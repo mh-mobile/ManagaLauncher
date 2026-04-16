@@ -20,7 +20,6 @@ struct SettingsView: View {
     @State private var updateStatus: UpdateStatus = .idle
     @State private var showingOnboarding = false
     @State private var showingSyncError = false
-    @State private var showAddMangaTip = true
     @State private var currentThemeMode: ThemeMode = ThemeManager.shared.mode
 
     private enum UpdateStatus {
@@ -280,14 +279,10 @@ struct SettingsView: View {
                     .accessibilityLabel("\(appDisplayName)のショートカット")
                     .accessibilityAddTraits(.isButton)
                     .accessibilityHint("ショートカットアプリを開きます")
-                    // AddMangaIntent のみ inline tip 表示。OpenDayIntent はパラメータ付きで
-                    // SiriTipView が "${dayOfWeek}" のリテラル表示になるため非表示。
-                    // 両 intent ともショートカット App から確認できる。
-                    SiriTipView(intent: AddMangaIntent(), isVisible: $showAddMangaTip)
                 } header: {
                     Text("ショートカット")
                 } footer: {
-                    Text("ショートカットアプリやSiriからマンガの登録や曜日の切替ができます。")
+                    Text("ショートカットアプリからマンガの登録や曜日の切替をオートメーション化できます。")
                 }
 
                 Section {
