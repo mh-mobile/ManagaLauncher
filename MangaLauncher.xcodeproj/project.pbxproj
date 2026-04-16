@@ -52,6 +52,11 @@
 		BC000003 /* MangaComment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000010 /* MangaComment.swift */; };
 		BC000101 /* CommentListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000110 /* CommentListView.swift */; };
 		BC000301 /* ActivityItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000310 /* ActivityItem.swift */; };
+		AB2001FF00112233AA000001 /* TimelineItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2001FF00112233AA000002 /* TimelineItem.swift */; };
+		AB2001FF00112233AA000003 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2001FF00112233AA000004 /* TimelineView.swift */; };
+		AB2001FF00112233AA000005 /* TimelineRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2001FF00112233AA000006 /* TimelineRowView.swift */; };
+		AB2001FF00112233AA000008 /* WeekStripView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2001FF00112233AA000009 /* WeekStripView.swift */; };
+		AB2001FF00112233AA00000A /* ActivityCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2001FF00112233AA00000B /* ActivityCalendarView.swift */; };
 		BC000401 /* MangaStatusBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000410 /* MangaStatusBadgeView.swift */; };
 		BC000501 /* SectionHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000510 /* SectionHeaderView.swift */; };
 		BC000801 /* MangaDataChangeModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000810 /* MangaDataChangeModifier.swift */; };
@@ -196,6 +201,11 @@
 		BC000010 /* MangaComment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaComment.swift; sourceTree = "<group>"; };
 		BC000110 /* CommentListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentListView.swift; sourceTree = "<group>"; };
 		BC000310 /* ActivityItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityItem.swift; sourceTree = "<group>"; };
+		AB2001FF00112233AA000002 /* TimelineItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineItem.swift; sourceTree = "<group>"; };
+		AB2001FF00112233AA000004 /* TimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineView.swift; sourceTree = "<group>"; };
+		AB2001FF00112233AA000006 /* TimelineRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineRowView.swift; sourceTree = "<group>"; };
+		AB2001FF00112233AA000009 /* WeekStripView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekStripView.swift; sourceTree = "<group>"; };
+		AB2001FF00112233AA00000B /* ActivityCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityCalendarView.swift; sourceTree = "<group>"; };
 		BC000410 /* MangaStatusBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaStatusBadgeView.swift; sourceTree = "<group>"; };
 		BC000510 /* SectionHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionHeaderView.swift; sourceTree = "<group>"; };
 		BC000810 /* MangaDataChangeModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaDataChangeModifier.swift; sourceTree = "<group>"; };
@@ -376,6 +386,7 @@
 				AA000010 /* ReadingActivity.swift */,
 				BC000010 /* MangaComment.swift */,
 				BC000310 /* ActivityItem.swift */,
+				AB2001FF00112233AA000002 /* TimelineItem.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -428,8 +439,20 @@
 				BC000630 /* AllPublishersView.swift */,
 				BC000640 /* LibrarySection.swift */,
 				BC000650 /* LibrarySectionBuilder.swift */,
+				AB2001FF00112233AA000007 /* Timeline */,
 			);
 			path = Library;
+			sourceTree = "<group>";
+		};
+		AB2001FF00112233AA000007 /* Timeline */ = {
+			isa = PBXGroup;
+			children = (
+				AB2001FF00112233AA000004 /* TimelineView.swift */,
+				AB2001FF00112233AA000006 /* TimelineRowView.swift */,
+				AB2001FF00112233AA000009 /* WeekStripView.swift */,
+				AB2001FF00112233AA00000B /* ActivityCalendarView.swift */,
+			);
+			path = Timeline;
 			sourceTree = "<group>";
 		};
 		A5000005 /* ViewModels */ = {
@@ -769,6 +792,11 @@
 				BC000605 /* LibrarySectionBuilder.swift in Sources */,
 				BC000101 /* CommentListView.swift in Sources */,
 				BC000301 /* ActivityItem.swift in Sources */,
+				AB2001FF00112233AA000001 /* TimelineItem.swift in Sources */,
+				AB2001FF00112233AA000003 /* TimelineView.swift in Sources */,
+				AB2001FF00112233AA000005 /* TimelineRowView.swift in Sources */,
+				AB2001FF00112233AA000008 /* WeekStripView.swift in Sources */,
+				AB2001FF00112233AA00000A /* ActivityCalendarView.swift in Sources */,
 				BC000401 /* MangaStatusBadgeView.swift in Sources */,
 				BC000501 /* SectionHeaderView.swift in Sources */,
 				BC000801 /* MangaDataChangeModifier.swift in Sources */,

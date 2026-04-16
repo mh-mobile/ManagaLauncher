@@ -116,6 +116,14 @@ struct SettingsView: View {
                             Text("読書アクティビティ")
                         }
                     }
+                    NavigationLink {
+                        TimelineView(viewModel: viewModel)
+                    } label: {
+                        HStack {
+                            Image(systemName: "chart.bar.doc.horizontal.fill")
+                            Text("タイムライン")
+                        }
+                    }
                 }
 
                 Section("iCloud同期") {

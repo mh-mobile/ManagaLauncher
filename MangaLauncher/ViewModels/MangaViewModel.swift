@@ -273,6 +273,10 @@ final class MangaViewModel {
         for activity in modelContext.fetchLogged(activityDescriptor) {
             modelContext.delete(activity)
         }
+        let commentDescriptor = FetchDescriptor<MangaComment>()
+        for comment in modelContext.fetchLogged(commentDescriptor) {
+            modelContext.delete(comment)
+        }
         UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.lastStreakShownDate)
         UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.shownMilestones)
         do {
@@ -540,6 +544,17 @@ final class MangaViewModel {
         )
         let pendingIDs = Set(pendingDeleteComments.map(\.id))
         return modelContext.fetchLogged(descriptor).filter { !pendingIDs.contains($0.id) }
+    }
+
+    /// タイムラインのアクティビティドットや日別集計に使う全 ReadingActivity。
+    /// ReadingStatsProvider.fetchActivityCounts は日付→件数のマップで情報が
+    /// 抜けるため、個々の record が欲しい用途はこちらを使う。
+    func allActivities() -> [ReadingActivity] {
+        let _ = refreshCounter
+        let descriptor = FetchDescriptor<ReadingActivity>(
+            sortBy: [SortDescriptor(\.date, order: .reverse)]
+        )
+        return modelContext.fetchLogged(descriptor)
     }
 
     func unreadCount(for day: DayOfWeek) -> Int {
