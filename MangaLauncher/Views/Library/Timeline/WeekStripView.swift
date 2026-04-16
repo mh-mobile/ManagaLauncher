@@ -40,6 +40,16 @@ struct WeekStripView: View {
                 withAnimation { weekOffset = target }
             }
         }
+        .onChange(of: weekOffset) { _, newOffset in
+            // ストリップをスワイプして週が変わったら、selectedDate も同じ曜日で
+            // 新しい週に引越しする。チャートと週表示のズレを防ぐ。
+            let currentOffset = computeWeekOffset(for: selectedDate)
+            guard currentOffset != newOffset else { return }
+            let delta = newOffset - currentOffset
+            if let newDate = calendar.date(byAdding: .weekOfYear, value: delta, to: selectedDate) {
+                selectedDate = calendar.startOfDay(for: newDate)
+            }
+        }
         .onAppear {
             weekOffset = computeWeekOffset(for: selectedDate)
         }
