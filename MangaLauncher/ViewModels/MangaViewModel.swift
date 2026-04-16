@@ -28,9 +28,22 @@ final class MangaViewModel {
     var lastError: AppError?
 
     private(set) var modelContext: ModelContext
+    @ObservationIgnored private var didRunStartupMigrations = false
 
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
+        // 起動時の重い処理 (migration / backfill) は init では実行しない。
+        // CloudKit 同期前のローカル DB を書き換えると、cloud で持っている値を
+        // デフォルトで上書きしてしまうリスクがある (Vision Pro 初回起動などで観測)。
+        // 代わりに scenePhase = .active のタイミングで `runStartupMigrationsIfNeeded()`
+        // を呼んでもらう。
+    }
+
+    /// 起動後 1 回だけ実行する重い初期化処理。
+    /// 初回 active phase で呼ばれることを想定 (アプリ側で onAppear / scenePhase 監視)。
+    func runStartupMigrationsIfNeeded() {
+        guard !didRunStartupMigrations else { return }
+        didRunStartupMigrations = true
         migrateLegacyStateIfNeeded()
         backfillMemoUpdatedAtIfNeeded()
     }

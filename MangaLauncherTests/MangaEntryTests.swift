@@ -7,6 +7,7 @@
 
 import Testing
 import Foundation
+import SwiftData
 @testable import MangaLauncher
 
 @Suite("MangaEntry.isRead")
@@ -160,5 +161,85 @@ struct MangaEntryMigrationTests {
         e.migrateLegacyStateIfNeeded()
 
         #expect(e.publicationStatus == .finished) // 変わらない
+    }
+
+    @Test("CloudKit 同期で来た新フィールドを上書きしない (legacy 全 false の場合)")
+    func preservesCloudSyncedNewState() {
+        // 別端末で .finished に設定された値が cloud から同期されてきた状態を想定
+        let e = MangaEntry(name: "x")
+        e.stateMigrationVersion = 0
+        e.publicationStatus = .finished
+        e.readingState = .archived
+        // legacy フィールドはすべて false (cloud 経由なので未設定)
+
+        e.migrateLegacyStateIfNeeded()
+
+        // 値は保持され、version だけ進む
+        #expect(e.publicationStatus == .finished)
+        #expect(e.readingState == .archived)
+        #expect(e.stateMigrationVersion == 1)
+    }
+
+    @Test("CloudKit 同期で来た .backlog を上書きしない")
+    func preservesBacklogState() {
+        let e = MangaEntry(name: "x")
+        e.stateMigrationVersion = 0
+        e.readingState = .backlog
+        // publicationStatus はデフォルト .active (rawValue=0) のまま
+
+        e.migrateLegacyStateIfNeeded()
+
+        #expect(e.readingState == .backlog)
+        #expect(e.stateMigrationVersion == 1)
+    }
+
+    @Test("CloudKit 同期で来た .hiatus を上書きしない")
+    func preservesHiatusStatus() {
+        let e = MangaEntry(name: "x")
+        e.stateMigrationVersion = 0
+        e.publicationStatus = .hiatus
+        // readingState はデフォルト .following (rawValue=0) のまま
+
+        e.migrateLegacyStateIfNeeded()
+
+        #expect(e.publicationStatus == .hiatus)
+        #expect(e.stateMigrationVersion == 1)
+    }
+}
+
+@Suite("MangaViewModel.runStartupMigrationsIfNeeded")
+struct MangaViewModelStartupTests {
+
+    private func makeContainer() throws -> ModelContainer {
+        try ModelContainer(
+            for: MangaEntry.self, ReadingActivity.self, MangaComment.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+    }
+
+    @Test("legacy entry が 1 回だけ migration される (2 回目は no-op)")
+    @MainActor
+    func runsMigrationOnceAcrossCalls() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        // 旧 isCompleted=true の legacy entry を入れておく
+        let legacy = MangaEntry(name: "old")
+        legacy.stateMigrationVersion = 0
+        legacy.isCompleted = true
+        context.insert(legacy)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+
+        // 1 回目: migration が走って archived になる
+        vm.runStartupMigrationsIfNeeded()
+        #expect(legacy.readingState == .archived)
+        #expect(legacy.stateMigrationVersion == 1)
+
+        // 2 回目以降を呼んでも既に migration 済みなので状態変化なし
+        legacy.readingState = .following // 仮に何らかの理由で変わったとして
+        vm.runStartupMigrationsIfNeeded()
+        #expect(legacy.readingState == .following) // migration が再走しないので戻されない
     }
 }

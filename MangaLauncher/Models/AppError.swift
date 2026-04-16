@@ -31,4 +31,16 @@ struct AppError: Identifiable, Equatable {
             message: "データの保存に失敗しました。\n\(underlying.localizedDescription)"
         )
     }
+
+    /// CloudKit の初期化に失敗してローカル only モードで起動したことをユーザーに通知する。
+    /// このまま使えるが端末間同期は止まっている状態。
+    static func cloudKitDisabled(_ underlying: Error) -> AppError {
+        AppError(
+            title: "iCloud 同期が無効になっています",
+            message: "iCloud との接続に失敗したため、ローカル only モードで起動しました。"
+                + "他端末との同期は行われません。\n\n"
+                + "iCloud 設定を確認後、アプリを再起動してください。\n\n"
+                + "詳細: \(underlying.localizedDescription)"
+        )
+    }
 }
