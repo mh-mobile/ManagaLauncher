@@ -1,4 +1,5 @@
 import SwiftUI
+import AppIntents
 import UniformTypeIdentifiers
 import NotificationKit
 import CloudSyncKit
@@ -46,6 +47,12 @@ struct SettingsView: View {
 
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "-"
+    }
+
+    private var appDisplayName: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
+            ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
+            ?? ""
     }
 
     var body: some View {
@@ -237,6 +244,45 @@ struct SettingsView: View {
                     Text("通知")
                 } footer: {
                     Text("未読バッジはアプリアイコンに未読数を表示します。更新通知は登録がある曜日の指定時間にリマインドします。")
+                }
+
+                Section {
+                    // ShortcutsLink のラベルは CFBundleName 固定で変更不可のため、
+                    // ZStack で上に自前ラベルを重ね、下の ShortcutsLink がタップを受ける方式の workaround。
+                    // 将来 iOS 側でラベル指定 API が入ったら通常の ShortcutsLink に戻す。
+                    //
+                    // アクセシビリティ:
+                    //  - ShortcutsLink 内蔵の英語 "MangaLauncher のショートカット" が VoiceOver に読まれないよう、
+                    //    ZStack 全体を 1 つの要素にまとめて自前のラベルを提供する
+                    //  - hit-testing は ShortcutsLink がそのまま受けるので VoiceOver の double-tap も機能する
+                    ZStack {
+                        ShortcutsLink()
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .opacity(0.01)
+                        HStack(spacing: 10) {
+                            Image(systemName: "square.2.layers.3d.fill")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .frame(width: 28, height: 28)
+                            Text("\(appDisplayName)のショートカット")
+                                .font(.body.weight(.semibold))
+                                .foregroundStyle(.white)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.black, in: RoundedRectangle(cornerRadius: 10))
+                        .allowsHitTesting(false)
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("\(appDisplayName)のショートカット")
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityHint("ショートカットアプリを開きます")
+                } header: {
+                    Text("ショートカット")
+                } footer: {
+                    Text("ショートカットアプリからマンガの登録や曜日の切替をオートメーション化できます。")
                 }
 
                 Section {
