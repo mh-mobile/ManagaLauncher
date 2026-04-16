@@ -56,6 +56,11 @@ struct MangaLauncherApp: App {
     /// ユーザーに通知するための Error を一時保持する。次回 onAppear で
     /// viewModel.lastError に渡して alert 表示する。
     @State private var pendingContainerFallbackError: Error?
+    /// startup migration の待機 Task が既に起動しているか。
+    /// onAppear と scenePhase=.active が近接して発火した場合に Task を 2 つ
+    /// 立ち上げないためのガード。後発 Task が「sync 開始前に return」して
+    /// 古いローカルデータで migration を走らせるリスクを排除する。
+    @State private var migrationWaitStarted = false
     private let notificationDelegate = NotificationDelegate()
 
     init() {
@@ -115,23 +120,14 @@ struct MangaLauncherApp: App {
                         viewModel.lastError = .cloudKitDisabled(error)
                         pendingContainerFallbackError = nil
                     }
-                    Task { @MainActor in
-                        // CloudKit sync が落ち着いてから migration を走らせる。
-                        // 固定 sleep より syncStatus を見るほうが堅実 (Vision Pro 等で
-                        // 初回データ受信中の write を防ぐ)。
-                        await waitForCloudSyncSettle()
-                        viewModel.runStartupMigrationsIfNeeded()
-                    }
+                    startMigrationWaitIfNeeded()
                     checkPendingIntent()
                     checkPendingOpenDay()
                     checkPendingOpenCatchUp()
                 }
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
-                        Task { @MainActor in
-                            await waitForCloudSyncSettle()
-                            viewModel.runStartupMigrationsIfNeeded()
-                        }
+                        startMigrationWaitIfNeeded()
                         checkPendingIntent()
                         checkPendingOpenDay()
                         checkPendingOpenCatchUp()
@@ -143,14 +139,27 @@ struct MangaLauncherApp: App {
         .modelContainer(container)
     }
 
-    /// CloudKit sync が落ち着くのを待ってから true を返す。
-    /// - 初期 .idle で 1 秒待っても sync が始まらなければそのまま return (cold start で
-    ///   syncing event が来ないケース、初回データ無しのケース)
+    /// startup migration の Task を 1 つだけ起動するエントリポイント。
+    /// 既に起動済みなら no-op。Task 内で sync 完了待ち + migration を実行。
+    private func startMigrationWaitIfNeeded() {
+        guard !migrationWaitStarted else { return }
+        migrationWaitStarted = true
+        Task { @MainActor in
+            await waitForCloudSyncSettle()
+            viewModel.runStartupMigrationsIfNeeded()
+        }
+    }
+
+    /// CloudKit sync が落ち着くのを待ってから return。
+    /// - 初期 .idle で 3 秒待っても sync が始まらなければそのまま return (cold start で
+    ///   syncing event が来ないケース、初回データ無しのケース)。3 秒は CloudKit が
+    ///   wake up するのに必要な余裕を見たもの
     /// - .syncing になったら .idle / .failed / .notAvailable に変わるまで待つ
     /// - 最大タイムアウト 10 秒
     @MainActor
     private func waitForCloudSyncSettle() async {
         let timeout: TimeInterval = 10
+        let initialIdleGrace: TimeInterval = 3
         let pollNanoseconds: UInt64 = 200_000_000 // 0.2s
         let start = Date()
         var sawSyncing = false
@@ -163,7 +172,7 @@ struct MangaLauncherApp: App {
                 return
             case .idle:
                 if sawSyncing { return }
-                if Date().timeIntervalSince(start) > 1.0 { return }
+                if Date().timeIntervalSince(start) > initialIdleGrace { return }
             }
             try? await Task.sleep(nanoseconds: pollNanoseconds)
         }

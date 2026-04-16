@@ -210,17 +210,36 @@ struct MangaEntryMigrationTests {
 @Suite("MangaViewModel.runStartupMigrationsIfNeeded")
 struct MangaViewModelStartupTests {
 
-    @Test("複数回呼んでも 1 回だけ migration が走る")
-    func idempotentStartup() throws {
-        // ViewModel は ModelContext を要求するため、最小スタブで検証する
-        let container = try ModelContainer(
+    private func makeContainer() throws -> ModelContainer {
+        try ModelContainer(
             for: MangaEntry.self, ReadingActivity.self, MangaComment.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
-        let vm = MangaViewModel(modelContext: container.mainContext)
+    }
 
-        // 2 回呼んでもクラッシュしない (フラグ実装の冪等性チェック)
+    @Test("legacy entry が 1 回だけ migration される (2 回目は no-op)")
+    @MainActor
+    func runsMigrationOnceAcrossCalls() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        // 旧 isCompleted=true の legacy entry を入れておく
+        let legacy = MangaEntry(name: "old")
+        legacy.stateMigrationVersion = 0
+        legacy.isCompleted = true
+        context.insert(legacy)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+
+        // 1 回目: migration が走って archived になる
         vm.runStartupMigrationsIfNeeded()
+        #expect(legacy.readingState == .archived)
+        #expect(legacy.stateMigrationVersion == 1)
+
+        // 2 回目以降を呼んでも既に migration 済みなので状態変化なし
+        legacy.readingState = .following // 仮に何らかの理由で変わったとして
         vm.runStartupMigrationsIfNeeded()
+        #expect(legacy.readingState == .following) // migration が再走しないので戻されない
     }
 }
