@@ -1,13 +1,7 @@
 import AppIntents
 import Foundation
 
-extension Notification.Name {
-    /// 曜日タブの切替リクエスト。object に DayOfWeek.rawValue (Int) を渡す。
-    /// 共有定義: app と widget extension の両方から参照される。
-    static let switchToDay = Notification.Name("switchToDay")
-    /// キャッチアップ画面の起動リクエスト。
-    static let openCatchUp = Notification.Name("openCatchUp")
-}
+// Notification.Name の共有定義は UserDefaultsKeys.swift に集約
 
 // MARK: - Shared App Enums
 
@@ -66,7 +60,7 @@ struct OpenDayIntent: AppIntent {
     func perform() async throws -> some IntentResult {
         let rawValue = dayOfWeek.toDayOfWeek.rawValue
         let defaults = UserDefaults(suiteName: SharedModelContainer.appGroupIdentifier)
-        defaults?.set(rawValue, forKey: "pendingOpenDay")
+        defaults?.set(rawValue, forKey: UserDefaultsKeys.pendingOpenDay)
         await MainActor.run {
             NotificationCenter.default.post(name: .switchToDay, object: rawValue)
         }
@@ -84,7 +78,7 @@ struct OpenTodayIntent: AppIntent {
     func perform() async throws -> some IntentResult {
         let raw = DayOfWeek.today.rawValue
         let defaults = UserDefaults(suiteName: SharedModelContainer.appGroupIdentifier)
-        defaults?.set(raw, forKey: "pendingOpenDay")
+        defaults?.set(raw, forKey: UserDefaultsKeys.pendingOpenDay)
         await MainActor.run {
             NotificationCenter.default.post(name: .switchToDay, object: raw)
         }
@@ -102,8 +96,8 @@ struct OpenCatchUpIntent: AppIntent {
     func perform() async throws -> some IntentResult {
         let todayRaw = DayOfWeek.today.rawValue
         let defaults = UserDefaults(suiteName: SharedModelContainer.appGroupIdentifier)
-        defaults?.set(todayRaw, forKey: "pendingOpenDay")
-        defaults?.set(true, forKey: "pendingOpenCatchUp")
+        defaults?.set(todayRaw, forKey: UserDefaultsKeys.pendingOpenDay)
+        defaults?.set(true, forKey: UserDefaultsKeys.pendingOpenCatchUp)
         await MainActor.run {
             // 曜日を今日に切り替えてからキャッチアップを立ち上げる（順序重要）
             NotificationCenter.default.post(name: .switchToDay, object: todayRaw)
@@ -149,8 +143,8 @@ struct OpenCatchUpForDayIntent: AppIntent {
     func perform() async throws -> some IntentResult {
         let raw = dayOfWeek.toDayOfWeek.rawValue
         let defaults = UserDefaults(suiteName: SharedModelContainer.appGroupIdentifier)
-        defaults?.set(raw, forKey: "pendingOpenDay")
-        defaults?.set(true, forKey: "pendingOpenCatchUp")
+        defaults?.set(raw, forKey: UserDefaultsKeys.pendingOpenDay)
+        defaults?.set(true, forKey: UserDefaultsKeys.pendingOpenCatchUp)
         await MainActor.run {
             // 先に曜日を切り替えてから CatchUp を立ち上げる（順序重要）
             NotificationCenter.default.post(name: .switchToDay, object: raw)

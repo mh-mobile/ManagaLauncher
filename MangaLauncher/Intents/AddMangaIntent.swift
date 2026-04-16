@@ -61,7 +61,7 @@ struct AddMangaIntent: AppIntent {
             "iconColor": (iconColor ?? .blue).rawValue,
             "isOneShot": isOneShot ? "true" : "false",
         ]
-        defaults?.set(intentData, forKey: "pendingIntentData")
+        defaults?.set(intentData, forKey: UserDefaultsKeys.pendingIntentData)
 
         // Save image to App Group temp file
         if let image,

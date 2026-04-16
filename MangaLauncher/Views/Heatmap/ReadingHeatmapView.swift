@@ -254,7 +254,7 @@ private struct DayActivitySheet: View {
     var viewModel: MangaViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
-    @AppStorage("browserMode") private var browserMode: String = "external"
+    @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
     @State private var safariURL: URL?
 
     private var theme: ThemeStyle { ThemeManager.shared.style }

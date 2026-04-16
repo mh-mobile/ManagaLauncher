@@ -19,7 +19,7 @@ struct SearchView: View {
     @State private var safariURL: URL?
     @State private var editingEntry: MangaEntry?
     @State private var commentingEntry: MangaEntry?
-    @AppStorage("browserMode") private var browserMode: String = "external"
+    @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
 
     private let colorLabelStore = ColorLabelStore.shared
     private var theme: ThemeStyle { ThemeManager.shared.style }

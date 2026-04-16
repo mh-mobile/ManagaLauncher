@@ -13,7 +13,7 @@ struct TimelineView: View {
     @State private var filter: TimelineFilter = .all
     @State private var showingMonthPicker = false
     @State private var chartGranularity: TimelineChartGranularity = .week
-    @AppStorage("browserMode") private var browserMode: String = "external"
+    @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 

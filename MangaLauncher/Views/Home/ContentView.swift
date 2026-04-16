@@ -16,9 +16,9 @@ struct ContentView: View {
 
     var viewModel: MangaViewModel
     @State private var homeState = HomeState()
-    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
-    @AppStorage("displayMode") private var displayMode: DisplayMode = .grid
-    @AppStorage("browserMode") private var browserMode: String = "external"
+    @AppStorage(UserDefaultsKeys.hasSeenOnboarding) private var hasSeenOnboarding = false
+    @AppStorage(UserDefaultsKeys.displayMode) private var displayMode: DisplayMode = .grid
+    @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
 
     @Namespace private var tabUnderline
 

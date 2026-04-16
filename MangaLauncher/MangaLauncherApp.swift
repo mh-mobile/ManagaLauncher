@@ -114,8 +114,8 @@ struct MangaLauncherApp: App {
 
     private func checkPendingIntent() {
         let defaults = UserDefaults(suiteName: SharedModelContainer.appGroupIdentifier)
-        guard let data = defaults?.dictionary(forKey: "pendingIntentData") as? [String: String] else { return }
-        defaults?.removeObject(forKey: "pendingIntentData")
+        guard let data = defaults?.dictionary(forKey: UserDefaultsKeys.pendingIntentData) as? [String: String] else { return }
+        defaults?.removeObject(forKey: UserDefaultsKeys.pendingIntentData)
 
         // Load image from temp file if exists
         var imageData: Data?
@@ -139,15 +139,15 @@ struct MangaLauncherApp: App {
 
     private func checkPendingOpenDay() {
         let defaults = UserDefaults(suiteName: SharedModelContainer.appGroupIdentifier)
-        guard let rawValue = defaults?.object(forKey: "pendingOpenDay") as? Int else { return }
-        defaults?.removeObject(forKey: "pendingOpenDay")
+        guard let rawValue = defaults?.object(forKey: UserDefaultsKeys.pendingOpenDay) as? Int else { return }
+        defaults?.removeObject(forKey: UserDefaultsKeys.pendingOpenDay)
         NotificationCenter.default.post(name: .switchToDay, object: rawValue)
     }
 
     private func checkPendingOpenCatchUp() {
         let defaults = UserDefaults(suiteName: SharedModelContainer.appGroupIdentifier)
-        guard defaults?.bool(forKey: "pendingOpenCatchUp") == true else { return }
-        defaults?.removeObject(forKey: "pendingOpenCatchUp")
+        guard defaults?.bool(forKey: UserDefaultsKeys.pendingOpenCatchUp) == true else { return }
+        defaults?.removeObject(forKey: UserDefaultsKeys.pendingOpenCatchUp)
         NotificationCenter.default.post(name: .openCatchUp, object: nil)
     }
 
