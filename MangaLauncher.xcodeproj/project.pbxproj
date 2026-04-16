@@ -61,6 +61,9 @@
 		AB3001FF00112233AA000001 /* ShortcutsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3001FF00112233AA000002 /* ShortcutsSection.swift */; };
 		AB3001FF00112233AA000003 /* NotificationSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3001FF00112233AA000004 /* NotificationSection.swift */; };
 		AB3001FF00112233AA000005 /* LicenseListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3001FF00112233AA000006 /* LicenseListView.swift */; };
+		AB4001FF00112233AA000001 /* SearchFilterBars.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4001FF00112233AA000002 /* SearchFilterBars.swift */; };
+		AB4001FF00112233AA000003 /* EditEntryStatusSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4001FF00112233AA000004 /* EditEntryStatusSection.swift */; };
+		AB4001FF00112233AA000005 /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4001FF00112233AA000006 /* AppError.swift */; };
 		BC000401 /* MangaStatusBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000410 /* MangaStatusBadgeView.swift */; };
 		BC000501 /* SectionHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000510 /* SectionHeaderView.swift */; };
 		BC000801 /* MangaDataChangeModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000810 /* MangaDataChangeModifier.swift */; };
@@ -214,6 +217,9 @@
 		AB3001FF00112233AA000002 /* ShortcutsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsSection.swift; sourceTree = "<group>"; };
 		AB3001FF00112233AA000004 /* NotificationSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSection.swift; sourceTree = "<group>"; };
 		AB3001FF00112233AA000006 /* LicenseListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseListView.swift; sourceTree = "<group>"; };
+		AB4001FF00112233AA000002 /* SearchFilterBars.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchFilterBars.swift; sourceTree = "<group>"; };
+		AB4001FF00112233AA000004 /* EditEntryStatusSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditEntryStatusSection.swift; sourceTree = "<group>"; };
+		AB4001FF00112233AA000006 /* AppError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppError.swift; sourceTree = "<group>"; };
 		BC000410 /* MangaStatusBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaStatusBadgeView.swift; sourceTree = "<group>"; };
 		BC000510 /* SectionHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionHeaderView.swift; sourceTree = "<group>"; };
 		BC000810 /* MangaDataChangeModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaDataChangeModifier.swift; sourceTree = "<group>"; };
@@ -395,6 +401,7 @@
 				BC000010 /* MangaComment.swift */,
 				BC000310 /* ActivityItem.swift */,
 				AB2001FF00112233AA000002 /* TimelineItem.swift */,
+				AB4001FF00112233AA000006 /* AppError.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -429,6 +436,7 @@
 			isa = PBXGroup;
 			children = (
 				BB000102 /* SearchView.swift */,
+				AB4001FF00112233AA000002 /* SearchFilterBars.swift */,
 				BC000710 /* SearchResultRow.swift */,
 				BC000720 /* MemoMatchRow.swift */,
 				BC000730 /* CommentMatchRow.swift */,
@@ -548,6 +556,7 @@
 				ECCD2FCD2F65596900BF3309 /* PublisherPickerView.swift */,
 				EEC07D90615785B81C2E71C8 /* ImageCropView.swift */,
 				A2000005 /* EditEntryView.swift */,
+				AB4001FF00112233AA000004 /* EditEntryStatusSection.swift */,
 			);
 			path = Entry;
 			sourceTree = "<group>";
@@ -798,6 +807,9 @@
 				EC04B7D82F74202400AEE45F /* SafariView.swift in Sources */,
 				A1000004 /* ContentView.swift in Sources */,
 				BB000002 /* SearchView.swift in Sources */,
+				AB4001FF00112233AA000001 /* SearchFilterBars.swift in Sources */,
+				AB4001FF00112233AA000003 /* EditEntryStatusSection.swift in Sources */,
+				AB4001FF00112233AA000005 /* AppError.swift in Sources */,
 				BC000701 /* SearchResultRow.swift in Sources */,
 				BC000702 /* MemoMatchRow.swift in Sources */,
 				BC000703 /* CommentMatchRow.swift in Sources */,

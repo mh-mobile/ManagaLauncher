@@ -45,5 +45,18 @@ struct RootTabView: View {
             }
         }
         .animation(.easeInOut(duration: 0.3), value: viewModel.pendingDeleteEntries.isEmpty)
+        // 移行 / インポート / 保存などの重大エラーをアプリ全体で 1 箇所に集約して alert
+        .alert(
+            viewModel.lastError?.title ?? "",
+            isPresented: Binding(
+                get: { viewModel.lastError != nil },
+                set: { if !$0 { viewModel.lastError = nil } }
+            ),
+            presenting: viewModel.lastError
+        ) { _ in
+            Button("OK") { viewModel.lastError = nil }
+        } message: { error in
+            Text(error.message)
+        }
     }
 }
