@@ -33,6 +33,9 @@ struct TimelineChartView: View {
             summaryLine
             chartBody
         }
+        .animation(.easeInOut(duration: 0.2), value: selectedDate)
+        .animation(.easeInOut(duration: 0.3), value: granularity)
+        .animation(.easeInOut(duration: 0.3), value: counts)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilitySummary)
     }
@@ -48,6 +51,7 @@ struct TimelineChartView: View {
             Text("\(totalCount) 件")
                 .font(theme.subheadlineFont.weight(.semibold))
                 .foregroundStyle(theme.onSurface)
+                .contentTransition(.numericText())
             if totalCount > 0 {
                 Text(breakdownText)
                     .font(theme.captionFont)
