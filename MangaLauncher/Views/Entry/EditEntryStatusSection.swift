@@ -36,7 +36,7 @@ struct EditEntryStatusSection: View {
                 } header: {
                     Text("掲載状況")
                 } footer: {
-                    Text("作品自体の状態。連載中／休載中／完結。")
+                    Text("連載中はホーム画面に表示されます。休載中・完結はライブラリのみに表示されます。")
                 }
 
                 Section {
@@ -49,7 +49,7 @@ struct EditEntryStatusSection: View {
                 } header: {
                     Text("読書状況")
                 } footer: {
-                    Text("自分の進捗。追っかけ中／積読／読了。読了にすると常に既読扱いになります。")
+                    Text("追っかけ中はホーム画面に表示されます。積読・読了はライブラリのみに表示されます。読了にすると常に既読扱いになります。")
                 }
             }
         }

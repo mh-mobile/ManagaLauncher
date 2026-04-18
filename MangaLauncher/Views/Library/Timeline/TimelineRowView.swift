@@ -124,8 +124,12 @@ struct TimelineRowView: View {
             } else {
                 Text(entry.memo)
             }
-        case .read:
-            Text("読みました")
+        case .read(let activity, _):
+            if let ep = activity.episodeNumber {
+                Text("既読 \(ep)話に更新")
+            } else {
+                Text("読みました")
+            }
         }
     }
 
@@ -134,7 +138,11 @@ struct TimelineRowView: View {
         switch item {
         case .comment: return ("bubble.left.fill", .blue)
         case .memo: return ("pencil", .orange)
-        case .read: return ("checkmark", .green)
+        case .read(let activity, _):
+            if activity.episodeNumber != nil {
+                return ("book.fill", .purple)
+            }
+            return ("checkmark", .green)
         }
     }
 }

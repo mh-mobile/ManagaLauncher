@@ -31,6 +31,15 @@ struct MangaContextMenu: View {
             }
         }
 
+        Button {
+            viewModel.incrementEpisode(entry)
+        } label: {
+            Label(
+                entry.currentEpisode == nil ? "話数を記録（1話）" : "\((entry.currentEpisode ?? 0) + 1)話まで読んだ",
+                systemImage: "plus.circle"
+            )
+        }
+
         Divider()
 
         // MARK: 日常操作

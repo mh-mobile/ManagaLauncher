@@ -31,6 +31,19 @@ struct LibraryCard: View {
                         MangaStatusBadgeView(entry: entry, fontSize: 10)
                             .padding(4)
                     }
+                    .overlay(alignment: .bottomLeading) {
+                        if let ep = entry.currentEpisode {
+                            Text("既読 \(ep)話")
+                                .font(.caption2.weight(.medium))
+                                .foregroundStyle(theme.onPrimary)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(
+                                    Capsule().fill(theme.primary.opacity(0.85))
+                                )
+                                .padding(4)
+                        }
+                    }
 
                 Text(entry.name)
                     .font(theme.captionFont)
