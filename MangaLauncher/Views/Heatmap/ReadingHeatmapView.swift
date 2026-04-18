@@ -33,7 +33,7 @@ struct ReadingHeatmapView: View {
             activityCounts = viewModel.stats.fetchActivityCounts(days: weeks * 7)
         }
         .sheet(item: $selectedDate) { date in
-            DayActivitySheet(date: date, viewModel: viewModel)
+            DayActivitySheet(initialDate: date, viewModel: viewModel, activityDates: Set(activityCounts.filter { $0.value > 0 }.keys))
         }
     }
 
@@ -250,57 +250,77 @@ struct ReadingHeatmapView: View {
 // MARK: - Day Activity Sheet
 
 private struct DayActivitySheet: View {
-    let date: Date
+    let initialDate: Date
     var viewModel: MangaViewModel
+    let activityDates: Set<Date>
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
     @State private var safariURL: URL?
+    @State private var currentDate: Date = Date()
+    @State private var showingDatePicker = false
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
     var body: some View {
         NavigationStack {
-            List {
-                let activities = viewModel.stats.fetchActivities(for: date)
-                ForEach(activities, id: \.id) { activity in
-                    let entry = viewModel.findEntry(by: activity.mangaEntryID)
-                    Button {
-                        if let entry {
-                            openMangaURL(entry.url)
+            VStack(spacing: 0) {
+                dateNavigationBar
+                Divider()
+                List {
+                    let activities = viewModel.stats.fetchActivities(for: currentDate)
+                    if activities.isEmpty {
+                        ContentUnavailableView {
+                            Label("アクティビティなし", systemImage: "calendar.badge.clock")
+                                .foregroundStyle(theme.onSurfaceVariant)
+                        } description: {
+                            Text("この日の読書記録はありません")
+                                .foregroundStyle(theme.onSurfaceVariant.opacity(0.7))
                         }
-                    } label: {
-                        HStack(spacing: 12) {
-                            if let entry, let imageData = entry.imageData,
-                               let image = imageData.toSwiftUIImage() {
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 40, height: 40)
-                                    .clipShape(RoundedRectangle(cornerRadius: theme.cardCornerRadius))
-                            } else {
-                                activityPlaceholderIcon
+                    } else {
+                        ForEach(activities, id: \.id) { activity in
+                            let entry = viewModel.findEntry(by: activity.mangaEntryID)
+                            Button {
+                                if let entry {
+                                    openMangaURL(entry.url)
+                                }
+                            } label: {
+                                HStack(spacing: 12) {
+                                    if let entry, let imageData = entry.imageData,
+                                       let image = imageData.toSwiftUIImage() {
+                                        image
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                            .frame(width: 40, height: 40)
+                                            .clipShape(RoundedRectangle(cornerRadius: theme.cardCornerRadius))
+                                    } else {
+                                        activityPlaceholderIcon
+                                    }
+                                    Text(activity.mangaName)
+                                        .foregroundStyle(theme.onSurface)
+                                        .fontWeight(theme.forceDarkMode ? .bold : .regular)
+                                }
                             }
-                            Text(activity.mangaName)
-                                .foregroundStyle(theme.onSurface)
-                                .fontWeight(theme.forceDarkMode ? .bold : .regular)
+                            .tint(theme.onSurface)
+                            .disabled(entry == nil)
                         }
                     }
-                    .tint(theme.onSurface)
-                    .disabled(entry == nil)
                 }
             }
             .themedNavigationStyle()
-            .navigationTitle(dateTitle)
-            #if os(iOS) || os(visionOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("閉じる") { dismiss() }
                         .if(theme.forceDarkMode) { view in
                             view.foregroundStyle(theme.onSurfaceVariant)
                         }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        showingDatePicker = true
+                    } label: {
+                        Image(systemName: "calendar")
+                    }
                 }
             }
             #if canImport(UIKit)
@@ -308,8 +328,54 @@ private struct DayActivitySheet: View {
                 SafariView(url: url)
             }
             #endif
+            .sheet(isPresented: $showingDatePicker) {
+                ActivityDatePickerSheet(
+                    selectedDate: $currentDate,
+                    activityDates: activityDates,
+                    onDone: { showingDatePicker = false }
+                )
+            }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
+        .onAppear { currentDate = initialDate }
+    }
+
+    // MARK: - Date navigation bar
+
+    @ViewBuilder
+    private var dateNavigationBar: some View {
+        HStack {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    currentDate = Calendar.current.date(byAdding: .day, value: -1, to: currentDate) ?? currentDate
+                }
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.body.weight(.semibold))
+            }
+
+            Spacer()
+
+            Text(dateTitle)
+                .font(theme.subheadlineFont.weight(.semibold))
+                .foregroundStyle(theme.onSurface)
+                .contentTransition(.numericText())
+                .animation(.easeInOut(duration: 0.2), value: currentDate)
+
+            Spacer()
+
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    currentDate = Calendar.current.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
+                }
+            } label: {
+                Image(systemName: "chevron.right")
+                    .font(.body.weight(.semibold))
+            }
+            .disabled(Calendar.current.isDateInToday(currentDate))
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 10)
     }
 
     private func openMangaURL(_ urlString: String) {
@@ -318,44 +384,54 @@ private struct DayActivitySheet: View {
 
     @ViewBuilder
     private var activityPlaceholderIcon: some View {
-        switch ThemeManager.shared.mode {
-        case .ink:
-            RoundedRectangle(cornerRadius: theme.cardCornerRadius)
-                .fill(theme.surfaceContainerHighest)
-                .frame(width: 40, height: 40)
-                .overlay {
-                    Image(systemName: "book.closed")
-                        .foregroundStyle(theme.onSurfaceVariant)
-                }
-        case .classic:
-            RoundedRectangle(cornerRadius: 8)
-                .fill(.fill.tertiary)
-                .frame(width: 40, height: 40)
-                .overlay {
-                    Image(systemName: "book.closed")
-                        .foregroundStyle(.secondary)
-                }
-        case .retro:
-            RoundedRectangle(cornerRadius: theme.cardCornerRadius)
-                .fill(theme.surfaceContainerHigh)
-                .frame(width: 40, height: 40)
-                .overlay {
-                    Image(systemName: "book.closed")
-                        .foregroundStyle(theme.onSurfaceVariant)
-                }
-        }
+        RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+            .fill(theme.usesCustomSurface ? theme.surfaceContainerHigh : Color(.tertiarySystemFill))
+            .frame(width: 40, height: 40)
+            .overlay {
+                Image(systemName: "book.closed")
+                    .foregroundStyle(theme.onSurfaceVariant)
+            }
     }
 
     private var dateTitle: String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ja_JP")
-        formatter.dateFormat = "M月d日(E)"
-        return formatter.string(from: date)
+        Self.dateTitleFormatter.string(from: currentDate)
     }
+
+    private static let dateTitleFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "ja_JP")
+        f.dateFormat = "M月d日(E)"
+        return f
+    }()
 }
 
 // MARK: - Date + Identifiable
 
 extension Date: @retroactive Identifiable {
     public var id: TimeInterval { timeIntervalSince1970 }
+}
+
+// MARK: - Calendar picker with activity dots
+
+private struct ActivityDatePickerSheet: View {
+    @Binding var selectedDate: Date
+    let activityDates: Set<Date>
+    let onDone: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            ActivityCalendarView(selectedDate: $selectedDate, activeDays: activityDates)
+                .padding()
+                .navigationTitle("日付を選択")
+                #if os(iOS) || os(visionOS)
+                .navigationBarTitleDisplayMode(.inline)
+                #endif
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("完了") { onDone() }
+                    }
+                }
+        }
+        .presentationDetents([.medium, .large])
+    }
 }
