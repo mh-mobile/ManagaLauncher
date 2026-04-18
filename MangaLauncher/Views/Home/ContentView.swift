@@ -16,7 +16,6 @@ struct ContentView: View {
 
     var viewModel: MangaViewModel
     @State private var homeState = HomeState()
-    @AppStorage(UserDefaultsKeys.hasSeenOnboarding) private var hasSeenOnboarding = false
     @AppStorage(UserDefaultsKeys.displayMode) private var displayMode: DisplayMode = .grid
     @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
 
@@ -25,17 +24,12 @@ struct ContentView: View {
     private let orderedDays = DayOfWeek.orderedDays
 
     var body: some View {
-        if !hasSeenOnboarding {
-            OnboardingView {
-                hasSeenOnboarding = true
-            }
-        } else {
-            NavigationStack {
-                mainContent(viewModel: viewModel)
-            }
-            .onAppear {
-                homeState.wallpaper.loadImage()
-            }
+        NavigationStack {
+            mainContent(viewModel: viewModel)
+        }
+        .onAppear {
+            homeState.wallpaper.loadImage()
+        }
             .onMangaDataChange {
                 viewModel.refresh()
             }
@@ -49,7 +43,6 @@ struct ContentView: View {
             .onReceive(NotificationCenter.default.publisher(for: .openCatchUp)) { _ in
                 homeState.sheets.showingCatchUp = true
             }
-        }
     }
 
     // MARK: - Main Content
