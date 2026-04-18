@@ -137,7 +137,20 @@ final class MangaViewModel {
         save()
     }
 
-    func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, publicationStatus: PublicationStatus = .active, readingState: ReadingState = .following, isOneShot: Bool = false, memo: String = "") {
+    func incrementEpisode(_ entry: MangaEntry) {
+        let newEpisode = (entry.currentEpisode ?? 0) + 1
+        entry.currentEpisode = newEpisode
+        let activity = ReadingActivity(
+            date: Date(),
+            mangaName: entry.name,
+            mangaEntryID: entry.id,
+            episodeNumber: newEpisode
+        )
+        modelContext.insert(activity)
+        save()
+    }
+
+    func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, publicationStatus: PublicationStatus = .active, readingState: ReadingState = .following, isOneShot: Bool = false, memo: String = "", currentEpisode: Int? = nil) {
         for day in days {
             let existingEntries = fetchEntries(for: day)
             let maxOrder = existingEntries.map(\.sortOrder).max() ?? -1
@@ -160,6 +173,7 @@ final class MangaViewModel {
             if !memo.isEmpty {
                 entry.memoUpdatedAt = Date()
             }
+            entry.currentEpisode = currentEpisode
             modelContext.insert(entry)
         }
         save()
@@ -178,7 +192,8 @@ final class MangaViewModel {
         isOneShot: Bool,
         publicationStatus: PublicationStatus,
         readingState: ReadingState,
-        memo: String
+        memo: String,
+        currentEpisode: Int? = nil
     ) {
         let memoChanged = entry.memo != memo
         entry.name = name
@@ -198,6 +213,7 @@ final class MangaViewModel {
         if memoChanged {
             entry.memoUpdatedAt = memo.isEmpty ? nil : Date()
         }
+        entry.currentEpisode = currentEpisode
         save()
     }
 
@@ -373,6 +389,7 @@ final class MangaViewModel {
             entry.isOneShot = backupEntry.isOneShot ?? false
             entry.memo = backupEntry.memo ?? ""
             entry.memoUpdatedAt = backupEntry.memoUpdatedAt
+            entry.currentEpisode = backupEntry.currentEpisode
             // v6+ バックアップは publicationStatusRawValue / readingStateRawValue を authoritative とする。
             // 両方 nil のときだけ v5 以前の legacy Bool から導出する。
             // 通常 export 側は両方を必ず書くので片方 nil は現実にはほぼ起こらないが、

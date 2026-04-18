@@ -32,6 +32,8 @@ struct EditEntryView: View {
     @State private var readingState: ReadingState = .following
     @State private var isOneShot = false
     @State private var memo: String = ""
+    @State private var currentEpisode: Int?
+    @State private var episodeText: String = ""
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
@@ -282,6 +284,36 @@ struct EditEntryView: View {
                 }
 
                 Section {
+                    HStack {
+                        TextField("未設定", text: $episodeText)
+                            #if os(iOS) || os(visionOS)
+                            .keyboardType(.numberPad)
+                            #endif
+                            .onChange(of: episodeText) { _, newValue in
+                                if newValue.isEmpty {
+                                    currentEpisode = nil
+                                } else if let val = Int(newValue), val > 0 {
+                                    currentEpisode = val
+                                }
+                            }
+                        if currentEpisode != nil {
+                            Button {
+                                currentEpisode = nil
+                                episodeText = ""
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                } header: {
+                    Text("話数")
+                } footer: {
+                    Text("読んだ話数を記録します。長押しメニューからも更新できます。")
+                }
+
+                Section {
                     TextField("メモ（あらすじ・キャラ相関図など）", text: $memo, axis: .vertical)
                         .lineLimit(3...10)
                         #if os(iOS) || os(visionOS)
@@ -387,6 +419,8 @@ struct EditEntryView: View {
                     readingState = entry.readingState
                     isOneShot = entry.isOneShot
                     memo = entry.memo
+                    currentEpisode = entry.currentEpisode
+                    episodeText = entry.currentEpisode.map { String($0) } ?? ""
                     didLoadEntry = true
                 } else if entry == nil, !didLoadEntry {
                     nextUpdateDate = nextUpdateCandidates.first ?? nextOccurrence(of: selectedDay)
@@ -444,7 +478,8 @@ struct EditEntryView: View {
                 isOneShot: isOneShot,
                 publicationStatus: publicationStatus,
                 readingState: readingState,
-                memo: memo
+                memo: memo,
+                currentEpisode: currentEpisode
             )
         } else {
             viewModel.addEntry(
@@ -459,7 +494,8 @@ struct EditEntryView: View {
                 publicationStatus: isOneShot ? .active : publicationStatus,
                 readingState: readingState,
                 isOneShot: isOneShot,
-                memo: memo
+                memo: memo,
+                currentEpisode: currentEpisode
             )
         }
     }

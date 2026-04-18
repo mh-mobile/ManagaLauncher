@@ -48,10 +48,21 @@ struct MangaGridCell: View {
                         NextUpdateBadgeView(result: result)
                             .padding(.horizontal, 5)
                             .padding(.vertical, 2)
-                            // テーマに沿った塗り。`.ultraThinMaterial` だと
-                            // Ink / Retro の独自背景と整合せず浮いて見える。
                             .background(
                                 Capsule().fill(theme.surfaceContainerHighest.opacity(0.85))
+                            )
+                            .padding(4)
+                    }
+                }
+                .overlay(alignment: .bottomLeading) {
+                    if let ep = entry.currentEpisode {
+                        Text("既読 \(ep)話")
+                            .font(.caption2.weight(.medium))
+                            .foregroundStyle(theme.onPrimary)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(
+                                Capsule().fill(theme.primary.opacity(0.85))
                             )
                             .padding(4)
                     }

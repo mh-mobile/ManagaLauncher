@@ -11,12 +11,14 @@ final class ReadingActivity {
     var timestamp: Date?
     var mangaName: String = ""
     var mangaEntryID: UUID = UUID()
+    var episodeNumber: Int?
 
-    init(date: Date, mangaName: String, mangaEntryID: UUID) {
+    init(date: Date, mangaName: String, mangaEntryID: UUID, episodeNumber: Int? = nil) {
         self.id = UUID()
         self.date = Calendar.current.startOfDay(for: date)
         self.timestamp = date
         self.mangaName = mangaName
         self.mangaEntryID = mangaEntryID
+        self.episodeNumber = episodeNumber
     }
 }

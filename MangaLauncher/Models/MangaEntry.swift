@@ -111,6 +111,8 @@ final class MangaEntry {
     var memo: String = ""
     /// メモの最終更新日時。並び替え用。
     var memoUpdatedAt: Date?
+    /// 現在の話数。nil は未設定。
+    var currentEpisode: Int?
 
     /// 掲載状況の Int 値（PublicationStatus.rawValue）
     var publicationStatusRawValue: Int = 0

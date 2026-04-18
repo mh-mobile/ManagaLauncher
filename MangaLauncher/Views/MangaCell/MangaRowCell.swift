@@ -66,10 +66,22 @@ struct MangaRowCell: View {
                     Text(entry.name)
                         .font(theme.bodyFont)
                         .foregroundStyle(theme.onSurface)
-                    if !entry.publisher.isEmpty {
-                        Text(entry.publisher)
-                            .font(theme.captionFont)
-                            .foregroundStyle(theme.onSurfaceVariant)
+                    HStack(spacing: 4) {
+                        if !entry.publisher.isEmpty {
+                            Text(entry.publisher)
+                                .font(theme.captionFont)
+                                .foregroundStyle(theme.onSurfaceVariant)
+                        }
+                        if let ep = entry.currentEpisode {
+                            if !entry.publisher.isEmpty {
+                                Text("·")
+                                    .font(theme.captionFont)
+                                    .foregroundStyle(theme.onSurfaceVariant)
+                            }
+                            Text("既読 \(ep)話")
+                                .font(theme.captionFont)
+                                .foregroundStyle(theme.primary)
+                        }
                     }
                 }
 
