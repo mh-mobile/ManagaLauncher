@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AB50020000112233AA000002 /* MangaEntryAccessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50020000112233AA000001 /* MangaEntryAccessibility.swift */; };
 		C2C5E8A68C5957E075832254 /* ImageColorExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05365AD0D66B41D8C20EDF49 /* ImageColorExtractor.swift */; };
 		C2C5E8A68C5957E075832255 /* ImageColorExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05365AD0D66B41D8C20EDF49 /* ImageColorExtractor.swift */; };
 		ECCE6BE2DD70F34BA69061B3 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC38F4ED01AE0D411DA0C66B /* DesignSystem.swift */; };
@@ -170,6 +171,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AB50020000112233AA000001 /* MangaEntryAccessibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaEntryAccessibility.swift; sourceTree = "<group>"; };
 		EC38F4ED01AE0D411DA0C66B /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		05365AD0D66B41D8C20EDF49 /* ImageColorExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageColorExtractor.swift; sourceTree = "<group>"; };
 		0557E9481117CB9F8B903947 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -619,6 +621,7 @@
 				BC000510 /* SectionHeaderView.swift */,
 				BC000810 /* MangaDataChangeModifier.swift */,
 				AB5001FF00112233AA000002 /* NextUpdateFormatter.swift */,
+				AB50020000112233AA000001 /* MangaEntryAccessibility.swift */,
 				AB5001FF00112233AA000004 /* NextUpdateBadgeView.swift */,
 			);
 			path = Shared;
@@ -817,6 +820,7 @@
 				AB4001FF00112233AA000003 /* EditEntryStatusSection.swift in Sources */,
 				AB4001FF00112233AA000005 /* AppError.swift in Sources */,
 				AB5001FF00112233AA000001 /* NextUpdateFormatter.swift in Sources */,
+				AB50020000112233AA000002 /* MangaEntryAccessibility.swift in Sources */,
 				AB5001FF00112233AA000003 /* NextUpdateBadgeView.swift in Sources */,
 				BC000701 /* SearchResultRow.swift in Sources */,
 				BC000702 /* MemoMatchRow.swift in Sources */,

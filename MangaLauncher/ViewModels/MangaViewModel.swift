@@ -434,13 +434,12 @@ final class MangaViewModel {
     }
 
     func findEntries(by ids: Set<UUID>) -> [UUID: MangaEntry] {
-        let descriptor = FetchDescriptor<MangaEntry>()
+        let idArray = Array(ids)
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { idArray.contains($0.id) }
+        )
         let entries = modelContext.fetchLogged(descriptor)
-        var result: [UUID: MangaEntry] = [:]
-        for entry in entries where ids.contains(entry.id) {
-            result[entry.id] = entry
-        }
-        return result
+        return Dictionary(uniqueKeysWithValues: entries.map { ($0.id, $0) })
     }
 
     func markAsRead(_ entry: MangaEntry) {

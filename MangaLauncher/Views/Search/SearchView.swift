@@ -21,19 +21,21 @@ struct SearchView: View {
     @State private var commentingEntry: MangaEntry?
     @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
 
+    @State private var cachedResults = SearchResults()
+
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
     // MARK: - Search Results
 
     private struct SearchResults {
-        var entries: [MangaEntry]
-        var memos: [MangaEntry]
-        var comments: [(comment: MangaComment, entry: MangaEntry)]
+        var entries: [MangaEntry] = []
+        var memos: [MangaEntry] = []
+        var comments: [(comment: MangaComment, entry: MangaEntry)] = []
 
         var isEmpty: Bool { entries.isEmpty && memos.isEmpty && comments.isEmpty }
     }
 
-    private var searchResults: SearchResults {
+    private func computeSearchResults() -> SearchResults {
         let allEntries = viewModel.allEntries()
         let dayFiltered = applyDayFilter(to: allEntries)
         let colorFiltered = applyColorFilter(to: dayFiltered)
@@ -89,6 +91,10 @@ struct SearchView: View {
         }
 
         return SearchResults(entries: nameMatched, memos: memoMatched, comments: commentMatched)
+    }
+
+    private func refreshResults() {
+        cachedResults = computeSearchResults()
     }
 
     // MARK: - Filter Logic
@@ -187,6 +193,15 @@ struct SearchView: View {
             }
             #endif
         }
+        .onAppear { refreshResults() }
+        .onChange(of: searchText) { _, _ in refreshResults() }
+        .onChange(of: contentMode) { _, _ in refreshResults() }
+        .onChange(of: publicationFilter) { _, _ in refreshResults() }
+        .onChange(of: readingFilter) { _, _ in refreshResults() }
+        .onChange(of: showOneShotOnly) { _, _ in refreshResults() }
+        .onChange(of: selectedDay) { _, _ in refreshResults() }
+        .onChange(of: selectedColors) { _, _ in refreshResults() }
+        .onChange(of: viewModel.refreshCounter) { _, _ in refreshResults() }
         .onMangaDataChange {
             viewModel.refresh()
         }
@@ -196,11 +211,10 @@ struct SearchView: View {
 
     @ViewBuilder
     private var content: some View {
-        let results = searchResults
-        if results.isEmpty {
+        if cachedResults.isEmpty {
             emptyState
         } else {
-            resultList(results: results)
+            resultList(results: cachedResults)
         }
     }
 
