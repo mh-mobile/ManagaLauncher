@@ -7,8 +7,14 @@ enum RootTab: Hashable {
 struct RootTabView: View {
     var viewModel: MangaViewModel
     @State private var selectedTab: RootTab = .home
+    @AppStorage(UserDefaultsKeys.hasSeenOnboarding) private var hasSeenOnboarding = false
 
     var body: some View {
+        if !hasSeenOnboarding {
+            OnboardingView {
+                hasSeenOnboarding = true
+            }
+        } else {
         TabView(selection: $selectedTab) {
             Tab("ホーム", systemImage: "house.fill", value: RootTab.home) {
                 ContentView(viewModel: viewModel)
@@ -62,6 +68,7 @@ struct RootTabView: View {
             Button("OK") { viewModel.lastError = nil }
         } message: { error in
             Text(error.message)
+        }
         }
     }
 }
