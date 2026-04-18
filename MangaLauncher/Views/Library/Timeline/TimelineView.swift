@@ -4,9 +4,10 @@ import SwiftUI
 /// WeekStripView で日付切替、ActivityCalendarView で月 grid ピッカー、
 /// TimelineFilter で種別フィルタを提供する。
 struct TimelineView: View {
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     var viewModel: MangaViewModel
-    @State private var selectedDate: Date = Date()
+    @State private var selectedDate: Date = Calendar.current.startOfDay(for: Date())
     @State private var editingEntry: MangaEntry?
     @State private var commentingEntry: MangaEntry?
     @State private var safariURL: URL?
@@ -15,10 +16,13 @@ struct TimelineView: View {
     @State private var chartGranularity: TimelineChartGranularity = .week
     @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
 
+    @State private var pageAnchor: Date = Calendar.current.startOfDay(for: Date())
+
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
+    private static let pageRadius = 90
+
     var body: some View {
-        // 1 度だけ fetch して week strip とタイムラインで共有する
         let _ = viewModel.refreshCounter
         let allEntries = viewModel.allEntries()
         let allComments = viewModel.allComments()
@@ -28,6 +32,7 @@ struct TimelineView: View {
             comments: allComments,
             activities: allActivities
         )
+        let dates = pageDates()
 
         return VStack(alignment: .leading, spacing: 0) {
             WeekStripView(selectedDate: $selectedDate, activeDays: activeDays)
@@ -37,25 +42,50 @@ struct TimelineView: View {
                     theme.usesCustomSurface ? AnyView(theme.surface) : AnyView(Color(uiColor: .systemBackground))
                 )
             Divider()
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    header
-                    chartBlock(entries: allEntries, comments: allComments, activities: allActivities)
-                    filterChips
-                    timelineSection(entries: allEntries, comments: allComments, activities: allActivities)
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 12)
+
+            VStack(alignment: .leading, spacing: 16) {
+                header
+                chartBlock(entries: allEntries, comments: allComments, activities: allActivities)
+                filterChips
             }
+            .padding(.horizontal)
+            .padding(.top, 12)
+
+            TabView(selection: $selectedDate) {
+                ForEach(dates, id: \.self) { date in
+                    TimelineDatePage(
+                        date: date,
+                        filter: $filter,
+                        allEntries: allEntries,
+                        allComments: allComments,
+                        allActivities: allActivities,
+                        onTap: { handleTap(on: $0) }
+                    )
+                    .tag(date)
+                }
+            }
+            #if os(iOS) || os(visionOS)
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            #endif
         }
         .background(
             theme.usesCustomSurface ? AnyView(theme.surface.ignoresSafeArea()) : AnyView(Color.clear)
         )
+        .background { InteractivePopDisabler() }
         .navigationTitle("タイムライン")
         #if os(iOS) || os(visionOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .navigationBarBackButtonHidden(true)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button { dismiss() } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.backward")
+                        Text("戻る")
+                    }
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     showingMonthPicker = true
@@ -63,6 +93,9 @@ struct TimelineView: View {
                     Image(systemName: "calendar")
                 }
             }
+        }
+        .onChange(of: selectedDate) { _, newDate in
+            reanchorIfNeeded(for: newDate)
         }
         .sheet(isPresented: $showingMonthPicker) {
             NavigationStack {
@@ -97,7 +130,52 @@ struct TimelineView: View {
         }
     }
 
-    // MARK: - Filter chips
+    // MARK: - Fixed sections
+
+    @ViewBuilder
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(Self.dayOfMonthFormatter.string(from: selectedDate))
+                .font(.system(size: 40, weight: .bold))
+                .foregroundStyle(theme.onSurface)
+                .contentTransition(.numericText())
+            Text(Self.monthYearFormatter.string(from: selectedDate))
+                .font(theme.subheadlineFont)
+                .foregroundStyle(theme.onSurfaceVariant)
+        }
+        .padding(.bottom, 4)
+        .animation(.easeInOut(duration: 0.2), value: selectedDate)
+    }
+
+    @ViewBuilder
+    private func chartBlock(
+        entries: [MangaEntry],
+        comments: [MangaComment],
+        activities: [ReadingActivity]
+    ) -> some View {
+        let allCounts = TimelineBuilder.dailyCounts(
+            days: chartGranularity.days(containing: selectedDate),
+            entries: entries,
+            comments: comments,
+            activities: activities
+        )
+        let counts = filter.kind.map { kind in allCounts.filter { $0.kind == kind } } ?? allCounts
+        VStack(alignment: .leading, spacing: 8) {
+            Picker("期間", selection: $chartGranularity) {
+                ForEach(TimelineChartGranularity.allCases) { g in
+                    Text(g.displayName).tag(g)
+                }
+            }
+            .pickerStyle(.segmented)
+            .frame(maxWidth: 160)
+
+            TimelineChartView(
+                selectedDate: $selectedDate,
+                granularity: chartGranularity,
+                counts: counts
+            )
+        }
+    }
 
     @ViewBuilder
     private var filterChips: some View {
@@ -134,76 +212,20 @@ struct TimelineView: View {
         .buttonStyle(.plain)
     }
 
+    // MARK: - Paging helpers
 
-    // MARK: - Header
-
-    @ViewBuilder
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(Self.dayOfMonthFormatter.string(from: selectedDate))
-                .font(.system(size: 40, weight: .bold))
-                .foregroundStyle(theme.onSurface)
-            Text(Self.monthYearFormatter.string(from: selectedDate))
-                .font(theme.subheadlineFont)
-                .foregroundStyle(theme.onSurfaceVariant)
-        }
-        .padding(.bottom, 4)
-    }
-
-    // MARK: - Timeline list
-
-    @ViewBuilder
-    private func timelineSection(
-        entries: [MangaEntry],
-        comments: [MangaComment],
-        activities: [ReadingActivity]
-    ) -> some View {
-        let allItems = TimelineBuilder.items(
-            for: selectedDate,
-            entries: entries,
-            comments: comments,
-            activities: activities
-        )
-        let items = filter.apply(to: allItems)
-
-        if items.isEmpty {
-            emptyState(hasAnyItems: !allItems.isEmpty)
-                .padding(.top, 40)
-        } else {
-            LazyVStack(spacing: 0) {
-                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-                    TimelineRowView(
-                        item: item,
-                        isFirst: index == 0,
-                        isLast: index == items.count - 1,
-                        onTap: { handleTap(on: item) }
-                    )
-                }
-            }
+    private func pageDates() -> [Date] {
+        let calendar = Calendar.current
+        return (-Self.pageRadius...Self.pageRadius).map {
+            calendar.date(byAdding: .day, value: $0, to: pageAnchor)!
         }
     }
 
-    /// 空状態。フィルタ適用で 0 件になった場合と、そもそも 0 件の場合を区別する。
-    @ViewBuilder
-    private func emptyState(hasAnyItems: Bool) -> some View {
-        if hasAnyItems && filter != .all {
-            ContentUnavailableView {
-                Label("該当するアクティビティがありません", systemImage: "line.3.horizontal.decrease.circle")
-                    .foregroundStyle(theme.onSurfaceVariant)
-            } description: {
-                Text("フィルタ「\(filter.displayName)」に合うものはこの日にありません")
-                    .foregroundStyle(theme.onSurfaceVariant.opacity(0.7))
-            } actions: {
-                Button("すべて表示") { filter = .all }
-            }
-        } else {
-            ContentUnavailableView {
-                Label("この日はアクティビティがありません", systemImage: "calendar.badge.clock")
-                    .foregroundStyle(theme.onSurfaceVariant)
-            } description: {
-                Text("コメント・メモ編集・既読の記録がここに並びます")
-                    .foregroundStyle(theme.onSurfaceVariant.opacity(0.7))
-            }
+    private func reanchorIfNeeded(for date: Date) {
+        let calendar = Calendar.current
+        let days = calendar.dateComponents([.day], from: pageAnchor, to: date).day ?? 0
+        if abs(days) > Self.pageRadius - 15 {
+            pageAnchor = calendar.startOfDay(for: date)
         }
     }
 
@@ -216,64 +238,115 @@ struct TimelineView: View {
         case .memo(let entry):
             editingEntry = entry
         case .read(_, let entry):
-            // 「読みました」の再訪導線としてマンガサイトを開く。
-            // entry が見つからないのは削除済みエントリの場合のみ (無視)。
             guard let entry else { return }
             MangaURLOpener(browserMode: browserMode, openURL: openURL) { safariURL = $0 }.open(entry.url)
         }
     }
 
-    // MARK: - Chart block
-
-    /// 期間トグル + 棒グラフをまとめたブロック。
-    /// フィルタが .all 以外ならその kind だけに絞った counts を渡す。
-    @ViewBuilder
-    private func chartBlock(
-        entries: [MangaEntry],
-        comments: [MangaComment],
-        activities: [ReadingActivity]
-    ) -> some View {
-        let allCounts = TimelineBuilder.dailyCounts(
-            days: chartGranularity.days(containing: selectedDate),
-            entries: entries,
-            comments: comments,
-            activities: activities
-        )
-        let counts = filter.kind.map { kind in allCounts.filter { $0.kind == kind } } ?? allCounts
-        VStack(alignment: .leading, spacing: 8) {
-            granularityPicker
-            TimelineChartView(
-                selectedDate: $selectedDate,
-                granularity: chartGranularity,
-                counts: counts
-            )
-        }
-    }
-
-    @ViewBuilder
-    private var granularityPicker: some View {
-        Picker("期間", selection: $chartGranularity) {
-            ForEach(TimelineChartGranularity.allCases) { g in
-                Text(g.displayName).tag(g)
-            }
-        }
-        .pickerStyle(.segmented)
-        .frame(maxWidth: 160)
-    }
-
     // MARK: - Formatters
 
-    private static let dayOfMonthFormatter: DateFormatter = {
+    static let dayOfMonthFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "ja_JP")
         f.dateFormat = "d日 (EEE)"
         return f
     }()
 
-    private static let monthYearFormatter: DateFormatter = {
+    static let monthYearFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "ja_JP")
         f.dateFormat = "yyyy年 M月"
         return f
     }()
 }
+
+// MARK: - Swipeable timeline items (per-date page)
+
+private struct TimelineDatePage: View {
+    let date: Date
+    @Binding var filter: TimelineFilter
+    let allEntries: [MangaEntry]
+    let allComments: [MangaComment]
+    let allActivities: [ReadingActivity]
+    let onTap: (TimelineItem) -> Void
+
+    private var theme: ThemeStyle { ThemeManager.shared.style }
+
+    var body: some View {
+        let allItems = TimelineBuilder.items(
+            for: date,
+            entries: allEntries,
+            comments: allComments,
+            activities: allActivities
+        )
+        let items = filter.apply(to: allItems)
+
+        ScrollView {
+            if items.isEmpty {
+                emptyState(hasAnyItems: !allItems.isEmpty)
+                    .padding(.top, 40)
+            } else {
+                LazyVStack(spacing: 0) {
+                    ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                        TimelineRowView(
+                            item: item,
+                            isFirst: index == 0,
+                            isLast: index == items.count - 1,
+                            onTap: { onTap(item) }
+                        )
+                    }
+                }
+            }
+        }
+        .padding(.horizontal)
+    }
+
+    @ViewBuilder
+    private func emptyState(hasAnyItems: Bool) -> some View {
+        if hasAnyItems && filter != .all {
+            ContentUnavailableView {
+                Label("該当するアクティビティがありません", systemImage: "line.3.horizontal.decrease.circle")
+                    .foregroundStyle(theme.onSurfaceVariant)
+            } description: {
+                Text("フィルタ「\(filter.displayName)」に合うものはこの日にありません")
+                    .foregroundStyle(theme.onSurfaceVariant.opacity(0.7))
+            } actions: {
+                Button("すべて表示") {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        filter = .all
+                    }
+                }
+            }
+        } else {
+            ContentUnavailableView {
+                Label("この日はアクティビティがありません", systemImage: "calendar.badge.clock")
+                    .foregroundStyle(theme.onSurfaceVariant)
+            } description: {
+                Text("コメント・メモ編集・既読の記録がここに並びます")
+                    .foregroundStyle(theme.onSurfaceVariant.opacity(0.7))
+            }
+        }
+    }
+}
+
+// MARK: - Disable interactive pop gesture
+
+#if canImport(UIKit)
+private struct InteractivePopDisabler: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> PopDisablerController {
+        PopDisablerController()
+    }
+    func updateUIViewController(_ controller: PopDisablerController, context: Context) {}
+}
+
+private final class PopDisablerController: UIViewController {
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+    }
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+    }
+}
+#endif
