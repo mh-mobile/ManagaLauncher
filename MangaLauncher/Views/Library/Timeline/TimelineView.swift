@@ -43,23 +43,19 @@ struct TimelineView: View {
                 )
             Divider()
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    header
-                    chartBlock(entries: allEntries, comments: allComments, activities: allActivities)
-                    filterChips
-                }
-                .padding(.horizontal)
-                .padding(.top, 12)
+            VStack(alignment: .leading, spacing: 16) {
+                header
+                chartBlock(entries: allEntries, comments: allComments, activities: allActivities)
+                filterChips
             }
-            .scrollDisabled(true)
-            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal)
+            .padding(.top, 12)
 
             TabView(selection: $selectedDate) {
                 ForEach(dates, id: \.self) { date in
                     TimelineDatePage(
                         date: date,
-                        filter: filter,
+                        filter: $filter,
                         allEntries: allEntries,
                         allComments: allComments,
                         allActivities: allActivities,
@@ -268,7 +264,7 @@ struct TimelineView: View {
 
 private struct TimelineDatePage: View {
     let date: Date
-    let filter: TimelineFilter
+    @Binding var filter: TimelineFilter
     let allEntries: [MangaEntry]
     let allComments: [MangaComment]
     let allActivities: [ReadingActivity]
@@ -314,6 +310,12 @@ private struct TimelineDatePage: View {
             } description: {
                 Text("フィルタ「\(filter.displayName)」に合うものはこの日にありません")
                     .foregroundStyle(theme.onSurfaceVariant.opacity(0.7))
+            } actions: {
+                Button("すべて表示") {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        filter = .all
+                    }
+                }
             }
         } else {
             ContentUnavailableView {
