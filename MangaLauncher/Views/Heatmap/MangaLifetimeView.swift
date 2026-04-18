@@ -250,18 +250,22 @@ struct LifetimeDetailSheet: View {
     @Environment(\.openURL) private var openURL
     @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
     @State private var safariURL: URL?
+    @State private var filter: TimelineFilter = .all
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
     var body: some View {
         NavigationStack {
-            let items = buildItems()
+            let allItems = buildItems()
+            let items = filter.apply(to: allItems)
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     periodHeader
+                    filterChips
                     if items.isEmpty {
                         ContentUnavailableView {
-                            Label("イベントなし", systemImage: "calendar.badge.clock")
+                            Label(allItems.isEmpty ? "イベントなし" : "該当するイベントがありません",
+                                  systemImage: allItems.isEmpty ? "calendar.badge.clock" : "line.3.horizontal.decrease.circle")
                                 .foregroundStyle(theme.onSurfaceVariant)
                         }
                         .padding(.top, 40)
@@ -320,6 +324,35 @@ struct LifetimeDetailSheet: View {
         .foregroundStyle(theme.onSurfaceVariant)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 8)
+    }
+
+    @ViewBuilder
+    private var filterChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(TimelineFilter.allCases) { option in
+                    let isSelected = filter == option
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.15)) { filter = option }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: option.iconName)
+                                .font(.caption2)
+                            Text(option.displayName)
+                                .font(theme.captionFont.weight(.medium))
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(
+                            Capsule().fill(isSelected ? Color.accentColor : theme.surfaceContainerHigh)
+                        )
+                        .foregroundStyle(isSelected ? Color.white : theme.onSurface)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(.bottom, 8)
     }
 
     @ViewBuilder
