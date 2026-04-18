@@ -13,6 +13,7 @@ struct MangaRowCell: View {
     #endif
     let onOpenURL: (String) -> Void
 
+    @State private var lifetimeEntry: MangaEntry?
     @AppStorage(UserDefaultsKeys.showsNextUpdateBadge) private var showsNextUpdateBadge: Bool = true
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
@@ -163,13 +164,21 @@ struct MangaRowCell: View {
                 }
             )
             .contextMenu {
-                MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry) {
+                MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, onShowLifetime: { lifetimeEntry = entry }) {
                     #if os(iOS) || os(visionOS)
                     withAnimation(.easeInOut(duration: 0.2)) {
                         listEditMode = .active
                     }
                     #endif
                 }
+            }
+            .sheet(item: $lifetimeEntry) { entry in
+                let lifetime = LifetimeBuilder.build(
+                    entries: [entry],
+                    activities: viewModel.allActivities(),
+                    comments: viewModel.allComments()
+                ).first ?? MangaLifetime(entry: entry, startDate: Date(), endDate: Date(), activityCount: 0)
+                LifetimeDetailSheet(lifetime: lifetime, viewModel: viewModel)
             }
         }
     }

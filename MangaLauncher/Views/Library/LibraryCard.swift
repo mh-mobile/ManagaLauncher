@@ -8,6 +8,7 @@ struct LibraryCard: View {
     @Binding var commentingEntry: MangaEntry?
     let onOpenURL: (String) -> Void
 
+    @State private var lifetimeEntry: MangaEntry?
     private var theme: ThemeStyle { ThemeManager.shared.style }
     private let cardWidth: CGFloat = 130
 
@@ -62,7 +63,15 @@ struct LibraryCard: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry)
+            MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, onShowLifetime: { lifetimeEntry = entry })
+        }
+        .sheet(item: $lifetimeEntry) { entry in
+            let lifetime = LifetimeBuilder.build(
+                entries: [entry],
+                activities: viewModel.allActivities(),
+                comments: viewModel.allComments()
+            ).first ?? MangaLifetime(entry: entry, startDate: Date(), endDate: Date(), activityCount: 0)
+            LifetimeDetailSheet(lifetime: lifetime, viewModel: viewModel)
         }
     }
 

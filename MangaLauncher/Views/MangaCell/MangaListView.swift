@@ -28,12 +28,27 @@ struct MangaListView: View {
                     viewModel.queueDelete(entry)
                 }
             }
-            .onMove { source, destination in
-                viewModel.moveEntries(for: day, from: source, to: destination)
+            .if(listEditMode == .active) { view in
+                view.onMove { source, destination in
+                    viewModel.moveEntries(for: day, from: source, to: destination)
+                }
             }
             .listRowSeparator(.hidden)
             .if(theme.usesCustomSurface) { view in
                 view.listRowInsets(EdgeInsets(top: 2, leading: 12, bottom: 2, trailing: 12))
+            }
+
+            Section {
+                Color.clear
+                    .frame(height: 200)
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .contentShape(Rectangle())
+                    .onLongPressGesture(minimumDuration: 0.5) {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            listEditMode = .active
+                        }
+                    }
             }
         }
         .listStyle(.plain)
@@ -42,14 +57,6 @@ struct MangaListView: View {
         .if(theme.usesCustomSurface && !hasWallpaper) { view in
             view.background(theme.surface)
         }
-        .simultaneousGesture(
-            LongPressGesture(minimumDuration: 0.5)
-                .onEnded { _ in
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        listEditMode = .active
-                    }
-                }
-        )
         #if os(iOS) || os(visionOS)
         .environment(\.editMode, $listEditMode)
         #endif
