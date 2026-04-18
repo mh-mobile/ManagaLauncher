@@ -129,6 +129,7 @@ struct CatchUpView: View {
                 .ignoresSafeArea()
         }
         #endif
+        .gesture(dismissDragGesture, including: isCompleted || unreadItems.isEmpty ? .all : .subviews)
         .preferredColorScheme(hasGradient ? .dark : theme.resolvedColorScheme(system: systemColorScheme))
     }
 
@@ -217,7 +218,18 @@ struct CatchUpView: View {
         .frame(maxWidth: .infinity)
     }
 
-    // MARK: - Drag Gesture
+    // MARK: - Dismiss Drag Gesture
+
+    private var dismissDragGesture: some Gesture {
+        DragGesture(minimumDistance: 50)
+            .onEnded { value in
+                if value.translation.height > 100 && value.translation.height > abs(value.translation.width) {
+                    dismiss()
+                }
+            }
+    }
+
+    // MARK: - Card Drag Gesture
 
     private var dragGesture: some Gesture {
         DragGesture()
