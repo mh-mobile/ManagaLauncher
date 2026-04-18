@@ -278,4 +278,5 @@ final class MangaEntry {
         // 新規作成時は移行済み扱い
         self.stateMigrationVersion = 1
     }
+
 }

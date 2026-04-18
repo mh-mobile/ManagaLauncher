@@ -16,14 +16,7 @@ struct MangaGridCell: View {
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
     private var accessibilityLabel: String {
-        var parts = [entry.name]
-        if !entry.publisher.isEmpty { parts.append(entry.publisher) }
-        if !entry.isRead { parts.append("未読") }
-        if showsNextUpdateBadge,
-           let next = NextUpdateFormatter.format(entry.nextExpectedUpdate, style: .compact) {
-            parts.append(next.accessibilityText)
-        }
-        return parts.joined(separator: "、")
+        entry.accessibilityDescription(nextUpdateStyle: .compact, showsNextUpdateBadge: showsNextUpdateBadge)
     }
 
     var body: some View {
