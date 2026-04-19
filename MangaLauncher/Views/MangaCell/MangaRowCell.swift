@@ -67,32 +67,27 @@ struct MangaRowCell: View {
                     Text(entry.name)
                         .font(theme.bodyFont)
                         .foregroundStyle(theme.onSurface)
-                    HStack(spacing: 4) {
-                        if !entry.publisher.isEmpty {
-                            Text(entry.publisher)
-                                .font(theme.captionFont)
-                                .foregroundStyle(theme.onSurfaceVariant)
-                        }
-                        if let ep = entry.currentEpisode {
-                            if !entry.publisher.isEmpty {
-                                Text("·")
-                                    .font(theme.captionFont)
-                                    .foregroundStyle(theme.onSurfaceVariant)
-                            }
-                            Text("既読 \(ep)話")
-                                .font(theme.captionFont)
-                                .foregroundStyle(theme.primary)
-                        }
+                    if !entry.publisher.isEmpty {
+                        Text(entry.publisher)
+                            .font(theme.captionFont)
+                            .foregroundStyle(theme.onSurfaceVariant)
                     }
                 }
 
                 Spacer()
 
-                if showsNextUpdateBadge,
-                   let result = NextUpdateFormatter.format(entry.nextExpectedUpdate, style: .full) {
-                    NextUpdateBadgeView(result: result)
-                        .padding(.trailing, 4)
+                VStack(alignment: .trailing, spacing: 2) {
+                    if showsNextUpdateBadge,
+                       let result = NextUpdateFormatter.format(entry.nextExpectedUpdate, style: .full) {
+                        NextUpdateBadgeView(result: result)
+                    }
+                    if let ep = entry.currentEpisode {
+                        Text("既読 \(ep)話")
+                            .font(theme.caption2Font)
+                            .foregroundStyle(theme.onSurfaceVariant)
+                    }
                 }
+                .padding(.trailing, 4)
 
                 switch ThemeManager.shared.mode {
                 case .ink:
