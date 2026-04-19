@@ -51,6 +51,7 @@ struct TimelineView: View {
             }
             .padding(.horizontal)
             .padding(.top, 12)
+            .padding(.bottom, 8)
 
             TabView(selection: $selectedDate) {
                 ForEach(dates, id: \.self) { date in
