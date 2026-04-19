@@ -15,7 +15,7 @@ struct SettingsView: View {
     @State private var importResult: ImportResult?
     @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
     @AppStorage(UserDefaultsKeys.showsNextUpdateBadge) private var showsNextUpdateBadge: Bool = true
-    @AppStorage(UserDefaultsKeys.showHiddenSection) private var showHiddenSection: Bool = false
+    @AppStorage(UserDefaultsKeys.showHiddenSection) private var showHiddenSection: Bool = true
     @State private var updateStatus: UpdateStatus = .idle
     @State private var showingOnboarding = false
     @State private var showingSyncError = false

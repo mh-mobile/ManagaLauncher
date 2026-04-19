@@ -151,15 +151,21 @@ final class MangaViewModel {
         }
         // entry が属するコンテキストで保存する（refresh() で modelContext が
         // 差し替わっている場合、self.modelContext と異なる可能性がある）
-        if let ctx = entry.modelContext {
-            try? ctx.save()
-        } else {
-            try? modelContext.save()
+        do {
+            if let ctx = entry.modelContext {
+                try ctx.save()
+            } else {
+                try modelContext.save()
+            }
+        } catch {
+            print("[MangaViewModel] setHidden save failed: \(error)")
         }
         refreshCounter += 1
         #if canImport(WidgetKit)
         WidgetCenter.shared.reloadAllTimelines()
         #endif
+        BadgeManager.updateBadge(unreadCount: unreadCount(for: .today))
+        rescheduleNotifications()
     }
 
     func reloadHiddenIDs() {
@@ -508,7 +514,10 @@ final class MangaViewModel {
                 importedCount += 1
             }
         }
-        if importedCount > 0 { save() }
+        if importedCount > 0 {
+            save()
+            reloadHiddenIDs()
+        }
         return importedCount
     }
 
