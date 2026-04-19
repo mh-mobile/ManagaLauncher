@@ -5,6 +5,7 @@ struct MangaContextMenu: View {
     var viewModel: MangaViewModel
     @Binding var editingEntry: MangaEntry?
     @Binding var commentingEntry: MangaEntry?
+    var onShowLifetime: (() -> Void)? = nil
     var onReorder: (() -> Void)? = nil
 
     var body: some View {
@@ -53,6 +54,14 @@ struct MangaContextMenu: View {
             commentingEntry = entry
         } label: {
             Label("コメント", systemImage: "bubble.left.and.bubble.right")
+        }
+
+        if let onShowLifetime {
+            Button {
+                onShowLifetime()
+            } label: {
+                Label("ライフタイムを見る", systemImage: "chart.bar.xaxis")
+            }
         }
 
         if let onReorder {

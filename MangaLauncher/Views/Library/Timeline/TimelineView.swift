@@ -15,6 +15,7 @@ struct TimelineView: View {
     @State private var showingMonthPicker = false
     @State private var chartGranularity: TimelineChartGranularity = .week
     @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
+    @State private var lifetimeEntry: MangaEntry?
 
     @State private var pageAnchor: Date = Calendar.current.startOfDay(for: Date())
 
@@ -59,7 +60,8 @@ struct TimelineView: View {
                         allEntries: allEntries,
                         allComments: allComments,
                         allActivities: allActivities,
-                        onTap: { handleTap(on: $0) }
+                        onTap: { handleTap(on: $0) },
+                        onShowLifetime: { lifetimeEntry = $0 }
                     )
                     .tag(date)
                 }
@@ -125,6 +127,14 @@ struct TimelineView: View {
                 .ignoresSafeArea()
         }
         #endif
+        .sheet(item: $lifetimeEntry) { entry in
+            let lifetime = LifetimeBuilder.build(
+                entries: [entry],
+                activities: viewModel.allActivities(),
+                comments: viewModel.allComments()
+            ).first ?? MangaLifetime(entry: entry, startDate: Date(), endDate: Date(), activityCount: 0)
+            LifetimeDetailSheet(lifetime: lifetime, viewModel: viewModel)
+        }
         .onMangaDataChange {
             viewModel.refresh()
         }
@@ -269,6 +279,7 @@ private struct TimelineDatePage: View {
     let allComments: [MangaComment]
     let allActivities: [ReadingActivity]
     let onTap: (TimelineItem) -> Void
+    var onShowLifetime: ((MangaEntry) -> Void)?
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
@@ -294,6 +305,15 @@ private struct TimelineDatePage: View {
                             isLast: index == items.count - 1,
                             onTap: { onTap(item) }
                         )
+                        .contextMenu {
+                            if let entry = item.entry {
+                                Button {
+                                    onShowLifetime?(entry)
+                                } label: {
+                                    Label("ライフタイムを見る", systemImage: "chart.bar.xaxis")
+                                }
+                            }
+                        }
                     }
                 }
             }

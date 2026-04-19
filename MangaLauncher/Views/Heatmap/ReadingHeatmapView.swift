@@ -21,6 +21,7 @@ struct ReadingHeatmapView: View {
                 statsSection
                 heatmapSection
                 legendSection
+                lifetimeSection
             }
             .padding()
         }
@@ -176,6 +177,17 @@ struct ReadingHeatmapView: View {
                 .font(theme.caption2Font)
                 .foregroundStyle(theme.onSurfaceVariant)
         }
+    }
+
+    // MARK: - Lifetime
+
+    private var lifetimeSection: some View {
+        let lifetimes = LifetimeBuilder.build(
+            entries: viewModel.allEntries(),
+            activities: viewModel.allActivities(),
+            comments: viewModel.allComments()
+        )
+        return MangaLifetimeView(lifetimes: lifetimes, viewModel: viewModel)
     }
 
     // MARK: - Helpers

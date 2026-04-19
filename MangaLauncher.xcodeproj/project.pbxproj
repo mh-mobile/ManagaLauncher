@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AB50030000112233AA000003 /* MangaLifetimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50030000112233AA000004 /* MangaLifetimeView.swift */; };
+		AB50030000112233AA000001 /* MangaLifetime.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50030000112233AA000002 /* MangaLifetime.swift */; };
 		AB50020000112233AA000002 /* MangaEntryAccessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50020000112233AA000001 /* MangaEntryAccessibility.swift */; };
 		C2C5E8A68C5957E075832254 /* ImageColorExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05365AD0D66B41D8C20EDF49 /* ImageColorExtractor.swift */; };
 		C2C5E8A68C5957E075832255 /* ImageColorExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05365AD0D66B41D8C20EDF49 /* ImageColorExtractor.swift */; };
@@ -171,6 +173,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AB50030000112233AA000004 /* MangaLifetimeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaLifetimeView.swift; sourceTree = "<group>"; };
+		AB50030000112233AA000002 /* MangaLifetime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaLifetime.swift; sourceTree = "<group>"; };
 		AB50020000112233AA000001 /* MangaEntryAccessibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaEntryAccessibility.swift; sourceTree = "<group>"; };
 		EC38F4ED01AE0D411DA0C66B /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		05365AD0D66B41D8C20EDF49 /* ImageColorExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageColorExtractor.swift; sourceTree = "<group>"; };
@@ -402,6 +406,7 @@
 			isa = PBXGroup;
 			children = (
 				A2000002 /* MangaEntry.swift */,
+				AB50030000112233AA000002 /* MangaLifetime.swift */,
 				3AFF912AECB7C6B219DD1600 /* BackupData.swift */,
 				AA000010 /* ReadingActivity.swift */,
 				BC000010 /* MangaComment.swift */,
@@ -591,6 +596,7 @@
 			isa = PBXGroup;
 			children = (
 				AA000011 /* ReadingHeatmapView.swift */,
+				AB50030000112233AA000004 /* MangaLifetimeView.swift */,
 			);
 			path = Heatmap;
 			sourceTree = "<group>";
@@ -808,6 +814,8 @@
 				ECFEA85C2F7F7C5200CE4DC0 /* PublisherFilterView.swift in Sources */,
 				ECCD2FCE2F65596900BF3309 /* PublisherPickerView.swift in Sources */,
 				A1000002 /* MangaEntry.swift in Sources */,
+				AB50030000112233AA000001 /* MangaLifetime.swift in Sources */,
+				AB50030000112233AA000003 /* MangaLifetimeView.swift in Sources */,
 				ECFEA8482F7F6E5700CE4DC0 /* MangaURLOpener.swift in Sources */,
 				A1000003 /* MangaViewModel.swift in Sources */,
 				ECFEA8582F7F7C3500CE4DC0 /* MangaListView.swift in Sources */,
