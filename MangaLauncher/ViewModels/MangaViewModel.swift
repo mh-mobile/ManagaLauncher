@@ -11,6 +11,7 @@ import WidgetKit
 final class MangaViewModel {
     var selectedDay: DayOfWeek = .today
     private(set) var refreshCounter = 0
+    private var hiddenIDs: Set<UUID> = []
     var pendingDeleteEntries: [MangaEntry] = []
     private var deleteTimer: Timer?
     var pendingDeleteComments: [MangaComment] = []
@@ -32,6 +33,7 @@ final class MangaViewModel {
 
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
+        reloadHiddenIDs()
         // 起動時の重い処理 (migration / backfill) は init では実行しない。
         // CloudKit 同期前のローカル DB を書き換えると、cloud で持っている値を
         // デフォルトで上書きしてしまうリスクがある (Vision Pro 初回起動などで観測)。
@@ -105,7 +107,6 @@ final class MangaViewModel {
     func fetchEntries(for day: DayOfWeek) -> [MangaEntry] {
         let _ = refreshCounter
         let dayRawValue = day.rawValue
-        // #Predicate は enum case を直接受け付けないので、ローカル let でキャプチャして意味を明示する
         let followingRaw = ReadingState.following.rawValue
         let activeRaw = PublicationStatus.active.rawValue
         let descriptor = FetchDescriptor<MangaEntry>(
@@ -118,8 +119,10 @@ final class MangaViewModel {
         )
         let results = modelContext.fetchLogged(descriptor)
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
+        let currentHiddenIDs = hiddenIDs
         var seenIDs = Set<UUID>()
         return results.filter { entry in
+            guard !currentHiddenIDs.contains(entry.id) else { return false }
             guard !pendingIDs.contains(entry.id) else { return false }
             return seenIDs.insert(entry.id).inserted
         }
@@ -135,6 +138,38 @@ final class MangaViewModel {
     func setReadingState(_ entry: MangaEntry, to state: ReadingState) {
         entry.readingState = state
         save()
+    }
+
+    /// 非表示フラグの切り替え（refresh() は呼ばない）
+    func setHidden(_ entry: MangaEntry, isHidden: Bool) {
+        entry.isHidden = isHidden
+        // entry が属するコンテキストで保存する（refresh() で modelContext が
+        // 差し替わっている場合、self.modelContext と異なる可能性がある）
+        if let ctx = entry.modelContext {
+            try? ctx.save()
+        } else {
+            try? modelContext.save()
+        }
+        refreshCounter += 1
+        #if canImport(WidgetKit)
+        WidgetCenter.shared.reloadAllTimelines()
+        #endif
+    }
+
+    func reloadHiddenIDs() {
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.isHidden == true }
+        )
+        let entries = (try? modelContext.fetch(descriptor)) ?? []
+        hiddenIDs = Set(entries.map(\.id))
+    }
+
+    func hiddenEntries() -> [MangaEntry] {
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.isHidden == true },
+            sortBy: [SortDescriptor(\.name)]
+        )
+        return modelContext.fetchLogged(descriptor)
     }
 
     func recordSpecialEpisode(_ entry: MangaEntry, label: String) {
@@ -250,8 +285,10 @@ final class MangaViewModel {
             sortBy: [SortDescriptor(\.lastReadDate, order: .reverse), SortDescriptor(\.name)]
         )
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
+        let currentHiddenIDs = hiddenIDs
         var seenIDs = Set<UUID>()
         let result = modelContext.fetchLogged(descriptor).filter { entry in
+            guard !currentHiddenIDs.contains(entry.id) else { return false }
             guard !pendingIDs.contains(entry.id) else { return false }
             return seenIDs.insert(entry.id).inserted
         }
@@ -262,7 +299,8 @@ final class MangaViewModel {
     func allPublishers() -> [String] {
         let descriptor = FetchDescriptor<MangaEntry>()
         let entries = modelContext.fetchLogged(descriptor)
-        let publishers = Set(entries.map(\.publisher)).filter { !$0.isEmpty }
+        let currentHiddenIDs = hiddenIDs
+        let publishers = Set(entries.filter { !currentHiddenIDs.contains($0.id) }.map(\.publisher)).filter { !$0.isEmpty }
         return publishers.sorted()
     }
 
@@ -363,8 +401,10 @@ final class MangaViewModel {
         let descriptor = FetchDescriptor<MangaEntry>()
         let results = modelContext.fetchLogged(descriptor)
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
+        let currentHiddenIDs = hiddenIDs
         var seenIDs = Set<UUID>()
         return results.filter { entry in
+            guard !currentHiddenIDs.contains(entry.id) else { return false }
             guard !pendingIDs.contains(entry.id) else { return false }
             return seenIDs.insert(entry.id).inserted
         }.count
@@ -412,6 +452,7 @@ final class MangaViewModel {
             entry.memoUpdatedAt = backupEntry.memoUpdatedAt
             entry.currentEpisode = backupEntry.currentEpisode
             entry.episodeLabel = backupEntry.episodeLabel
+            entry.isHidden = backupEntry.isHidden ?? false
             // v6+ バックアップは publicationStatusRawValue / readingStateRawValue を authoritative とする。
             // 両方 nil のときだけ v5 以前の legacy Bool から導出する。
             // 通常 export 側は両方を必ず書くので片方 nil は現実にはほぼ起こらないが、
@@ -666,6 +707,7 @@ final class MangaViewModel {
 
     func refresh() {
         modelContext = ModelContext(modelContext.container)
+        reloadHiddenIDs()
         refreshCounter += 1
     }
 

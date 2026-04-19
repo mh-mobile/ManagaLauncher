@@ -115,6 +115,8 @@ final class MangaEntry {
     var currentEpisode: Int?
     /// 表示用ラベル（「おまけ」「1.5話」等）。nil なら currentEpisode から自動生成。
     var episodeLabel: String?
+    /// 非表示フラグ（シークレットモード）
+    var isHidden: Bool = false
 
     /// 掲載状況の Int 値（PublicationStatus.rawValue）
     var publicationStatusRawValue: Int = 0
