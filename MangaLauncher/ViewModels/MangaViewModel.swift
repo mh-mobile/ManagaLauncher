@@ -11,7 +11,7 @@ import WidgetKit
 final class MangaViewModel {
     var selectedDay: DayOfWeek = .today
     private(set) var refreshCounter = 0
-    private var hiddenIDs: Set<UUID> = []
+    private(set) var hiddenIDs: Set<UUID> = []
     var pendingDeleteEntries: [MangaEntry] = []
     private var deleteTimer: Timer?
     var pendingDeleteComments: [MangaComment] = []
@@ -143,6 +143,11 @@ final class MangaViewModel {
     /// 非表示フラグの切り替え（refresh() は呼ばない）
     func setHidden(_ entry: MangaEntry, isHidden: Bool) {
         entry.isHidden = isHidden
+        if isHidden {
+            hiddenIDs.insert(entry.id)
+        } else {
+            hiddenIDs.remove(entry.id)
+        }
         // entry が属するコンテキストで保存する（refresh() で modelContext が
         // 差し替わっている場合、self.modelContext と異なる可能性がある）
         if let ctx = entry.modelContext {

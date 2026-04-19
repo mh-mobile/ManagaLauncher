@@ -1,14 +1,10 @@
 import SwiftUI
-import SwiftData
 import PlatformKit
 
 struct LibraryView: View {
     @Environment(\.openURL) private var openURL
 
     var viewModel: MangaViewModel
-    @Query(filter: #Predicate<MangaEntry> { $0.isHidden == false },
-           sort: \MangaEntry.lastReadDate, order: .reverse)
-    private var visibleEntries: [MangaEntry]
     @State private var editingEntry: MangaEntry?
     @State private var commentingEntry: MangaEntry?
     @State private var safariURL: URL?
@@ -65,7 +61,7 @@ struct LibraryView: View {
     @ViewBuilder
     private func content(viewModel: MangaViewModel) -> some View {
         let _ = viewModel.refreshCounter
-        let allEntries = Array(visibleEntries)
+        let allEntries = viewModel.allEntries()
         let allComments = viewModel.allComments()
         let sections = LibrarySectionBuilder(allEntries: allEntries).build()
         let recentActivity = ActivityBuilder.recent(entries: allEntries, comments: allComments, limit: 8)
@@ -164,6 +160,12 @@ struct LibraryView: View {
                         .font(theme.subheadlineFont.weight(.semibold))
                         .foregroundStyle(theme.onSurface)
                     Spacer()
+                    let count = viewModel.hiddenIDs.count
+                    if count > 0 {
+                        Text("\(count)")
+                            .font(theme.captionFont)
+                            .foregroundStyle(theme.onSurfaceVariant)
+                    }
                     Image(systemName: "chevron.right")
                         .font(.caption)
                         .foregroundStyle(theme.onSurfaceVariant)
