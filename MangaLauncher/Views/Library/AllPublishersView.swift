@@ -74,6 +74,8 @@ struct PublisherEntriesView: View {
     let onOpenURL: (String) -> Void
 
     @State private var lifetimeEntry: MangaEntry?
+    @State private var showSpecialEpisodeAlert = false
+    @State private var specialEpisodeEntry: MangaEntry?
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
     private var entries: [MangaEntry] {
@@ -106,7 +108,10 @@ struct PublisherEntriesView: View {
                     .buttonStyle(.plain)
                     .listRowBackground(Color.clear)
                     .contextMenu {
-                        MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, onShowLifetime: { lifetimeEntry = entry })
+                        MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, onShowLifetime: { lifetimeEntry = entry }, onRecordSpecialEpisode: {
+                            specialEpisodeEntry = entry
+                            showSpecialEpisodeAlert = true
+                        })
                     }
                     .sheet(item: $lifetimeEntry) { entry in
                         let lifetime = LifetimeBuilder.build(
@@ -125,5 +130,8 @@ struct PublisherEntriesView: View {
         #if os(iOS) || os(visionOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .if(specialEpisodeEntry != nil || !entries.isEmpty) { view in
+            view.specialEpisodeAlert(entry: specialEpisodeEntry ?? entries[0], viewModel: viewModel, isPresented: $showSpecialEpisodeAlert)
+        }
     }
 }

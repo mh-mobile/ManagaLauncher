@@ -9,6 +9,7 @@ struct SearchResultRow: View {
     let onOpenURL: (String) -> Void
 
     @State private var lifetimeEntry: MangaEntry?
+    @State private var showSpecialEpisodeAlert = false
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
     var body: some View {
@@ -56,8 +57,9 @@ struct SearchResultRow: View {
         .listRowBackground(Color.clear)
         .listRowSeparator(.hidden)
         .contextMenu {
-            MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, onShowLifetime: { lifetimeEntry = entry })
+            MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, onShowLifetime: { lifetimeEntry = entry }, onRecordSpecialEpisode: { showSpecialEpisodeAlert = true })
         }
+        .specialEpisodeAlert(entry: entry, viewModel: viewModel, isPresented: $showSpecialEpisodeAlert)
         .sheet(item: $lifetimeEntry) { entry in
             let lifetime = LifetimeBuilder.build(
                 entries: [entry],

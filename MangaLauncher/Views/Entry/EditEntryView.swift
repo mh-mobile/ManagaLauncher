@@ -34,6 +34,8 @@ struct EditEntryView: View {
     @State private var memo: String = ""
     @State private var currentEpisode: Int?
     @State private var episodeText: String = ""
+    @State private var episodeLabel: String = ""
+    @State private var markAsReadOnSave: Bool = false
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
@@ -285,10 +287,13 @@ struct EditEntryView: View {
 
                 Section {
                     HStack {
+                        Text("話数")
+                        Spacer()
                         TextField("未設定", text: $episodeText)
                             #if os(iOS) || os(visionOS)
                             .keyboardType(.numberPad)
                             #endif
+                            .multilineTextAlignment(.trailing)
                             .onChange(of: episodeText) { _, newValue in
                                 if newValue.isEmpty {
                                     currentEpisode = nil
@@ -307,10 +312,23 @@ struct EditEntryView: View {
                             .buttonStyle(.plain)
                         }
                     }
+                    HStack {
+                        Text("ラベル")
+                        Spacer()
+                        TextField("おまけ、1.5話 など", text: $episodeLabel)
+                            .multilineTextAlignment(.trailing)
+                            #if os(iOS) || os(visionOS)
+                            .textInputAutocapitalization(.none)
+                            #endif
+                    }
+                    Toggle("保存時に既読にする", isOn: $markAsReadOnSave)
+                        .onChange(of: markAsReadOnSave) { _, isOn in
+                            if isOn { episodeLabel = "" }
+                        }
                 } header: {
                     Text("話数")
                 } footer: {
-                    Text("読んだ話数を記録します。長押しメニューからも更新できます。")
+                    Text("読んだ話数を記録します。「保存時に既読にする」をオンにすると、保存と同時に読書記録が作成されます。")
                 }
 
                 Section {
@@ -421,6 +439,7 @@ struct EditEntryView: View {
                     memo = entry.memo
                     currentEpisode = entry.currentEpisode
                     episodeText = entry.currentEpisode.map { String($0) } ?? ""
+                    episodeLabel = entry.episodeLabel ?? ""
                     didLoadEntry = true
                 } else if entry == nil, !didLoadEntry {
                     nextUpdateDate = nextUpdateCandidates.first ?? nextOccurrence(of: selectedDay)
@@ -464,6 +483,7 @@ struct EditEntryView: View {
 
     private func saveEntry() {
         let interval = actualIntervalWeeks
+        let labelToSave = episodeLabel.isEmpty ? nil : episodeLabel
         if let entry {
             viewModel.updateEntry(
                 entry,
@@ -479,8 +499,16 @@ struct EditEntryView: View {
                 publicationStatus: publicationStatus,
                 readingState: readingState,
                 memo: memo,
-                currentEpisode: currentEpisode
+                currentEpisode: currentEpisode,
+                episodeLabel: labelToSave
             )
+            if markAsReadOnSave {
+                if let labelToSave {
+                    viewModel.recordSpecialEpisode(entry, label: labelToSave)
+                } else {
+                    entry.lastReadDate = Date()
+                }
+            }
         } else {
             viewModel.addEntry(
                 name: name,
@@ -495,7 +523,8 @@ struct EditEntryView: View {
                 readingState: readingState,
                 isOneShot: isOneShot,
                 memo: memo,
-                currentEpisode: currentEpisode
+                currentEpisode: currentEpisode,
+                episodeLabel: labelToSave
             )
         }
     }

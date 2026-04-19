@@ -14,6 +14,7 @@ struct MangaRowCell: View {
     let onOpenURL: (String) -> Void
 
     @State private var lifetimeEntry: MangaEntry?
+    @State private var showSpecialEpisodeAlert = false
     @AppStorage(UserDefaultsKeys.showsNextUpdateBadge) private var showsNextUpdateBadge: Bool = true
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
@@ -76,18 +77,11 @@ struct MangaRowCell: View {
 
                 Spacer()
 
-                VStack(alignment: .trailing, spacing: 2) {
-                    if showsNextUpdateBadge,
-                       let result = NextUpdateFormatter.format(entry.nextExpectedUpdate, style: .full) {
-                        NextUpdateBadgeView(result: result)
-                    }
-                    if let ep = entry.currentEpisode {
-                        Text("既読 \(ep)話")
-                            .font(theme.caption2Font)
-                            .foregroundStyle(theme.onSurfaceVariant)
-                    }
+                if showsNextUpdateBadge,
+                   let result = NextUpdateFormatter.format(entry.nextExpectedUpdate, style: .full) {
+                    NextUpdateBadgeView(result: result)
+                        .padding(.trailing, 4)
                 }
-                .padding(.trailing, 4)
 
                 switch ThemeManager.shared.mode {
                 case .ink:
@@ -159,7 +153,7 @@ struct MangaRowCell: View {
                 }
             )
             .contextMenu {
-                MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, onShowLifetime: { lifetimeEntry = entry }) {
+                MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, onShowLifetime: { lifetimeEntry = entry }, onRecordSpecialEpisode: { showSpecialEpisodeAlert = true }) {
                     #if os(iOS) || os(visionOS)
                     withAnimation(.easeInOut(duration: 0.2)) {
                         listEditMode = .active
@@ -167,6 +161,7 @@ struct MangaRowCell: View {
                     #endif
                 }
             }
+            .specialEpisodeAlert(entry: entry, viewModel: viewModel, isPresented: $showSpecialEpisodeAlert)
             .sheet(item: $lifetimeEntry) { entry in
                 let lifetime = LifetimeBuilder.build(
                     entries: [entry],

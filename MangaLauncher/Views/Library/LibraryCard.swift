@@ -9,6 +9,7 @@ struct LibraryCard: View {
     let onOpenURL: (String) -> Void
 
     @State private var lifetimeEntry: MangaEntry?
+    @State private var showSpecialEpisodeAlert = false
     private var theme: ThemeStyle { ThemeManager.shared.style }
     private let cardWidth: CGFloat = 130
 
@@ -33,8 +34,8 @@ struct LibraryCard: View {
                             .padding(4)
                     }
                     .overlay(alignment: .bottomLeading) {
-                        if let ep = entry.currentEpisode {
-                            Text("既読 \(ep)話")
+                        if let text = entry.episodeDisplayText {
+                            Text(text)
                                 .font(.caption2.weight(.medium))
                                 .foregroundStyle(theme.onPrimary)
                                 .padding(.horizontal, 6)
@@ -63,8 +64,9 @@ struct LibraryCard: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, onShowLifetime: { lifetimeEntry = entry })
+            MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, onShowLifetime: { lifetimeEntry = entry }, onRecordSpecialEpisode: { showSpecialEpisodeAlert = true })
         }
+        .specialEpisodeAlert(entry: entry, viewModel: viewModel, isPresented: $showSpecialEpisodeAlert)
         .sheet(item: $lifetimeEntry) { entry in
             let lifetime = LifetimeBuilder.build(
                 entries: [entry],

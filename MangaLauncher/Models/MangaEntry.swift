@@ -113,6 +113,8 @@ final class MangaEntry {
     var memoUpdatedAt: Date?
     /// 現在の話数。nil は未設定。
     var currentEpisode: Int?
+    /// 表示用ラベル（「おまけ」「1.5話」等）。nil なら currentEpisode から自動生成。
+    var episodeLabel: String?
 
     /// 掲載状況の Int 値（PublicationStatus.rawValue）
     var publicationStatusRawValue: Int = 0

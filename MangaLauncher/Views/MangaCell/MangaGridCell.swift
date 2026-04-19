@@ -12,6 +12,7 @@ struct MangaGridCell: View {
     let onOpenURL: (String) -> Void
 
     @State private var lifetimeEntry: MangaEntry?
+    @State private var showSpecialEpisodeAlert = false
     @AppStorage(UserDefaultsKeys.showsNextUpdateBadge) private var showsNextUpdateBadge: Bool = true
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
@@ -55,20 +56,6 @@ struct MangaGridCell: View {
                             .padding(4)
                     }
                 }
-                .overlay(alignment: .bottomLeading) {
-                    if let ep = entry.currentEpisode {
-                        Text("既読 \(ep)話")
-                            .font(.caption2.weight(.medium))
-                            .foregroundStyle(theme.onPrimary)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(
-                                Capsule().fill(theme.primary.opacity(0.85))
-                            )
-                            .padding(4)
-                    }
-                }
-
                 HStack(alignment: .top, spacing: 4) {
                     if !entry.isRead {
                         Circle()
@@ -116,12 +103,13 @@ struct MangaGridCell: View {
                 }
             }
             .contextMenu {
-                MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, onShowLifetime: { lifetimeEntry = entry }) {
+                MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, onShowLifetime: { lifetimeEntry = entry }, onRecordSpecialEpisode: { showSpecialEpisodeAlert = true }) {
                     withAnimation(.easeInOut(duration: 0.2)) {
                         isGridEditMode = true
                     }
                 }
             }
+            .specialEpisodeAlert(entry: entry, viewModel: viewModel, isPresented: $showSpecialEpisodeAlert)
             .sheet(item: $lifetimeEntry) { entry in
                 let lifetime = LifetimeBuilder.build(
                     entries: [entry],
