@@ -512,9 +512,7 @@ final class MangaViewModel {
                     episodeLabel: backupActivity.episodeLabel
                 )
                 activity.id = backupActivity.id
-                if let timestamp = backupActivity.timestamp {
-                    activity.timestamp = timestamp
-                }
+                activity.timestamp = backupActivity.timestamp
                 modelContext.insert(activity)
                 importedCount += 1
             }
