@@ -107,6 +107,7 @@ final class MangaViewModel {
     func fetchEntries(for day: DayOfWeek) -> [MangaEntry] {
         let _ = refreshCounter
         let dayRawValue = day.rawValue
+        // #Predicate は enum case を直接受け付けないので、ローカル let でキャプチャして意味を明示する
         let followingRaw = ReadingState.following.rawValue
         let activeRaw = PublicationStatus.active.rawValue
         let descriptor = FetchDescriptor<MangaEntry>(
