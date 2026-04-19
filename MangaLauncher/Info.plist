@@ -6,6 +6,8 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<key>NSFaceIDUsageDescription</key>
+	<string>非表示のマンガを閲覧するために Face ID を使用します</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

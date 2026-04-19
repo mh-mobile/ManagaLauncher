@@ -11,6 +11,7 @@ struct LibraryView: View {
     @State private var safariURL: URL?
     @State private var showingAddSheet = false
     @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
+    @AppStorage(UserDefaultsKeys.showHiddenSection) private var showHiddenSection: Bool = true
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
@@ -67,7 +68,6 @@ struct LibraryView: View {
         let sections = LibrarySectionBuilder(allEntries: allEntries).build()
         let recentActivity = ActivityBuilder.recent(entries: allEntries, comments: allComments, limit: 8)
         let totalActivityCount = ActivityBuilder.totalCount(entries: allEntries, comments: allComments)
-
         if sections.isEmpty && recentActivity.isEmpty {
             ContentUnavailableView {
                 Label("ライブラリは空です", systemImage: "books.vertical")
@@ -80,6 +80,9 @@ struct LibraryView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 24) {
                     timelineLink
+                    if showHiddenSection {
+                        hiddenSectionLink
+                    }
                     if !recentActivity.isEmpty {
                         recentActivitySection(items: recentActivity, totalCount: totalActivityCount)
                     }
@@ -113,6 +116,8 @@ struct LibraryView: View {
             )
         case .timeline:
             TimelineView(viewModel: viewModel)
+        case .hiddenEntries:
+            HiddenEntriesView(viewModel: viewModel)
         }
     }
 
@@ -126,6 +131,34 @@ struct LibraryView: View {
                     .frame(width: 28, height: 28)
                     .background(Color.indigo, in: RoundedRectangle(cornerRadius: 6))
                 Text("タイムライン")
+                    .font(theme.subheadlineFont.weight(.semibold))
+                    .foregroundStyle(theme.onSurface)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(theme.onSurfaceVariant)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(theme.surfaceContainerHigh)
+            )
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal)
+    }
+
+    @ViewBuilder
+    private var hiddenSectionLink: some View {
+        NavigationLink(value: LibraryDestination.hiddenEntries) {
+            HStack(spacing: 10) {
+                Image(systemName: "eye.slash.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 28, height: 28)
+                    .background(Color.gray, in: RoundedRectangle(cornerRadius: 6))
+                Text("非表示")
                     .font(theme.subheadlineFont.weight(.semibold))
                     .foregroundStyle(theme.onSurface)
                 Spacer()
