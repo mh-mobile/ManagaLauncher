@@ -507,9 +507,14 @@ final class MangaViewModel {
                 let activity = ReadingActivity(
                     date: backupActivity.date,
                     mangaName: backupActivity.mangaName,
-                    mangaEntryID: backupActivity.mangaEntryID
+                    mangaEntryID: backupActivity.mangaEntryID,
+                    episodeNumber: backupActivity.episodeNumber,
+                    episodeLabel: backupActivity.episodeLabel
                 )
                 activity.id = backupActivity.id
+                if let timestamp = backupActivity.timestamp {
+                    activity.timestamp = timestamp
+                }
                 modelContext.insert(activity)
                 importedCount += 1
             }
