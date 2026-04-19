@@ -56,19 +56,6 @@ struct MangaGridCell: View {
                             .padding(4)
                     }
                 }
-                .overlay(alignment: .bottomLeading) {
-                    if let text = entry.episodeDisplayText {
-                        Text(text)
-                            .font(.caption2.weight(.medium))
-                            .foregroundStyle(theme.onPrimary)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(
-                                Capsule().fill(theme.primary.opacity(0.85))
-                            )
-                            .padding(4)
-                    }
-                }
 
                 HStack(alignment: .top, spacing: 4) {
                     if !entry.isRead {

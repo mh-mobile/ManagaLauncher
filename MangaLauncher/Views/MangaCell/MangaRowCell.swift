@@ -77,18 +77,11 @@ struct MangaRowCell: View {
 
                 Spacer()
 
-                VStack(alignment: .trailing, spacing: 2) {
-                    if showsNextUpdateBadge,
-                       let result = NextUpdateFormatter.format(entry.nextExpectedUpdate, style: .full) {
-                        NextUpdateBadgeView(result: result)
-                    }
-                    if let text = entry.episodeDisplayText {
-                        Text(text)
-                            .font(theme.caption2Font)
-                            .foregroundStyle(theme.onSurfaceVariant)
-                    }
+                if showsNextUpdateBadge,
+                   let result = NextUpdateFormatter.format(entry.nextExpectedUpdate, style: .full) {
+                    NextUpdateBadgeView(result: result)
+                        .padding(.trailing, 4)
                 }
-                .padding(.trailing, 4)
 
                 switch ThemeManager.shared.mode {
                 case .ink:
