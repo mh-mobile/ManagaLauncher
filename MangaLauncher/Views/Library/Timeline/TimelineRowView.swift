@@ -125,7 +125,9 @@ struct TimelineRowView: View {
                 Text(entry.memo)
             }
         case .read(let activity, _):
-            if let ep = activity.episodeNumber {
+            if let label = activity.episodeLabel, !label.isEmpty {
+                Text(label)
+            } else if let ep = activity.episodeNumber {
                 Text("既読 \(ep)話に更新")
             } else {
                 Text("読みました")

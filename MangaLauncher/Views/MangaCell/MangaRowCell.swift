@@ -14,6 +14,8 @@ struct MangaRowCell: View {
     let onOpenURL: (String) -> Void
 
     @State private var lifetimeEntry: MangaEntry?
+    @State private var showSpecialEpisodeAlert = false
+    @State private var specialEpisodeText = ""
     @AppStorage(UserDefaultsKeys.showsNextUpdateBadge) private var showsNextUpdateBadge: Bool = true
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
@@ -81,8 +83,8 @@ struct MangaRowCell: View {
                        let result = NextUpdateFormatter.format(entry.nextExpectedUpdate, style: .full) {
                         NextUpdateBadgeView(result: result)
                     }
-                    if let ep = entry.currentEpisode {
-                        Text("既読 \(ep)話")
+                    if let text = entry.episodeDisplayText {
+                        Text(text)
                             .font(theme.caption2Font)
                             .foregroundStyle(theme.onSurfaceVariant)
                     }
@@ -159,12 +161,24 @@ struct MangaRowCell: View {
                 }
             )
             .contextMenu {
-                MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, onShowLifetime: { lifetimeEntry = entry }) {
+                MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, onShowLifetime: { lifetimeEntry = entry }, onRecordSpecialEpisode: { showSpecialEpisodeAlert = true }) {
                     #if os(iOS) || os(visionOS)
                     withAnimation(.easeInOut(duration: 0.2)) {
                         listEditMode = .active
                     }
                     #endif
+                }
+            }
+            .alert("特別回を記録", isPresented: $showSpecialEpisodeAlert) {
+                TextField("おまけ、1.5話 など", text: $specialEpisodeText)
+                Button("記録") {
+                    if !specialEpisodeText.isEmpty {
+                        viewModel.recordSpecialEpisode(entry, label: specialEpisodeText)
+                        specialEpisodeText = ""
+                    }
+                }
+                Button("キャンセル", role: .cancel) {
+                    specialEpisodeText = ""
                 }
             }
             .sheet(item: $lifetimeEntry) { entry in

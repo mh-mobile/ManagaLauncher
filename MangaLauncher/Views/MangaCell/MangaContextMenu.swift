@@ -6,6 +6,7 @@ struct MangaContextMenu: View {
     @Binding var editingEntry: MangaEntry?
     @Binding var commentingEntry: MangaEntry?
     var onShowLifetime: (() -> Void)? = nil
+    var onRecordSpecialEpisode: (() -> Void)? = nil
     var onReorder: (() -> Void)? = nil
 
     var body: some View {
@@ -39,6 +40,14 @@ struct MangaContextMenu: View {
                 entry.currentEpisode == nil ? "話数を記録（1話）" : "\((entry.currentEpisode ?? 0) + 1)話まで読んだ",
                 systemImage: "plus.circle"
             )
+        }
+
+        if let onRecordSpecialEpisode {
+            Button {
+                onRecordSpecialEpisode()
+            } label: {
+                Label("特別回を記録", systemImage: "pencil.and.list.clipboard")
+            }
         }
 
         Divider()
