@@ -181,6 +181,11 @@ final class MangaEntry {
         }
         // 読み切り: 1度読んだら既読
         if isOneShot { return lastReadDate != nil }
+        // 積読: 今日読んだら既読、翌日リセット
+        if readingState == .backlog {
+            guard let lastReadDate else { return false }
+            return Calendar.current.isDateInToday(lastReadDate)
+        }
         // 通常: 曜日サイクル
         guard let lastReadDate else { return false }
         if let nextUpdate = nextExpectedUpdate, nextUpdate > Date.now {
