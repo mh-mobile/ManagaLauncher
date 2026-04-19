@@ -12,7 +12,6 @@ struct LibraryView: View {
     @State private var showingAddSheet = false
     @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
     @AppStorage(UserDefaultsKeys.showHiddenSection) private var showHiddenSection: Bool = true
-    @State private var hiddenCount: Int = 0
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
@@ -55,9 +54,6 @@ struct LibraryView: View {
             }
             #endif
         }
-        .task(id: viewModel.hiddenEntryCount) {
-            hiddenCount = viewModel.hiddenEntryCount
-        }
         .onMangaDataChange {
             viewModel.refresh()
         }
@@ -72,7 +68,7 @@ struct LibraryView: View {
         let sections = LibrarySectionBuilder(allEntries: allEntries).build()
         let recentActivity = ActivityBuilder.recent(entries: allEntries, comments: allComments, limit: 8)
         let totalActivityCount = ActivityBuilder.totalCount(entries: allEntries, comments: allComments)
-        if sections.isEmpty && recentActivity.isEmpty && hiddenCount == 0 {
+        if sections.isEmpty && recentActivity.isEmpty {
             ContentUnavailableView {
                 Label("ライブラリは空です", systemImage: "books.vertical")
                     .foregroundStyle(theme.onSurfaceVariant)
@@ -85,7 +81,7 @@ struct LibraryView: View {
                 LazyVStack(alignment: .leading, spacing: 24) {
                     timelineLink
                     if showHiddenSection {
-                        hiddenSectionLink(count: hiddenCount)
+                        hiddenSectionLink
                     }
                     if !recentActivity.isEmpty {
                         recentActivitySection(items: recentActivity, totalCount: totalActivityCount)
@@ -154,7 +150,7 @@ struct LibraryView: View {
     }
 
     @ViewBuilder
-    private func hiddenSectionLink(count: Int) -> some View {
+    private var hiddenSectionLink: some View {
         NavigationLink(value: LibraryDestination.hiddenEntries) {
             HStack(spacing: 10) {
                 Image(systemName: "eye.slash.fill")
@@ -166,11 +162,6 @@ struct LibraryView: View {
                     .font(theme.subheadlineFont.weight(.semibold))
                     .foregroundStyle(theme.onSurface)
                 Spacer()
-                if count > 0 {
-                    Text("\(count)")
-                        .font(theme.captionFont)
-                        .foregroundStyle(theme.onSurfaceVariant)
-                }
                 Image(systemName: "chevron.right")
                     .font(.caption)
                     .foregroundStyle(theme.onSurfaceVariant)

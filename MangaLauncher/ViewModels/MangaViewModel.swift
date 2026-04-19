@@ -11,7 +11,6 @@ import WidgetKit
 final class MangaViewModel {
     var selectedDay: DayOfWeek = .today
     private(set) var refreshCounter = 0
-    private(set) var hiddenEntryCount: Int = 0
     var pendingDeleteEntries: [MangaEntry] = []
     private var deleteTimer: Timer?
     var pendingDeleteComments: [MangaComment] = []
@@ -669,7 +668,6 @@ final class MangaViewModel {
     func refresh() {
         modelContext = ModelContext(modelContext.container)
         refreshCounter += 1
-        hiddenEntryCount = hiddenEntries().count
     }
 
     private func save() {
