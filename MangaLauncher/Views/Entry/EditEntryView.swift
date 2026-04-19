@@ -506,7 +506,7 @@ struct EditEntryView: View {
                 if let labelToSave {
                     viewModel.recordSpecialEpisode(entry, label: labelToSave)
                 } else {
-                    viewModel.markAsRead(entry)
+                    entry.lastReadDate = Date()
                 }
             }
         } else {
