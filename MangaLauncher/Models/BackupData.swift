@@ -14,6 +14,31 @@ struct BackupData: Codable {
         let date: Date
         let mangaName: String
         let mangaEntryID: UUID
+        // v12+
+        let timestamp: Date?
+        let episodeNumber: Int?
+        let episodeLabel: String?
+
+        init(id: UUID, date: Date, mangaName: String, mangaEntryID: UUID, timestamp: Date? = nil, episodeNumber: Int? = nil, episodeLabel: String? = nil) {
+            self.id = id
+            self.date = date
+            self.mangaName = mangaName
+            self.mangaEntryID = mangaEntryID
+            self.timestamp = timestamp
+            self.episodeNumber = episodeNumber
+            self.episodeLabel = episodeLabel
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(UUID.self, forKey: .id)
+            date = try container.decode(Date.self, forKey: .date)
+            mangaName = try container.decode(String.self, forKey: .mangaName)
+            mangaEntryID = try container.decode(UUID.self, forKey: .mangaEntryID)
+            timestamp = try container.decodeIfPresent(Date.self, forKey: .timestamp)
+            episodeNumber = try container.decodeIfPresent(Int.self, forKey: .episodeNumber)
+            episodeLabel = try container.decodeIfPresent(String.self, forKey: .episodeLabel)
+        }
     }
 
     struct BackupComment: Codable {
@@ -109,7 +134,7 @@ struct BackupData: Codable {
 
     static func from(_ entries: [MangaEntry], activities: [ReadingActivity] = [], comments: [MangaComment] = []) -> BackupData {
         BackupData(
-            version: 11,
+            version: 12,
             exportDate: Date(),
             entries: entries.map {
                 BackupEntry(
@@ -139,7 +164,10 @@ struct BackupData: Codable {
                     id: $0.id,
                     date: $0.date,
                     mangaName: $0.mangaName,
-                    mangaEntryID: $0.mangaEntryID
+                    mangaEntryID: $0.mangaEntryID,
+                    timestamp: $0.timestamp,
+                    episodeNumber: $0.episodeNumber,
+                    episodeLabel: $0.episodeLabel
                 )
             },
             comments: comments.map {
