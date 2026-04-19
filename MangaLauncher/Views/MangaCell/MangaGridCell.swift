@@ -56,7 +56,6 @@ struct MangaGridCell: View {
                             .padding(4)
                     }
                 }
-
                 HStack(alignment: .top, spacing: 4) {
                     if !entry.isRead {
                         Circle()
