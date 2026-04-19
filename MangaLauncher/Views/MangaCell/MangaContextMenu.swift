@@ -141,6 +141,17 @@ struct MangaContextMenu: View {
 
         Divider()
 
+        Button {
+            if entry.isHidden {
+                viewModel.setHidden(entry, isHidden: false)
+            } else {
+                viewModel.setHidden(entry, isHidden: true)
+            }
+        } label: {
+            Label(entry.isHidden ? "非表示を解除" : "非表示にする",
+                  systemImage: entry.isHidden ? "eye" : "eye.slash")
+        }
+
         Button(role: .destructive) {
             viewModel.queueDelete(entry)
         } label: {

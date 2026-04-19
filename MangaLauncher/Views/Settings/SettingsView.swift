@@ -15,6 +15,7 @@ struct SettingsView: View {
     @State private var importResult: ImportResult?
     @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
     @AppStorage(UserDefaultsKeys.showsNextUpdateBadge) private var showsNextUpdateBadge: Bool = true
+    @AppStorage(UserDefaultsKeys.showHiddenSection) private var showHiddenSection: Bool = true
     @State private var updateStatus: UpdateStatus = .idle
     @State private var showingOnboarding = false
     @State private var showingSyncError = false
@@ -181,10 +182,11 @@ struct SettingsView: View {
 
                 Section {
                     Toggle("次回更新日を表示", isOn: $showsNextUpdateBadge)
+                    Toggle("非表示セクションを表示", isOn: $showHiddenSection)
                 } header: {
                     Text("表示")
                 } footer: {
-                    Text("ホーム画面のセルに次回更新までの日数を表示します。")
+                    Text("ホーム画面のセルに次回更新までの日数を表示します。非表示セクションをオンにすると、ライブラリに非表示マンガの管理画面が追加されます。")
                 }
 
                 Section {

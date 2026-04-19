@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 import PlatformKit
 
 struct LibraryView: View {
@@ -11,6 +10,7 @@ struct LibraryView: View {
     @State private var safariURL: URL?
     @State private var showingAddSheet = false
     @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
+    @AppStorage(UserDefaultsKeys.showHiddenSection) private var showHiddenSection: Bool = true
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
@@ -61,7 +61,6 @@ struct LibraryView: View {
     @ViewBuilder
     private func content(viewModel: MangaViewModel) -> some View {
         let _ = viewModel.refreshCounter
-        // 1 度だけ fetch して使い回す（N+1 fetch を避ける）
         let allEntries = viewModel.allEntries()
         let allComments = viewModel.allComments()
         let sections = LibrarySectionBuilder(allEntries: allEntries).build()
@@ -80,6 +79,7 @@ struct LibraryView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 24) {
                     timelineLink
+                    hiddenSectionLink
                     if !recentActivity.isEmpty {
                         recentActivitySection(items: recentActivity, totalCount: totalActivityCount)
                     }
@@ -113,6 +113,8 @@ struct LibraryView: View {
             )
         case .timeline:
             TimelineView(viewModel: viewModel)
+        case .hiddenEntries:
+            HiddenEntriesView(viewModel: viewModel)
         }
     }
 
@@ -142,6 +144,42 @@ struct LibraryView: View {
         }
         .buttonStyle(.plain)
         .padding(.horizontal)
+    }
+
+    @ViewBuilder
+    private var hiddenSectionLink: some View {
+        if showHiddenSection {
+            NavigationLink(value: LibraryDestination.hiddenEntries) {
+                HStack(spacing: 10) {
+                    Image(systemName: "eye.slash.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 28, height: 28)
+                        .background(Color.gray, in: RoundedRectangle(cornerRadius: 6))
+                    Text("非表示")
+                        .font(theme.subheadlineFont.weight(.semibold))
+                        .foregroundStyle(theme.onSurface)
+                    Spacer()
+                    let count = viewModel.hiddenIDs.count
+                    if count > 0 {
+                        Text("\(count)")
+                            .font(theme.captionFont)
+                            .foregroundStyle(theme.onSurfaceVariant)
+                    }
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(theme.onSurfaceVariant)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(theme.surfaceContainerHigh)
+                )
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal)
+        }
     }
 
     @ViewBuilder
