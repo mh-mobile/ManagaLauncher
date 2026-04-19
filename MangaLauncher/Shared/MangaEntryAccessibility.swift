@@ -2,7 +2,7 @@ import Foundation
 
 extension MangaEntry {
     var episodeDisplayText: String? {
-        if let label = episodeLabel, !label.isEmpty { return label }
+        if let label = episodeLabel, !label.isEmpty { return "既読 \(label)" }
         if let ep = currentEpisode { return "既読 \(ep)話" }
         return nil
     }

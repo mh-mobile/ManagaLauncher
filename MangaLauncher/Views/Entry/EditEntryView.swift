@@ -322,6 +322,9 @@ struct EditEntryView: View {
                             #endif
                     }
                     Toggle("保存時に既読にする", isOn: $markAsReadOnSave)
+                        .onChange(of: markAsReadOnSave) { _, isOn in
+                            if isOn { episodeLabel = "" }
+                        }
                 } header: {
                     Text("話数")
                 } footer: {

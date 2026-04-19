@@ -454,7 +454,7 @@ struct LifetimeDetailSheet: View {
             entry.memo.isEmpty ? "(空)" : entry.memo
         case .read(let activity, _):
             if let label = activity.episodeLabel, !label.isEmpty {
-                label
+                "既読 \(label)に更新"
             } else if let ep = activity.episodeNumber {
                 "既読 \(ep)話に更新"
             } else {

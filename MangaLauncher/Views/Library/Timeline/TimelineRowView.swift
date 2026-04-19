@@ -126,7 +126,7 @@ struct TimelineRowView: View {
             }
         case .read(let activity, _):
             if let label = activity.episodeLabel, !label.isEmpty {
-                Text(label)
+                Text("既読 \(label)に更新")
             } else if let ep = activity.episodeNumber {
                 Text("既読 \(ep)話に更新")
             } else {
@@ -141,7 +141,7 @@ struct TimelineRowView: View {
         case .comment: return ("bubble.left.fill", .blue)
         case .memo: return ("pencil", .orange)
         case .read(let activity, _):
-            if activity.episodeNumber != nil {
+            if activity.episodeNumber != nil || (activity.episodeLabel != nil && !activity.episodeLabel!.isEmpty) {
                 return ("book.fill", .purple)
             }
             return ("checkmark", .green)
