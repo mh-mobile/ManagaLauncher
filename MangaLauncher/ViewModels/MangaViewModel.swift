@@ -157,6 +157,7 @@ final class MangaViewModel {
         let newEpisode = (entry.currentEpisode ?? 0) + 1
         entry.currentEpisode = newEpisode
         entry.episodeLabel = nil
+        entry.lastReadDate = Date()
         let activity = ReadingActivity(
             date: Date(),
             mangaName: entry.name,
