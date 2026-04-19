@@ -10,7 +10,6 @@ struct LibraryCard: View {
 
     @State private var lifetimeEntry: MangaEntry?
     @State private var showSpecialEpisodeAlert = false
-    @State private var specialEpisodeText = ""
     private var theme: ThemeStyle { ThemeManager.shared.style }
     private let cardWidth: CGFloat = 130
 
@@ -67,18 +66,7 @@ struct LibraryCard: View {
         .contextMenu {
             MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, onShowLifetime: { lifetimeEntry = entry }, onRecordSpecialEpisode: { showSpecialEpisodeAlert = true })
         }
-        .alert("特別回を記録", isPresented: $showSpecialEpisodeAlert) {
-            TextField("おまけ、1.5話 など", text: $specialEpisodeText)
-            Button("記録") {
-                if !specialEpisodeText.isEmpty {
-                    viewModel.recordSpecialEpisode(entry, label: specialEpisodeText)
-                    specialEpisodeText = ""
-                }
-            }
-            Button("キャンセル", role: .cancel) {
-                specialEpisodeText = ""
-            }
-        }
+        .specialEpisodeAlert(entry: entry, viewModel: viewModel, isPresented: $showSpecialEpisodeAlert)
         .sheet(item: $lifetimeEntry) { entry in
             let lifetime = LifetimeBuilder.build(
                 entries: [entry],

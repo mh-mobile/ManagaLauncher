@@ -141,7 +141,7 @@ struct TimelineRowView: View {
         case .comment: return ("bubble.left.fill", .blue)
         case .memo: return ("pencil", .orange)
         case .read(let activity, _):
-            if activity.episodeNumber != nil || (activity.episodeLabel != nil && !activity.episodeLabel!.isEmpty) {
+            if activity.episodeNumber != nil || activity.episodeLabel.map({ !$0.isEmpty }) == true {
                 return ("book.fill", .purple)
             }
             return ("checkmark", .green)

@@ -138,13 +138,16 @@ final class MangaViewModel {
     }
 
     func recordSpecialEpisode(_ entry: MangaEntry, label: String) {
-        entry.episodeLabel = label
-        entry.lastReadDate = Date()
+        let trimmed = label.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        let now = Date()
+        entry.episodeLabel = trimmed
+        entry.lastReadDate = now
         let activity = ReadingActivity(
-            date: Date(),
+            date: now,
             mangaName: entry.name,
             mangaEntryID: entry.id,
-            episodeLabel: label
+            episodeLabel: trimmed
         )
         modelContext.insert(activity)
         save()

@@ -75,7 +75,6 @@ struct PublisherEntriesView: View {
 
     @State private var lifetimeEntry: MangaEntry?
     @State private var showSpecialEpisodeAlert = false
-    @State private var specialEpisodeText = ""
     @State private var specialEpisodeEntry: MangaEntry?
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
@@ -131,17 +130,6 @@ struct PublisherEntriesView: View {
         #if os(iOS) || os(visionOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
-        .alert("特別回を記録", isPresented: $showSpecialEpisodeAlert) {
-            TextField("おまけ、1.5話 など", text: $specialEpisodeText)
-            Button("記録") {
-                if !specialEpisodeText.isEmpty, let entry = specialEpisodeEntry {
-                    viewModel.recordSpecialEpisode(entry, label: specialEpisodeText)
-                    specialEpisodeText = ""
-                }
-            }
-            Button("キャンセル", role: .cancel) {
-                specialEpisodeText = ""
-            }
-        }
+        .specialEpisodeAlert(entry: specialEpisodeEntry ?? entries[0], viewModel: viewModel, isPresented: $showSpecialEpisodeAlert)
     }
 }

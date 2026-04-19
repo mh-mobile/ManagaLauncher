@@ -13,7 +13,6 @@ struct MangaGridCell: View {
 
     @State private var lifetimeEntry: MangaEntry?
     @State private var showSpecialEpisodeAlert = false
-    @State private var specialEpisodeText = ""
     @AppStorage(UserDefaultsKeys.showsNextUpdateBadge) private var showsNextUpdateBadge: Bool = true
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
@@ -124,18 +123,7 @@ struct MangaGridCell: View {
                     }
                 }
             }
-            .alert("特別回を記録", isPresented: $showSpecialEpisodeAlert) {
-                TextField("おまけ、1.5話 など", text: $specialEpisodeText)
-                Button("記録") {
-                    if !specialEpisodeText.isEmpty {
-                        viewModel.recordSpecialEpisode(entry, label: specialEpisodeText)
-                        specialEpisodeText = ""
-                    }
-                }
-                Button("キャンセル", role: .cancel) {
-                    specialEpisodeText = ""
-                }
-            }
+            .specialEpisodeAlert(entry: entry, viewModel: viewModel, isPresented: $showSpecialEpisodeAlert)
             .sheet(item: $lifetimeEntry) { entry in
                 let lifetime = LifetimeBuilder.build(
                     entries: [entry],

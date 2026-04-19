@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AB50050000112233AA000001 /* SpecialEpisodeAlertModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50050000112233AA000002 /* SpecialEpisodeAlertModifier.swift */; };
 		AB50030000112233AA000003 /* MangaLifetimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50030000112233AA000004 /* MangaLifetimeView.swift */; };
 		AB50030000112233AA000001 /* MangaLifetime.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50030000112233AA000002 /* MangaLifetime.swift */; };
 		AB50020000112233AA000002 /* MangaEntryAccessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50020000112233AA000001 /* MangaEntryAccessibility.swift */; };
@@ -173,6 +174,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AB50050000112233AA000002 /* SpecialEpisodeAlertModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecialEpisodeAlertModifier.swift; sourceTree = "<group>"; };
 		AB50030000112233AA000004 /* MangaLifetimeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaLifetimeView.swift; sourceTree = "<group>"; };
 		AB50030000112233AA000002 /* MangaLifetime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaLifetime.swift; sourceTree = "<group>"; };
 		AB50020000112233AA000001 /* MangaEntryAccessibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaEntryAccessibility.swift; sourceTree = "<group>"; };
@@ -628,6 +630,7 @@
 				BC000810 /* MangaDataChangeModifier.swift */,
 				AB5001FF00112233AA000002 /* NextUpdateFormatter.swift */,
 				AB50020000112233AA000001 /* MangaEntryAccessibility.swift */,
+				AB50050000112233AA000002 /* SpecialEpisodeAlertModifier.swift */,
 				AB5001FF00112233AA000004 /* NextUpdateBadgeView.swift */,
 			);
 			path = Shared;
@@ -814,6 +817,7 @@
 				ECFEA85C2F7F7C5200CE4DC0 /* PublisherFilterView.swift in Sources */,
 				ECCD2FCE2F65596900BF3309 /* PublisherPickerView.swift in Sources */,
 				A1000002 /* MangaEntry.swift in Sources */,
+				AB50050000112233AA000001 /* SpecialEpisodeAlertModifier.swift in Sources */,
 				AB50030000112233AA000001 /* MangaLifetime.swift in Sources */,
 				AB50030000112233AA000003 /* MangaLifetimeView.swift in Sources */,
 				ECFEA8482F7F6E5700CE4DC0 /* MangaURLOpener.swift in Sources */,
