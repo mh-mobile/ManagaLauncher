@@ -141,9 +141,6 @@ final class MangaViewModel {
     func setHidden(_ entry: MangaEntry, isHidden: Bool) {
         entry.isHidden = isHidden
         save()
-        // save() 後の同一 modelContext では #Predicate フィルタが
-        // インメモリの変更を反映しないため、context を再作成する。
-        refresh()
     }
 
     func hiddenEntries() -> [MangaEntry] {
