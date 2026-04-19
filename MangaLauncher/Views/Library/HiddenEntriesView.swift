@@ -2,12 +2,15 @@ import SwiftUI
 import PlatformKit
 
 struct HiddenEntriesView: View {
+    @Environment(\.openURL) private var openURL
     var viewModel: MangaViewModel
     @State private var isAuthenticated = false
     @State private var entries: [MangaEntry] = []
     @State private var editingEntry: MangaEntry?
     @State private var commentingEntry: MangaEntry?
     @State private var lifetimeEntry: MangaEntry?
+    @State private var safariURL: URL?
+    @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
@@ -39,6 +42,15 @@ struct HiddenEntriesView: View {
             ).first ?? MangaLifetime(entry: entry, startDate: Date(), endDate: Date(), activityCount: 0)
             LifetimeDetailSheet(lifetime: lifetime, viewModel: viewModel)
         }
+        #if canImport(UIKit)
+        .sheet(item: $safariURL) { url in
+            SafariView(url: url).ignoresSafeArea()
+        }
+        #endif
+    }
+
+    private func openMangaURL(_ urlString: String) {
+        MangaURLOpener(browserMode: browserMode, openURL: openURL) { safariURL = $0 }.open(urlString)
     }
 
     @ViewBuilder
@@ -95,6 +107,10 @@ struct HiddenEntriesView: View {
                             }
                         }
                         Spacer()
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        openMangaURL(entry.url)
                     }
                     .swipeActions(edge: .trailing) {
                         Button {
