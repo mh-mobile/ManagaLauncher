@@ -107,6 +107,7 @@ final class MangaEntry {
     var updateIntervalWeeks: Int = 1
     var nextExpectedUpdate: Date?
     var isOneShot: Bool = false
+    var isHidden: Bool = false
     /// 1作品に1つの長文メモ
     var memo: String = ""
     /// メモの最終更新日時。並び替え用。

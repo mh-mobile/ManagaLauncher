@@ -54,6 +54,7 @@ struct MangaTimelineProvider: TimelineProvider {
                 $0.dayOfWeekRawValue == dayRaw
                     && $0.publicationStatusRawValue == activeRaw
                     && $0.readingStateRawValue == followingRaw
+                    && $0.isHidden == false
             },
             sortBy: [SortDescriptor(\.sortOrder)]
         )
