@@ -54,8 +54,19 @@ struct OverlayBrowserScreen: View {
     @State private var showShareSheet = false
     @State private var isRevealed = false
     @State private var snapshot: UIImage?
+    @State private var dragOffset: CGFloat = 0
     private var displayURL: URL { currentURL ?? context.url }
     private let screenHeight = UIScreen.main.bounds.height
+
+    private var coverOffset: CGFloat {
+        if !isRevealed { return 0 }
+        return max(0, screenHeight + dragOffset * 2.5)
+    }
+
+    private var bottomBarOpacity: Double {
+        if dragOffset >= 0 { return 1.0 }
+        return max(0, 1.0 + Double(dragOffset) / (Double(screenHeight) * 0.25))
+    }
 
     var body: some View {
         ZStack {
@@ -67,29 +78,45 @@ struct OverlayBrowserScreen: View {
 
                 WebViewRepresentable(url: context.url, currentURL: $currentURL)
 
-                toolbarView
+                VStack(spacing: 0) {
+                    toolbarView
 
-                if context.entryName != nil {
-                    entryCard
-                        .contentShape(Rectangle())
-                        .gesture(
-                            DragGesture()
-                                .onEnded { value in
-                                    if value.translation.height < -60 {
-                                        dismissAnimated()
-                                    }
-                                }
-                        )
+                    if context.entryName != nil {
+                        entryCard
+                    }
                 }
+                .background(Color(.systemBackground))
+                .offset(y: dragOffset < 0 ? dragOffset : 0)
+                .opacity(bottomBarOpacity)
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture()
+                        .onChanged { value in
+                            if value.translation.height < 0 {
+                                dragOffset = value.translation.height
+                            }
+                        }
+                        .onEnded { value in
+                            if abs(dragOffset) > screenHeight * 0.3 || value.predictedEndTranslation.height < -200 {
+                                dismissAnimated()
+                            } else {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                    dragOffset = 0
+                                }
+                            }
+                        }
+                )
             }
             .background(Color(.systemBackground))
 
             if let snapshot {
+                let coverOpacity = isRevealed ? min(1.0, abs(dragOffset) / (screenHeight * 0.3)) : 1.0
                 Image(uiImage: snapshot)
                     .resizable()
                     .scaledToFill()
                     .ignoresSafeArea()
-                    .offset(y: isRevealed ? screenHeight : 0)
+                    .offset(y: coverOffset)
+                    .opacity(coverOpacity)
                     .allowsHitTesting(false)
             }
         }
@@ -98,7 +125,7 @@ struct OverlayBrowserScreen: View {
         }
         .onAppear {
             snapshot = captureScreenshot()
-            withAnimation(.easeInOut(duration: 0.35)) {
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
                 isRevealed = true
             }
         }
@@ -115,10 +142,11 @@ struct OverlayBrowserScreen: View {
     }
 
     private func dismissAnimated() {
-        withAnimation(.easeInOut(duration: 0.3)) {
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
             isRevealed = false
+            dragOffset = 0
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
             onDismiss()
         }
     }
