@@ -52,37 +52,60 @@ struct OverlayBrowserScreen: View {
     let onDismiss: () -> Void
     @State private var currentURL: URL?
     @State private var showShareSheet = false
+    @State private var isRevealed = false
     private var displayURL: URL { currentURL ?? context.url }
+    private let screenHeight = UIScreen.main.bounds.height
 
     var body: some View {
-        VStack(spacing: 0) {
-            WebViewRepresentable(url: context.url, currentURL: $currentURL)
+        ZStack {
+            VStack(spacing: 0) {
+                WebViewRepresentable(url: context.url, currentURL: $currentURL)
 
-            toolbarView
+                toolbarView
 
-            if context.entryName != nil {
-                entryCard
-                    .contentShape(Rectangle())
-                    .gesture(
-                        DragGesture()
-                            .onEnded { value in
-                                if value.translation.height < -60 {
-                                    onDismiss()
+                if context.entryName != nil {
+                    entryCard
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture()
+                                .onEnded { value in
+                                    if value.translation.height < -60 {
+                                        dismissAnimated()
+                                    }
                                 }
-                            }
-                    )
+                        )
+                }
             }
+            .background(Color(.systemBackground))
+
+            Color(.systemBackground)
+                .ignoresSafeArea()
+                .offset(y: isRevealed ? screenHeight : 0)
+                .allowsHitTesting(false)
         }
-        .background(Color(.systemBackground))
         .sheet(isPresented: $showShareSheet) {
             ShareSheet(url: displayURL)
+        }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 0.35)) {
+                isRevealed = true
+            }
+        }
+    }
+
+    private func dismissAnimated() {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            isRevealed = false
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            onDismiss()
         }
     }
 
     @ViewBuilder
     private var toolbarView: some View {
         HStack(spacing: 0) {
-            Button { onDismiss() } label: {
+            Button { dismissAnimated() } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(.secondary)

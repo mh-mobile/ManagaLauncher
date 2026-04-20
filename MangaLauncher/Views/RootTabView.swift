@@ -79,10 +79,8 @@ struct RootTabView: View {
                     viewModel.browserContext = nil
                 }
                 .ignoresSafeArea()
-                .transition(.opacity)
             }
         }
-        .animation(.easeInOut(duration: 0.3), value: viewModel.browserContext != nil)
         #endif
         }
     }

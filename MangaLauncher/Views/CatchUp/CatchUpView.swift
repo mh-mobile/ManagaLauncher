@@ -16,6 +16,7 @@ struct CatchUpView: View {
     @State private var undoStack: [(entry: MangaEntry, action: SwipeAction)] = []
     @State private var completionAnimated = false
     @State private var safariURL: URL?
+    @State private var overlayContext: BrowserContext?
     @AppStorage(UserDefaultsKeys.hasSeenCatchUpTutorial) private var hasSeenTutorial = false
     @State private var showTutorial = false
     @State private var editingEntry: MangaEntry?
@@ -126,6 +127,14 @@ struct CatchUpView: View {
         #if canImport(UIKit)
         .sheet(item: $safariURL) { url in
             SafariView(url: url).ignoresSafeArea()
+        }
+        .overlay {
+            if let ctx = overlayContext {
+                OverlayBrowserScreen(context: ctx) {
+                    overlayContext = nil
+                }
+                .ignoresSafeArea()
+            }
         }
         #endif
         .gesture(dismissDragGesture, including: isCompleted || unreadItems.isEmpty ? .all : .subviews)
@@ -404,7 +413,7 @@ struct CatchUpView: View {
         guard let url = URL(string: urlString) else { return }
         let entry = viewModel.allEntries().first { $0.url == urlString }
         if browserMode == "overlay" {
-            viewModel.browserContext = BrowserContext(url: url, entryName: entry?.name, entryPublisher: entry?.publisher, entryImageData: entry?.imageData)
+            overlayContext = BrowserContext(url: url, entryName: entry?.name, entryPublisher: entry?.publisher, entryImageData: entry?.imageData)
         } else if browserMode == "inApp" {
             safariURL = url
         } else {
