@@ -20,6 +20,7 @@ struct SettingsView: View {
     @State private var showingOnboarding = false
     @State private var showingSyncError = false
     @State private var currentThemeMode: ThemeMode = ThemeManager.shared.mode
+    @AppStorage(UserDefaultsKeys.appIconMode) private var appIconMode: String = "light"
 
     private enum UpdateStatus {
         case idle, checking, available(String), upToDate, error
@@ -169,6 +170,15 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Picker("アプリアイコン", selection: $appIconMode) {
+                        Text("ライト").tag("light")
+                        Text("ダーク").tag("dark")
+                    }
+                } header: {
+                    Text("アプリアイコン")
+                }
+
+                Section {
                     NavigationLink {
                         ColorLabelSettingsView()
                     } label: {
@@ -312,6 +322,10 @@ struct SettingsView: View {
         .preferredColorScheme(currentThemeMode.style.resolvedColorScheme(system: systemColorScheme))
         .onChange(of: currentThemeMode) { _, newValue in
             ThemeManager.shared.mode = newValue
+        }
+        .onChange(of: appIconMode) { _, newValue in
+            let iconName: String? = newValue == "dark" ? "AppIconDark" : nil
+            UIApplication.shared.setAlternateIconName(iconName)
         }
     }
 
