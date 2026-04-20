@@ -10,6 +10,7 @@ struct HiddenEntriesView: View {
     @State private var commentingEntry: MangaEntry?
     @State private var lifetimeEntry: MangaEntry?
     @State private var safariURL: URL?
+    @State private var showGrid = false
     @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
@@ -27,6 +28,19 @@ struct HiddenEntriesView: View {
         #if os(iOS) || os(visionOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .toolbar {
+            if isAuthenticated && !entries.isEmpty {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        withAnimation {
+                            showGrid.toggle()
+                        }
+                    } label: {
+                        Image(systemName: showGrid ? "list.bullet" : "square.grid.2x2")
+                    }
+                }
+            }
+        }
         .onAppear { authenticate() }
         .sheet(item: $editingEntry) { entry in
             EditEntryView(viewModel: viewModel, entry: entry)
@@ -76,72 +90,133 @@ struct HiddenEntriesView: View {
                 Text("マンガを長押し →「非表示にする」で追加できます")
                     .foregroundStyle(theme.onSurfaceVariant.opacity(0.7))
             }
+        } else if showGrid {
+            gridContent
         } else {
-            List {
-                ForEach(entries, id: \.id) { entry in
-                    HStack(spacing: 12) {
+            listContent
+        }
+    }
+
+    @ViewBuilder
+    private var listContent: some View {
+        List {
+            ForEach(entries, id: \.id) { entry in
+                HStack(spacing: 12) {
+                    entryThumbnail(entry, size: 44)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(entry.name)
+                            .font(theme.bodyFont)
+                            .foregroundStyle(theme.onSurface)
+                        if !entry.publisher.isEmpty {
+                            Text(entry.publisher)
+                                .font(theme.captionFont)
+                                .foregroundStyle(theme.onSurfaceVariant)
+                        }
+                    }
+                    Spacer()
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    openMangaURL(entry.url)
+                }
+                .swipeActions(edge: .trailing) {
+                    Button {
+                        unhide(entry)
+                    } label: {
+                        Label("解除", systemImage: "eye")
+                    }
+                    .tint(.blue)
+                }
+                .contextMenu { entryContextMenu(entry) }
+            }
+        }
+        .listStyle(.plain)
+    }
+
+    @ViewBuilder
+    private var gridContent: some View {
+        GeometryReader { geo in
+            ScrollView {
+                MasonryLayout(entries: entries, availableWidth: geo.size.width - 32) { entry in
+                    VStack(alignment: .leading, spacing: 6) {
                         if let data = entry.imageData, let image = data.toSwiftUIImage() {
                             image
                                 .resizable()
-                                .scaledToFill()
-                                .frame(width: 44, height: 44)
+                                .scaledToFit()
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
                         } else {
                             RoundedRectangle(cornerRadius: 8)
                                 .fill(Color.fromName(entry.iconColor))
-                                .frame(width: 44, height: 44)
+                                .aspectRatio(3 / 4, contentMode: .fit)
                                 .overlay {
-                                    Text(entry.name.prefix(1))
-                                        .font(.headline.bold())
+                                    Text(entry.name)
+                                        .font(.title2.bold())
                                         .foregroundStyle(.white)
+                                        .multilineTextAlignment(.center)
+                                        .padding(8)
                                 }
                         }
                         VStack(alignment: .leading, spacing: 2) {
                             Text(entry.name)
-                                .font(theme.bodyFont)
+                                .font(.caption)
                                 .foregroundStyle(theme.onSurface)
+                                .lineLimit(2)
                             if !entry.publisher.isEmpty {
                                 Text(entry.publisher)
-                                    .font(theme.captionFont)
+                                    .font(.caption2)
                                     .foregroundStyle(theme.onSurfaceVariant)
                             }
                         }
-                        Spacer()
                     }
                     .contentShape(Rectangle())
                     .onTapGesture {
                         openMangaURL(entry.url)
                     }
-                    .swipeActions(edge: .trailing) {
-                        Button {
-                            unhide(entry)
-                        } label: {
-                            Label("解除", systemImage: "eye")
-                        }
-                        .tint(.blue)
-                    }
-                    .contextMenu {
-                        Button {
-                            unhide(entry)
-                        } label: {
-                            Label("非表示を解除", systemImage: "eye")
-                        }
-
-                        Divider()
-
-                        Button { editingEntry = entry } label: {
-                            Label("編集", systemImage: "pencil")
-                        }
-                        Button { commentingEntry = entry } label: {
-                            Label("コメント", systemImage: "bubble.left.and.bubble.right")
-                        }
-                        Button { lifetimeEntry = entry } label: {
-                            Label("ライフタイムを見る", systemImage: "chart.bar.xaxis")
-                        }
-                    }
+                    .contextMenu { entryContextMenu(entry) }
                 }
+                .padding(.horizontal)
             }
-            .listStyle(.plain)
+        }
+    }
+
+    @ViewBuilder
+    private func entryThumbnail(_ entry: MangaEntry, size: CGFloat) -> some View {
+        if let data = entry.imageData, let image = data.toSwiftUIImage() {
+            image
+                .resizable()
+                .scaledToFill()
+                .frame(width: size, height: size)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+        } else {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.fromName(entry.iconColor))
+                .frame(width: size, height: size)
+                .overlay {
+                    Text(entry.name.prefix(1))
+                        .font(.headline.bold())
+                        .foregroundStyle(.white)
+                }
+        }
+    }
+
+    @ViewBuilder
+    private func entryContextMenu(_ entry: MangaEntry) -> some View {
+        Button {
+            unhide(entry)
+        } label: {
+            Label("非表示を解除", systemImage: "eye")
+        }
+
+        Divider()
+
+        Button { editingEntry = entry } label: {
+            Label("編集", systemImage: "pencil")
+        }
+        Button { commentingEntry = entry } label: {
+            Label("コメント", systemImage: "bubble.left.and.bubble.right")
+        }
+        Button { lifetimeEntry = entry } label: {
+            Label("ライフタイムを見る", systemImage: "chart.bar.xaxis")
         }
     }
 
