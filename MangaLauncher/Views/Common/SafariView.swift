@@ -26,6 +26,7 @@ struct QuickViewBrowserScreen: View {
     @State private var snapshot: UIImage?
     @State private var dragOffset: CGFloat = 0
     @State private var reloadID = UUID()
+    @State private var showControls = true
     private var displayURL: URL { currentURL ?? context.url }
     private let screenHeight = UIScreen.main.bounds.height
 
@@ -52,19 +53,25 @@ struct QuickViewBrowserScreen: View {
                 Color(.systemBackground)
                     .frame(height: safeAreaTop)
 
-                WebViewRepresentable(url: context.url, currentURL: $currentURL, reloadTrigger: $reloadID)
+                WebViewRepresentable(url: context.url, currentURL: $currentURL, reloadTrigger: $reloadID, onCenterTap: {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showControls.toggle()
+                    }
+                })
             }
 
-            VStack(spacing: 0) {
-                toolbarView
+            if showControls {
+                VStack(spacing: 0) {
+                    toolbarView
 
-                if context.entryName != nil {
-                    entryCard
+                    if context.entryName != nil {
+                        entryCard
+                    }
                 }
-            }
-            .offset(y: dragOffset < 0 ? dragOffset : 0)
-            .opacity(bottomBarOpacity)
-            .contentShape(Rectangle())
+                .offset(y: dragOffset < 0 ? dragOffset : 0)
+                .opacity(bottomBarOpacity)
+                .contentShape(Rectangle())
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             .gesture(
                 DragGesture()
                     .onChanged { value in
@@ -82,6 +89,7 @@ struct QuickViewBrowserScreen: View {
                         }
                     }
             )
+            }
 
             if let snapshot {
                 let coverOpacity = isRevealed ? min(1.0, abs(dragOffset) / (screenHeight * 0.3)) : 1.0
@@ -236,16 +244,23 @@ private struct WebViewRepresentable: UIViewRepresentable {
     let url: URL
     @Binding var currentURL: URL?
     @Binding var reloadTrigger: UUID
+    var onCenterTap: (() -> Void)?
 
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView()
         webView.navigationDelegate = context.coordinator
         webView.load(URLRequest(url: url))
         context.coordinator.webView = webView
+
+        let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
+        tap.delegate = context.coordinator
+        webView.addGestureRecognizer(tap)
+
         return webView
     }
 
     func updateUIView(_ uiView: WKWebView, context: Context) {
+        context.coordinator.onCenterTap = onCenterTap
         if context.coordinator.lastReloadTrigger != reloadTrigger {
             context.coordinator.lastReloadTrigger = reloadTrigger
             uiView.reload()
@@ -253,21 +268,41 @@ private struct WebViewRepresentable: UIViewRepresentable {
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(currentURL: $currentURL, reloadTrigger: reloadTrigger)
+        Coordinator(currentURL: $currentURL, reloadTrigger: reloadTrigger, onCenterTap: onCenterTap)
     }
 
-    final class Coordinator: NSObject, WKNavigationDelegate {
+    final class Coordinator: NSObject, WKNavigationDelegate, UIGestureRecognizerDelegate {
         @Binding var currentURL: URL?
         weak var webView: WKWebView?
         var lastReloadTrigger: UUID
+        var onCenterTap: (() -> Void)?
 
-        init(currentURL: Binding<URL?>, reloadTrigger: UUID) {
+        init(currentURL: Binding<URL?>, reloadTrigger: UUID, onCenterTap: (() -> Void)?) {
             _currentURL = currentURL
             self.lastReloadTrigger = reloadTrigger
+            self.onCenterTap = onCenterTap
         }
 
         func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
             currentURL = webView.url
+        }
+
+        @objc func handleTap(_ gesture: UITapGestureRecognizer) {
+            guard let webView = gesture.view as? WKWebView else { return }
+            let location = gesture.location(in: webView)
+
+            let js = "document.elementFromPoint(\(location.x), \(location.y))?.closest('a, button, [onclick]') !== null"
+            webView.evaluateJavaScript(js) { [weak self] result, _ in
+                if let isInteractive = result as? Bool, !isInteractive {
+                    DispatchQueue.main.async {
+                        self?.onCenterTap?()
+                    }
+                }
+            }
+        }
+
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+            true
         }
     }
 }

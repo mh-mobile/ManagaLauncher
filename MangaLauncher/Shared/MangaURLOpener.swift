@@ -26,7 +26,7 @@ struct MangaURLOpener {
         guard let url = URL(string: urlString) else { return }
         #if canImport(UIKit)
         let isWebURL = url.scheme?.lowercased() == "http" || url.scheme?.lowercased() == "https"
-        if browserMode == "quickView" && isWebURL {
+        if (browserMode == "quickView" || browserMode == "overlay") && isWebURL {
             let info = entryLookup?(urlString)
             let ctx = BrowserContext(url: url, entryName: info?.name, entryPublisher: info?.publisher, entryImageData: info?.imageData)
             onQuickView?(ctx)
