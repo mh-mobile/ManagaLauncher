@@ -16,7 +16,7 @@ struct CatchUpView: View {
     @State private var undoStack: [(entry: MangaEntry, action: SwipeAction)] = []
     @State private var completionAnimated = false
     @State private var safariURL: URL?
-    @State private var overlayContext: BrowserContext?
+    @State private var quickViewContext: BrowserContext?
     @AppStorage(UserDefaultsKeys.hasSeenCatchUpTutorial) private var hasSeenTutorial = false
     @State private var showTutorial = false
     @State private var editingEntry: MangaEntry?
@@ -129,9 +129,9 @@ struct CatchUpView: View {
             SafariView(url: url).ignoresSafeArea()
         }
         .overlay {
-            if let ctx = overlayContext {
-                OverlayBrowserScreen(context: ctx) {
-                    overlayContext = nil
+            if let ctx = quickViewContext {
+                QuickViewBrowserScreen(context: ctx) {
+                    quickViewContext = nil
                 }
                 .ignoresSafeArea()
             }
@@ -412,8 +412,8 @@ struct CatchUpView: View {
     private func openMangaURL(_ urlString: String) {
         guard let url = URL(string: urlString) else { return }
         let entry = viewModel.allEntries().first { $0.url == urlString }
-        if browserMode == "overlay" {
-            overlayContext = BrowserContext(url: url, entryName: entry?.name, entryPublisher: entry?.publisher, entryImageData: entry?.imageData)
+        if browserMode == "quickView" {
+            quickViewContext = BrowserContext(url: url, entryName: entry?.name, entryPublisher: entry?.publisher, entryImageData: entry?.imageData)
         } else if browserMode == "inApp" {
             safariURL = url
         } else {

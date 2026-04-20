@@ -13,40 +13,9 @@ struct SafariView: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {}
 }
 
-// MARK: - Overlay Browser Modifier
+// MARK: - Quick View Browser Screen
 
-struct OverlayBrowserModifier: ViewModifier {
-    @Binding var context: BrowserContext?
-    @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
-
-    private var isActive: Bool { browserMode == "overlay" && context != nil }
-
-    func body(content: Content) -> some View {
-        content
-            .overlay {
-                if browserMode == "overlay", let ctx = context {
-                    OverlayBrowserScreen(context: ctx) { context = nil }
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                        .ignoresSafeArea(edges: .all)
-                }
-            }
-            .animation(.easeInOut(duration: 0.35), value: isActive)
-            .sheet(item: browserMode != "overlay" ? $context : .constant(nil)) { ctx in
-                SafariView(url: ctx.url)
-                    .ignoresSafeArea()
-            }
-    }
-}
-
-extension View {
-    func overlayBrowser(context: Binding<BrowserContext?>) -> some View {
-        modifier(OverlayBrowserModifier(context: context))
-    }
-}
-
-// MARK: - Web Layer (behind original content)
-
-struct OverlayBrowserScreen: View {
+struct QuickViewBrowserScreen: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
     let context: BrowserContext

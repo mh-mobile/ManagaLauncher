@@ -75,7 +75,7 @@ struct RootTabView: View {
         #if canImport(UIKit)
         .overlay {
             if let ctx = viewModel.browserContext {
-                OverlayBrowserScreen(context: ctx) {
+                QuickViewBrowserScreen(context: ctx) {
                     viewModel.browserContext = nil
                 }
                 .ignoresSafeArea()

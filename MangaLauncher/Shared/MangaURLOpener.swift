@@ -24,7 +24,7 @@ struct MangaURLOpener {
         guard let url = URL(string: urlString) else { return }
         #if canImport(UIKit)
         let isWebURL = url.scheme?.lowercased() == "http" || url.scheme?.lowercased() == "https"
-        if (browserMode == "inApp" || browserMode == "overlay") && isWebURL {
+        if (browserMode == "inApp" || browserMode == "quickView") && isWebURL {
             onBrowserContext?(BrowserContext(
                 url: url,
                 entryName: entry?.name,

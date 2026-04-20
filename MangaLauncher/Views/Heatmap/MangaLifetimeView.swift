@@ -156,7 +156,7 @@ struct MangaLifetimeView: View {
     private func openMangaURL(_ urlString: String) {
         guard let url = URL(string: urlString) else { return }
         let entry = viewModel.allEntries().first { $0.url == urlString }
-        if browserMode == "overlay" {
+        if browserMode == "quickView" {
             viewModel.browserContext = BrowserContext(url: url, entryName: entry?.name, entryPublisher: entry?.publisher, entryImageData: entry?.imageData)
         } else if browserMode == "inApp" {
             safariURL = url
@@ -320,7 +320,7 @@ struct LifetimeDetailSheet: View {
     private func openDetailURL(_ urlString: String) {
         guard let url = URL(string: urlString) else { return }
         let entry = viewModel.allEntries().first { $0.url == urlString }
-        if browserMode == "overlay" {
+        if browserMode == "quickView" {
             viewModel.browserContext = BrowserContext(url: url, entryName: entry?.name, entryPublisher: entry?.publisher, entryImageData: entry?.imageData)
         } else if browserMode == "inApp" {
             safariURL = url
