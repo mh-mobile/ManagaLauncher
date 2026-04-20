@@ -19,31 +19,43 @@ struct SectionHeaderView<Destination: Hashable>: View {
                     .font(theme.headlineFont)
                     .foregroundStyle(iconColor ?? theme.primary)
             }
-            Text(title)
-                .font(theme.title3Font)
-                .foregroundStyle(theme.onSurface)
-            if let count {
-                Text("\(count)")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(theme.onPrimary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
-                    .background(badgeColor ?? theme.primary)
-                    .clipShape(Capsule())
-            }
-            Spacer()
             if let seeAll {
                 NavigationLink(value: seeAll) {
-                    HStack(spacing: 2) {
-                        Text("すべて表示")
-                            .font(theme.captionFont)
+                    HStack(spacing: 8) {
+                        Text(title)
+                            .font(theme.title3Font)
+                            .foregroundStyle(theme.onSurface)
+                        if let count {
+                            countBadge
+                        }
                         Image(systemName: "chevron.right")
-                            .font(.caption2)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(theme.onSurfaceVariant)
                     }
-                    .foregroundStyle(theme.primary)
                 }
                 .buttonStyle(.plain)
+            } else {
+                Text(title)
+                    .font(theme.title3Font)
+                    .foregroundStyle(theme.onSurface)
+                if let count {
+                    countBadge
+                }
             }
+            Spacer()
+        }
+    }
+
+    @ViewBuilder
+    private var countBadge: some View {
+        if let count {
+            Text("\(count)")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(theme.onPrimary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 2)
+                .background(badgeColor ?? theme.primary)
+                .clipShape(Capsule())
         }
     }
 }

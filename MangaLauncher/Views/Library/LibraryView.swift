@@ -11,6 +11,8 @@ struct LibraryView: View {
     @State private var showingAddSheet = false
     @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
     @AppStorage(UserDefaultsKeys.showHiddenSection) private var showHiddenSection: Bool = true
+    @AppStorage(UserDefaultsKeys.recentActivityExpanded) private var recentActivityExpandedStorage: Bool = false
+    @State private var recentActivityExpanded: Bool = false
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
@@ -52,6 +54,12 @@ struct LibraryView: View {
                     .ignoresSafeArea()
             }
             #endif
+            .onAppear {
+                recentActivityExpanded = recentActivityExpandedStorage
+            }
+            .onChange(of: recentActivityExpanded) { _, newValue in
+                recentActivityExpandedStorage = newValue
+            }
         }
         .onMangaDataChange {
             viewModel.refresh()
@@ -185,22 +193,55 @@ struct LibraryView: View {
     @ViewBuilder
     private func recentActivitySection(items: [ActivityItem], totalCount: Int) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            SectionHeaderView(
-                title: "最近のメモ・コメント",
-                icon: "square.and.pencil",
-                iconColor: .purple,
-                count: totalCount,
-                badgeColor: .purple,
-                seeAll: totalCount > items.count ? LibraryDestination.allActivity : nil
-            )
-            .padding(.horizontal)
-
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(items) { item in
-                    activityRow(item)
+            HStack(spacing: 8) {
+                Image(systemName: "square.and.pencil")
+                    .font(theme.headlineFont)
+                    .foregroundStyle(.purple)
+                NavigationLink(value: LibraryDestination.allActivity) {
+                    HStack(spacing: 8) {
+                        Text("メモ・コメント")
+                            .font(theme.title3Font)
+                            .foregroundStyle(theme.onSurface)
+                        Text("\(totalCount)")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(theme.onPrimary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(.purple)
+                            .clipShape(Capsule())
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(theme.onSurfaceVariant)
+                    }
                 }
+                .buttonStyle(.plain)
+                Spacer()
+                Button {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        recentActivityExpanded.toggle()
+                    }
+                } label: {
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(theme.primary)
+                        .rotationEffect(.degrees(recentActivityExpanded ? 0 : -90))
+                        .frame(width: 30, height: 30)
+                        .background(theme.onSurfaceVariant.opacity(0.2))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
             }
             .padding(.horizontal)
+
+            if recentActivityExpanded {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(items) { item in
+                        activityRow(item)
+                    }
+                }
+                .padding(.horizontal)
+                .transition(.opacity)
+            }
         }
     }
 
