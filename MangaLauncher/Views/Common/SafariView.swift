@@ -55,6 +55,7 @@ struct OverlayBrowserScreen: View {
     @State private var isRevealed = false
     @State private var snapshot: UIImage?
     @State private var dragOffset: CGFloat = 0
+    @State private var reloadID = UUID()
     private var displayURL: URL { currentURL ?? context.url }
     private let screenHeight = UIScreen.main.bounds.height
 
@@ -68,46 +69,49 @@ struct OverlayBrowserScreen: View {
         return max(0, 1.0 + Double(dragOffset) / (Double(screenHeight) * 0.25))
     }
 
+    private var safeAreaTop: CGFloat {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first?.windows.first?.safeAreaInsets.top ?? 0
+    }
+
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottom) {
             VStack(spacing: 0) {
                 Color(.systemBackground)
-                    .frame(height: UIApplication.shared.connectedScenes
-                        .compactMap { $0 as? UIWindowScene }
-                        .first?.windows.first?.safeAreaInsets.top ?? 0)
+                    .frame(height: safeAreaTop)
 
                 WebViewRepresentable(url: context.url, currentURL: $currentURL)
-
-                VStack(spacing: 0) {
-                    toolbarView
-
-                    if context.entryName != nil {
-                        entryCard
-                    }
-                }
-                .background(Color(.systemBackground))
-                .offset(y: dragOffset < 0 ? dragOffset : 0)
-                .opacity(bottomBarOpacity)
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture()
-                        .onChanged { value in
-                            if value.translation.height < 0 {
-                                dragOffset = value.translation.height
-                            }
-                        }
-                        .onEnded { value in
-                            if abs(dragOffset) > screenHeight * 0.3 || value.predictedEndTranslation.height < -200 {
-                                dismissAnimated()
-                            } else {
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                    dragOffset = 0
-                                }
-                            }
-                        }
-                )
+                    .id(reloadID)
             }
-            .background(Color(.systemBackground))
+
+            VStack(spacing: 0) {
+                toolbarView
+
+                if context.entryName != nil {
+                    entryCard
+                }
+            }
+            .offset(y: dragOffset < 0 ? dragOffset : 0)
+            .opacity(bottomBarOpacity)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        if value.translation.height < 0 {
+                            dragOffset = value.translation.height
+                        }
+                    }
+                    .onEnded { value in
+                        if abs(dragOffset) > screenHeight * 0.3 || value.predictedEndTranslation.height < -200 {
+                            dismissAnimated()
+                        } else {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                dragOffset = 0
+                            }
+                        }
+                    }
+            )
 
             if let snapshot {
                 let coverOpacity = isRevealed ? min(1.0, abs(dragOffset) / (screenHeight * 0.3)) : 1.0
@@ -153,13 +157,13 @@ struct OverlayBrowserScreen: View {
 
     @ViewBuilder
     private var toolbarView: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 8) {
             Button { dismissAnimated() } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 32, height: 32)
-                    .background(Color(.systemGray5))
+                    .foregroundColor(.white)
+                    .frame(width: 36, height: 36)
+                    .background(.black.opacity(0.85))
                     .clipShape(Circle())
             }
 
@@ -184,37 +188,35 @@ struct OverlayBrowserScreen: View {
             } label: {
                 HStack(spacing: 4) {
                     Text(displayURL.host ?? "")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(.footnote.weight(.medium))
                         .lineLimit(1)
                     Image(systemName: "ellipsis")
                         .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(.secondary)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color(.systemGray5))
+                .foregroundColor(.white)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(.black.opacity(0.85))
                 .clipShape(Capsule())
             }
 
             Spacer()
 
-            Button {} label: {
+            Button { reloadID = UUID() } label: {
                 Image(systemName: "arrow.clockwise")
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 32, height: 32)
-                    .background(Color(.systemGray5))
+                    .foregroundColor(.white)
+                    .frame(width: 36, height: 36)
+                    .background(.black.opacity(0.85))
                     .clipShape(Circle())
             }
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 10)
         .padding(.vertical, 6)
     }
 
     @ViewBuilder
     private var entryCard: some View {
-        Divider()
         HStack(spacing: 12) {
             if let data = context.entryImageData, let image = data.toSwiftUIImage() {
                 image
@@ -227,12 +229,13 @@ struct OverlayBrowserScreen: View {
                 if let name = context.entryName {
                     Text(name)
                         .font(.subheadline.bold())
+                        .foregroundColor(.white)
                         .lineLimit(1)
                 }
                 if let publisher = context.entryPublisher, !publisher.isEmpty {
                     Text(publisher)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.white.opacity(0.7))
                 }
             }
             Spacer()
@@ -242,6 +245,7 @@ struct OverlayBrowserScreen: View {
         .padding(.bottom, UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .first?.windows.first?.safeAreaInsets.bottom ?? 0)
+        .background(.black.opacity(0.85))
     }
 }
 
