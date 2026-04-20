@@ -20,7 +20,7 @@ struct SettingsView: View {
     @State private var showingOnboarding = false
     @State private var showingSyncError = false
     @State private var currentThemeMode: ThemeMode = ThemeManager.shared.mode
-    @AppStorage(UserDefaultsKeys.appIconMode) private var appIconMode: String = "light"
+    @AppStorage(UserDefaultsKeys.appIconMode) private var appIconMode: String = "auto"
 
     private enum UpdateStatus {
         case idle, checking, available(String), upToDate, error
@@ -171,11 +171,14 @@ struct SettingsView: View {
 
                 Section {
                     Picker("アプリアイコン", selection: $appIconMode) {
+                        Text("自動").tag("auto")
                         Text("ライト").tag("light")
                         Text("ダーク").tag("dark")
                     }
                 } header: {
                     Text("アプリアイコン")
+                } footer: {
+                    Text("「自動」はiOSのダークモード設定に連動します。ライト/ダークを選ぶと常にそのアイコンで固定されます。")
                 }
 
                 Section {
@@ -324,7 +327,11 @@ struct SettingsView: View {
             ThemeManager.shared.mode = newValue
         }
         .onChange(of: appIconMode) { _, newValue in
-            let iconName: String? = newValue == "dark" ? "AppIconDark" : nil
+            let iconName: String? = switch newValue {
+            case "light": "AppIconLight"
+            case "dark": "AppIconDark"
+            default: nil
+            }
             UIApplication.shared.setAlternateIconName(iconName)
         }
     }
