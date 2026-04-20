@@ -188,8 +188,7 @@ struct SearchView: View {
             }
             #if canImport(UIKit)
             .sheet(item: $safariURL) { url in
-                SafariView(url: url)
-                    .ignoresSafeArea()
+                SafariView(url: url).ignoresSafeArea()
             }
             #endif
         }
@@ -326,6 +325,14 @@ struct SearchView: View {
     }
 
     private func openMangaURL(_ urlString: String) {
-        MangaURLOpener(browserMode: browserMode, openURL: openURL) { safariURL = $0 }.open(urlString)
+        guard let url = URL(string: urlString) else { return }
+        let entry = viewModel.allEntries().first { $0.url == urlString }
+        if browserMode == "overlay" {
+            viewModel.browserContext = BrowserContext(url: url, entryName: entry?.name, entryPublisher: entry?.publisher, entryImageData: entry?.imageData)
+        } else if browserMode == "inApp" {
+            safariURL = url
+        } else {
+            openURL(url)
+        }
     }
 }

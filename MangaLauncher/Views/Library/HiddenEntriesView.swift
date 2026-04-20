@@ -64,7 +64,15 @@ struct HiddenEntriesView: View {
     }
 
     private func openMangaURL(_ urlString: String) {
-        MangaURLOpener(browserMode: browserMode, openURL: openURL) { safariURL = $0 }.open(urlString)
+        guard let url = URL(string: urlString) else { return }
+        let entry = entries.first { $0.url == urlString }
+        if browserMode == "overlay" {
+            viewModel.browserContext = BrowserContext(url: url, entryName: entry?.name, entryPublisher: entry?.publisher, entryImageData: entry?.imageData)
+        } else if browserMode == "inApp" {
+            safariURL = url
+        } else {
+            openURL(url)
+        }
     }
 
     @ViewBuilder

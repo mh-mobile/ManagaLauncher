@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import WebKit
+#endif
 
 enum RootTab: Hashable {
     case home, library, settings, search
@@ -69,6 +72,18 @@ struct RootTabView: View {
         } message: { error in
             Text(error.message)
         }
+        #if canImport(UIKit)
+        .overlay {
+            if let ctx = viewModel.browserContext {
+                OverlayBrowserScreen(context: ctx) {
+                    viewModel.browserContext = nil
+                }
+                .ignoresSafeArea()
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: viewModel.browserContext != nil)
+        #endif
         }
     }
 }
