@@ -17,6 +17,7 @@ enum UserDefaultsKeys {
     static let showsNextUpdateBadge = "showsNextUpdateBadge"
     static let showHiddenSection = "showHiddenSection"
     static let appIconMode = "appIconMode"
+    static let recentActivityExpanded = "recentActivityExpanded"
 
     // MARK: - Pending intent signals (App Group 経由)
     static let pendingIntentData = "pendingIntentData"
