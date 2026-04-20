@@ -53,12 +53,18 @@ struct OverlayBrowserScreen: View {
     @State private var currentURL: URL?
     @State private var showShareSheet = false
     @State private var isRevealed = false
+    @State private var snapshot: UIImage?
     private var displayURL: URL { currentURL ?? context.url }
     private let screenHeight = UIScreen.main.bounds.height
 
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
+                Color(.systemBackground)
+                    .frame(height: UIApplication.shared.connectedScenes
+                        .compactMap { $0 as? UIWindowScene }
+                        .first?.windows.first?.safeAreaInsets.top ?? 0)
+
                 WebViewRepresentable(url: context.url, currentURL: $currentURL)
 
                 toolbarView
@@ -78,18 +84,33 @@ struct OverlayBrowserScreen: View {
             }
             .background(Color(.systemBackground))
 
-            Color(.systemBackground)
-                .ignoresSafeArea()
-                .offset(y: isRevealed ? screenHeight : 0)
-                .allowsHitTesting(false)
+            if let snapshot {
+                Image(uiImage: snapshot)
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
+                    .offset(y: isRevealed ? screenHeight : 0)
+                    .allowsHitTesting(false)
+            }
         }
         .sheet(isPresented: $showShareSheet) {
             ShareSheet(url: displayURL)
         }
         .onAppear {
+            snapshot = captureScreenshot()
             withAnimation(.easeInOut(duration: 0.35)) {
                 isRevealed = true
             }
+        }
+    }
+
+    private func captureScreenshot() -> UIImage? {
+        guard let window = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first?.windows.first else { return nil }
+        let renderer = UIGraphicsImageRenderer(bounds: window.bounds)
+        return renderer.image { _ in
+            window.drawHierarchy(in: window.bounds, afterScreenUpdates: false)
         }
     }
 
@@ -190,6 +211,9 @@ struct OverlayBrowserScreen: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+        .padding(.bottom, UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first?.windows.first?.safeAreaInsets.bottom ?? 0)
     }
 }
 
