@@ -48,6 +48,7 @@ extension View {
 
 struct OverlayBrowserScreen: View {
     @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
     let context: BrowserContext
     let onDismiss: () -> Void
     @State private var currentURL: URL?
@@ -131,6 +132,15 @@ struct OverlayBrowserScreen: View {
             snapshot = captureScreenshot()
             withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
                 isRevealed = true
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    dragOffset = 0
+                }
             }
         }
     }
