@@ -1,7 +1,4 @@
 import SwiftUI
-#if canImport(UIKit)
-import WebKit
-#endif
 
 enum RootTab: Hashable {
     case home, library, settings, search

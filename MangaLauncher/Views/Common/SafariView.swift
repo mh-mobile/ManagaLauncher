@@ -42,7 +42,8 @@ struct QuickViewBrowserScreen: View {
     private var safeAreaTop: CGFloat {
         UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
-            .first?.windows.first?.safeAreaInsets.top ?? 0
+            .flatMap(\.windows)
+            .first(where: { $0.isKeyWindow })?.safeAreaInsets.top ?? 0
     }
 
     var body: some View {
@@ -51,8 +52,7 @@ struct QuickViewBrowserScreen: View {
                 Color(.systemBackground)
                     .frame(height: safeAreaTop)
 
-                WebViewRepresentable(url: context.url, currentURL: $currentURL)
-                    .id(reloadID)
+                WebViewRepresentable(url: context.url, currentURL: $currentURL, reloadTrigger: $reloadID)
             }
 
             VStack(spacing: 0) {
@@ -117,7 +117,8 @@ struct QuickViewBrowserScreen: View {
     private func captureScreenshot() -> UIImage? {
         guard let window = UIApplication.shared.connectedScenes
             .compactMap({ $0 as? UIWindowScene })
-            .first?.windows.first else { return nil }
+            .flatMap(\.windows)
+            .first(where: { $0.isKeyWindow }) else { return nil }
         let renderer = UIGraphicsImageRenderer(bounds: window.bounds)
         return renderer.image { _ in
             window.drawHierarchy(in: window.bounds, afterScreenUpdates: false)
@@ -223,7 +224,8 @@ struct QuickViewBrowserScreen: View {
         .padding(.vertical, 12)
         .padding(.bottom, UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
-            .first?.windows.first?.safeAreaInsets.bottom ?? 0)
+            .flatMap(\.windows)
+            .first(where: { $0.isKeyWindow })?.safeAreaInsets.bottom ?? 0)
         .background(.black.opacity(0.85))
     }
 }
@@ -233,25 +235,35 @@ struct QuickViewBrowserScreen: View {
 private struct WebViewRepresentable: UIViewRepresentable {
     let url: URL
     @Binding var currentURL: URL?
+    @Binding var reloadTrigger: UUID
 
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView()
         webView.navigationDelegate = context.coordinator
         webView.load(URLRequest(url: url))
+        context.coordinator.webView = webView
         return webView
     }
 
-    func updateUIView(_ uiView: WKWebView, context: Context) {}
+    func updateUIView(_ uiView: WKWebView, context: Context) {
+        if context.coordinator.lastReloadTrigger != reloadTrigger {
+            context.coordinator.lastReloadTrigger = reloadTrigger
+            uiView.reload()
+        }
+    }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(currentURL: $currentURL)
+        Coordinator(currentURL: $currentURL, reloadTrigger: reloadTrigger)
     }
 
     final class Coordinator: NSObject, WKNavigationDelegate {
         @Binding var currentURL: URL?
+        weak var webView: WKWebView?
+        var lastReloadTrigger: UUID
 
-        init(currentURL: Binding<URL?>) {
+        init(currentURL: Binding<URL?>, reloadTrigger: UUID) {
             _currentURL = currentURL
+            self.lastReloadTrigger = reloadTrigger
         }
 
         func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
