@@ -18,19 +18,20 @@ struct BrowserContext: Identifiable {
 struct MangaURLOpener {
     let browserMode: String
     let openURL: OpenURLAction
-    var onBrowserContext: ((BrowserContext) -> Void)?
+    var onSafariURL: ((URL) -> Void)?
+    var onQuickView: ((BrowserContext) -> Void)?
+    var entryLookup: ((String) -> (name: String?, publisher: String?, imageData: Data?)?)?
 
-    func open(_ urlString: String, entry: MangaEntry? = nil) {
+    func open(_ urlString: String) {
         guard let url = URL(string: urlString) else { return }
         #if canImport(UIKit)
         let isWebURL = url.scheme?.lowercased() == "http" || url.scheme?.lowercased() == "https"
-        if (browserMode == "inApp" || browserMode == "quickView") && isWebURL {
-            onBrowserContext?(BrowserContext(
-                url: url,
-                entryName: entry?.name,
-                entryPublisher: entry?.publisher,
-                entryImageData: entry?.imageData
-            ))
+        if browserMode == "quickView" && isWebURL {
+            let info = entryLookup?(urlString)
+            let ctx = BrowserContext(url: url, entryName: info?.name, entryPublisher: info?.publisher, entryImageData: info?.imageData)
+            onQuickView?(ctx)
+        } else if browserMode == "inApp" && isWebURL {
+            onSafariURL?(url)
         } else {
             openURL(url)
         }

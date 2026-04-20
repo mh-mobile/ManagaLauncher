@@ -410,14 +410,15 @@ struct CatchUpView: View {
     }
 
     private func openMangaURL(_ urlString: String) {
-        guard let url = URL(string: urlString) else { return }
-        let entry = viewModel.allEntries().first { $0.url == urlString }
-        if browserMode == "quickView" {
-            quickViewContext = BrowserContext(url: url, entryName: entry?.name, entryPublisher: entry?.publisher, entryImageData: entry?.imageData)
-        } else if browserMode == "inApp" {
-            safariURL = url
-        } else {
-            openURL(url)
-        }
+        MangaURLOpener(
+            browserMode: browserMode,
+            openURL: openURL,
+            onSafariURL: { safariURL = $0 },
+            onQuickView: { quickViewContext = $0 },
+            entryLookup: { url in
+                guard let e = viewModel.allEntries().first(where: { $0.url == url }) else { return nil }
+                return (e.name, e.publisher, e.imageData)
+            }
+        ).open(urlString)
     }
 }
