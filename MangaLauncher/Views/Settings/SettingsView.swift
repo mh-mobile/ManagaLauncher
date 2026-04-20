@@ -205,12 +205,13 @@ struct SettingsView: View {
                 Section {
                     Picker("ブラウザ", selection: $browserMode) {
                         Text("アプリ内（Safari）").tag("inApp")
+                        Text("クイックビュー").tag("quickView")
                         Text("デフォルトブラウザ").tag("external")
                     }
                 } header: {
                     Text("ブラウザ")
                 } footer: {
-                    Text("「アプリ内」はSafariベースのブラウザで表示します。「デフォルトブラウザ」はiOSで設定したブラウザで開きます。")
+                    Text("「アプリ内」はSafariベースのブラウザで表示します。「クイックビュー」はマンガ情報付きのブラウザで素早く閲覧できます。「デフォルトブラウザ」はiOSで設定したブラウザで開きます。")
                 }
 
                 NotificationSection(viewModel: viewModel)

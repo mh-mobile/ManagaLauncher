@@ -18,6 +18,7 @@ struct ContentView: View {
     @State private var homeState = HomeState()
     @AppStorage(UserDefaultsKeys.displayMode) private var displayMode: DisplayMode = .grid
     @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
+    @State private var safariURL: URL?
 
     @Namespace private var tabUnderline
 
@@ -151,9 +152,8 @@ struct ContentView: View {
             }
         }
         #if canImport(UIKit)
-        .sheet(item: $homeState.safariURL) { url in
-            SafariView(url: url)
-                .ignoresSafeArea()
+        .sheet(item: $safariURL) { url in
+            SafariView(url: url).ignoresSafeArea()
         }
         #endif
     }
@@ -199,7 +199,16 @@ struct ContentView: View {
     // MARK: - Helpers
 
     private func openMangaURL(_ urlString: String) {
-        MangaURLOpener(browserMode: browserMode, openURL: openURL) { homeState.safariURL = $0 }.open(urlString)
+        MangaURLOpener(
+            browserMode: browserMode,
+            openURL: openURL,
+            onSafariURL: { safariURL = $0 },
+            onQuickView: { viewModel.browserContext = $0 },
+            entryLookup: { url in
+                guard let e = viewModel.allEntries().first(where: { $0.url == url }) else { return nil }
+                return (e.name, e.publisher, e.imageData)
+            }
+        ).open(urlString)
     }
 }
 

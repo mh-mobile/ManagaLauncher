@@ -124,8 +124,7 @@ struct TimelineView: View {
         }
         #if canImport(UIKit)
         .sheet(item: $safariURL) { url in
-            SafariView(url: url)
-                .ignoresSafeArea()
+            SafariView(url: url).ignoresSafeArea()
         }
         #endif
         .sheet(item: $lifetimeEntry) { entry in
@@ -250,8 +249,21 @@ struct TimelineView: View {
             editingEntry = entry
         case .read(_, let entry):
             guard let entry else { return }
-            MangaURLOpener(browserMode: browserMode, openURL: openURL) { safariURL = $0 }.open(entry.url)
+            openMangaURL(entry.url)
         }
+    }
+
+    private func openMangaURL(_ urlString: String) {
+        MangaURLOpener(
+            browserMode: browserMode,
+            openURL: openURL,
+            onSafariURL: { safariURL = $0 },
+            onQuickView: { viewModel.browserContext = $0 },
+            entryLookup: { url in
+                guard let e = viewModel.allEntries().first(where: { $0.url == url }) else { return nil }
+                return (e.name, e.publisher, e.imageData)
+            }
+        ).open(urlString)
     }
 
     // MARK: - Formatters

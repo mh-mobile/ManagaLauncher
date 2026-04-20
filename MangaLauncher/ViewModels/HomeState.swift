@@ -19,7 +19,6 @@ final class HomeState {
     // MARK: - Layout
     var headerHeight: CGFloat = 50
     var selectedPublisher: String?
-    var safariURL: URL?
     var commentingEntry: MangaEntry?
 }
 

@@ -69,6 +69,16 @@ struct RootTabView: View {
         } message: { error in
             Text(error.message)
         }
+        #if canImport(UIKit)
+        .overlay {
+            if let ctx = viewModel.browserContext {
+                QuickViewBrowserScreen(context: ctx) {
+                    viewModel.browserContext = nil
+                }
+                .ignoresSafeArea()
+            }
+        }
+        #endif
         }
     }
 }

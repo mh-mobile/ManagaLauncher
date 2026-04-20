@@ -28,6 +28,8 @@ final class MangaViewModel {
     /// 直近の重大エラー（移行/インポート/同期）。View 側で alert 表示する用。
     var lastError: AppError?
 
+    var browserContext: BrowserContext?
+
     private(set) var modelContext: ModelContext
     @ObservationIgnored private var didRunStartupMigrations = false
 

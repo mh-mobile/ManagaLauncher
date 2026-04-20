@@ -16,6 +16,7 @@ struct CatchUpView: View {
     @State private var undoStack: [(entry: MangaEntry, action: SwipeAction)] = []
     @State private var completionAnimated = false
     @State private var safariURL: URL?
+    @State private var quickViewContext: BrowserContext?
     @AppStorage(UserDefaultsKeys.hasSeenCatchUpTutorial) private var hasSeenTutorial = false
     @State private var showTutorial = false
     @State private var editingEntry: MangaEntry?
@@ -125,8 +126,15 @@ struct CatchUpView: View {
         }
         #if canImport(UIKit)
         .sheet(item: $safariURL) { url in
-            SafariView(url: url)
+            SafariView(url: url).ignoresSafeArea()
+        }
+        .overlay {
+            if let ctx = quickViewContext {
+                QuickViewBrowserScreen(context: ctx) {
+                    quickViewContext = nil
+                }
                 .ignoresSafeArea()
+            }
         }
         #endif
         .gesture(dismissDragGesture, including: isCompleted || unreadItems.isEmpty ? .all : .subviews)
@@ -402,6 +410,15 @@ struct CatchUpView: View {
     }
 
     private func openMangaURL(_ urlString: String) {
-        MangaURLOpener(browserMode: browserMode, openURL: openURL) { safariURL = $0 }.open(urlString)
+        MangaURLOpener(
+            browserMode: browserMode,
+            openURL: openURL,
+            onSafariURL: { safariURL = $0 },
+            onQuickView: { quickViewContext = $0 },
+            entryLookup: { url in
+                guard let e = viewModel.allEntries().first(where: { $0.url == url }) else { return nil }
+                return (e.name, e.publisher, e.imageData)
+            }
+        ).open(urlString)
     }
 }
