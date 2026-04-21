@@ -64,6 +64,14 @@ struct QuickViewBrowserScreen: View {
                 VStack(spacing: 0) {
                     toolbarView
 
+                    Capsule()
+                        .fill(.white.opacity(0.4))
+                        .frame(width: 36, height: 5)
+                        .padding(.top, 10)
+                        .padding(.bottom, 6)
+                        .frame(maxWidth: .infinity)
+                        .background(.black.opacity(0.85))
+
                     if context.entryName != nil {
                         entryCard
                     }
