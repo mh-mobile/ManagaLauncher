@@ -75,12 +75,14 @@ struct BackupData: Codable {
         let episodeLabel: String?
         // v11+
         let isHidden: Bool?
+        // v13+
+        let deletedAt: Date?
         // Legacy fields (kept for backward-compat with v5 backups)
         let isOnHiatus: Bool?
         let isCompleted: Bool?
         let isBacklog: Bool?
 
-        init(id: UUID, name: String, url: String, dayOfWeekRawValue: Int, sortOrder: Int, iconColor: String, publisher: String, imageData: Data?, lastReadDate: Date? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, isOneShot: Bool = false, publicationStatusRawValue: Int = 0, readingStateRawValue: Int = 0, memo: String = "", memoUpdatedAt: Date? = nil, currentEpisode: Int? = nil, episodeLabel: String? = nil, isHidden: Bool = false) {
+        init(id: UUID, name: String, url: String, dayOfWeekRawValue: Int, sortOrder: Int, iconColor: String, publisher: String, imageData: Data?, lastReadDate: Date? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, isOneShot: Bool = false, publicationStatusRawValue: Int = 0, readingStateRawValue: Int = 0, memo: String = "", memoUpdatedAt: Date? = nil, currentEpisode: Int? = nil, episodeLabel: String? = nil, isHidden: Bool = false, deletedAt: Date? = nil) {
             self.id = id
             self.name = name
             self.url = url
@@ -100,6 +102,7 @@ struct BackupData: Codable {
             self.currentEpisode = currentEpisode
             self.episodeLabel = episodeLabel
             self.isHidden = isHidden
+            self.deletedAt = deletedAt
             self.isOnHiatus = nil
             self.isCompleted = nil
             self.isBacklog = nil
@@ -126,6 +129,7 @@ struct BackupData: Codable {
             currentEpisode = try container.decodeIfPresent(Int.self, forKey: .currentEpisode)
             episodeLabel = try container.decodeIfPresent(String.self, forKey: .episodeLabel)
             isHidden = try container.decodeIfPresent(Bool.self, forKey: .isHidden)
+            deletedAt = try container.decodeIfPresent(Date.self, forKey: .deletedAt)
             isOnHiatus = try container.decodeIfPresent(Bool.self, forKey: .isOnHiatus)
             isCompleted = try container.decodeIfPresent(Bool.self, forKey: .isCompleted)
             isBacklog = try container.decodeIfPresent(Bool.self, forKey: .isBacklog)
@@ -134,7 +138,7 @@ struct BackupData: Codable {
 
     static func from(_ entries: [MangaEntry], activities: [ReadingActivity] = [], comments: [MangaComment] = []) -> BackupData {
         BackupData(
-            version: 12,
+            version: 13,
             exportDate: Date(),
             entries: entries.map {
                 BackupEntry(

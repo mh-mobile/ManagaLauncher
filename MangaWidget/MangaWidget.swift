@@ -55,6 +55,7 @@ struct MangaTimelineProvider: TimelineProvider {
                     && $0.publicationStatusRawValue == activeRaw
                     && $0.readingStateRawValue == followingRaw
                     && $0.isHidden == false
+                    && $0.deletedAt == nil
             },
             sortBy: [SortDescriptor(\.sortOrder)]
         )
