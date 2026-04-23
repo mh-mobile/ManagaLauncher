@@ -50,6 +50,7 @@ final class MangaViewModel {
         didRunStartupMigrations = true
         migrateLegacyStateIfNeeded()
         backfillMemoUpdatedAtIfNeeded()
+        purgeExpiredSoftDeletes()
     }
 
     /// 旧 Bool 状態（isOnHiatus / isCompleted / isBacklog）を
@@ -117,6 +118,7 @@ final class MangaViewModel {
                 $0.dayOfWeekRawValue == dayRawValue
                     && $0.readingStateRawValue == followingRaw
                     && $0.publicationStatusRawValue == activeRaw
+                    && $0.deletedAt == nil
             },
             sortBy: [SortDescriptor(\.sortOrder)]
         )
@@ -172,7 +174,7 @@ final class MangaViewModel {
 
     func reloadHiddenIDs() {
         let descriptor = FetchDescriptor<MangaEntry>(
-            predicate: #Predicate { $0.isHidden == true }
+            predicate: #Predicate { $0.isHidden == true && $0.deletedAt == nil }
         )
         let entries = (try? modelContext.fetch(descriptor)) ?? []
         hiddenIDs = Set(entries.map(\.id))
@@ -180,7 +182,7 @@ final class MangaViewModel {
 
     func hiddenEntries() -> [MangaEntry] {
         let descriptor = FetchDescriptor<MangaEntry>(
-            predicate: #Predicate { $0.isHidden == true },
+            predicate: #Predicate { $0.isHidden == true && $0.deletedAt == nil },
             sortBy: [SortDescriptor(\.name)]
         )
         return modelContext.fetchLogged(descriptor)
@@ -309,6 +311,7 @@ final class MangaViewModel {
         invalidateCacheIfStale()
         if let cached = cachedEntries { return cached }
         let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.deletedAt == nil },
             sortBy: [SortDescriptor(\.lastReadDate, order: .reverse), SortDescriptor(\.name)]
         )
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
@@ -324,7 +327,9 @@ final class MangaViewModel {
     }
 
     func allPublishers() -> [String] {
-        let descriptor = FetchDescriptor<MangaEntry>()
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.deletedAt == nil }
+        )
         let entries = modelContext.fetchLogged(descriptor)
         let currentHiddenIDs = hiddenIDs
         let publishers = Set(entries.filter { !currentHiddenIDs.contains($0.id) }.map(\.publisher)).filter { !$0.isEmpty }
@@ -332,7 +337,7 @@ final class MangaViewModel {
     }
 
     func deleteEntry(_ entry: MangaEntry) {
-        modelContext.delete(entry)
+        entry.deletedAt = Date()
         save()
     }
 
@@ -353,7 +358,7 @@ final class MangaViewModel {
         deleteTimer?.invalidate()
         deleteTimer = nil
         for entry in pendingDeleteEntries {
-            modelContext.delete(entry)
+            entry.deletedAt = Date()
         }
         pendingDeleteEntries.removeAll()
         save()
@@ -365,6 +370,54 @@ final class MangaViewModel {
             Task { @MainActor in
                 self?.commitPendingDeletes()
             }
+        }
+    }
+
+    // MARK: - Soft Delete
+
+    func permanentlyDelete(_ entry: MangaEntry) {
+        let entryID = entry.id
+        let activityDescriptor = FetchDescriptor<ReadingActivity>(predicate: #Predicate { $0.mangaEntryID == entryID })
+        if let activities = try? modelContext.fetch(activityDescriptor) {
+            for activity in activities { modelContext.delete(activity) }
+        }
+        let commentDescriptor = FetchDescriptor<MangaComment>(predicate: #Predicate { $0.mangaEntryID == entryID })
+        if let comments = try? modelContext.fetch(commentDescriptor) {
+            for comment in comments { modelContext.delete(comment) }
+        }
+        modelContext.delete(entry)
+        save()
+    }
+
+    func restoreEntry(_ entry: MangaEntry) {
+        entry.deletedAt = nil
+        // Recalculate sortOrder to end of its day group
+        let day = entry.dayOfWeekRawValue
+        let descriptor = FetchDescriptor<MangaEntry>(predicate: #Predicate { $0.dayOfWeekRawValue == day && $0.deletedAt == nil })
+        let maxOrder = (try? modelContext.fetch(descriptor))?.map(\.sortOrder).max() ?? 0
+        entry.sortOrder = maxOrder + 1
+        save()
+    }
+
+    func deletedEntries() -> [MangaEntry] {
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.deletedAt != nil && $0.isHidden == false },
+            sortBy: [SortDescriptor(\.deletedAt, order: .reverse)]
+        )
+        return (try? modelContext.fetch(descriptor)) ?? []
+    }
+
+    func deletedEntryCount() -> Int {
+        let descriptor = FetchDescriptor<MangaEntry>(predicate: #Predicate { $0.deletedAt != nil && $0.isHidden == false })
+        return (try? modelContext.fetchCount(descriptor)) ?? 0
+    }
+
+    func purgeExpiredSoftDeletes() {
+        let cutoff = Calendar.current.date(byAdding: .day, value: -30, to: Date())!
+        let descriptor = FetchDescriptor<MangaEntry>(predicate: #Predicate { $0.deletedAt != nil && $0.deletedAt! < cutoff })
+        guard let expired = try? modelContext.fetch(descriptor), !expired.isEmpty else { return }
+        for entry in expired {
+            permanentlyDelete(entry)
         }
     }
 
@@ -425,7 +478,9 @@ final class MangaViewModel {
 
     func totalEntryCount() -> Int {
         let _ = refreshCounter
-        let descriptor = FetchDescriptor<MangaEntry>()
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.deletedAt == nil }
+        )
         let results = modelContext.fetchLogged(descriptor)
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
         let currentHiddenIDs = hiddenIDs
