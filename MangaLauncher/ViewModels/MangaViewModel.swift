@@ -12,6 +12,7 @@ final class MangaViewModel {
     var selectedDay: DayOfWeek = .today
     private(set) var refreshCounter = 0
     private(set) var hiddenIDs: Set<UUID> = []
+    private(set) var deletedIDs: Set<UUID> = []
     var pendingDeleteEntries: [MangaEntry] = []
     private var deleteTimer: Timer?
     var pendingDeleteComments: [MangaComment] = []
@@ -36,6 +37,7 @@ final class MangaViewModel {
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
         reloadHiddenIDs()
+        reloadDeletedIDs()
         // 起動時の重い処理 (migration / backfill) は init では実行しない。
         // CloudKit 同期前のローカル DB を書き換えると、cloud で持っている値を
         // デフォルトで上書きしてしまうリスクがある (Vision Pro 初回起動などで観測)。
@@ -178,6 +180,14 @@ final class MangaViewModel {
         )
         let entries = (try? modelContext.fetch(descriptor)) ?? []
         hiddenIDs = Set(entries.map(\.id))
+    }
+
+    func reloadDeletedIDs() {
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.deletedAt != nil }
+        )
+        let entries = (try? modelContext.fetch(descriptor)) ?? []
+        deletedIDs = Set(entries.map(\.id))
     }
 
     func hiddenEntries() -> [MangaEntry] {
@@ -590,6 +600,7 @@ final class MangaViewModel {
         if importedCount > 0 {
             save()
             reloadHiddenIDs()
+            reloadDeletedIDs()
         }
         return importedCount
     }
@@ -796,6 +807,7 @@ final class MangaViewModel {
     func refresh() {
         modelContext = ModelContext(modelContext.container)
         reloadHiddenIDs()
+        reloadDeletedIDs()
         refreshCounter += 1
     }
 
