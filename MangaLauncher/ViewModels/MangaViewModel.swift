@@ -194,10 +194,14 @@ final class MangaViewModel {
 
     func hiddenEntries() -> [MangaEntry] {
         let descriptor = FetchDescriptor<MangaEntry>(
-            predicate: #Predicate { $0.isHidden == true && $0.deletedAt == nil },
+            predicate: #Predicate { $0.isHidden == true },
             sortBy: [SortDescriptor(\.name)]
         )
-        return modelContext.fetchLogged(descriptor)
+        let pendingIDs = Set(pendingDeleteEntries.map(\.id))
+        let currentDeletedIDs = deletedIDs
+        return modelContext.fetchLogged(descriptor).filter { entry in
+            !pendingIDs.contains(entry.id) && !currentDeletedIDs.contains(entry.id)
+        }
     }
 
     func recordSpecialEpisode(_ entry: MangaEntry, label: String) {
@@ -421,6 +425,9 @@ final class MangaViewModel {
     private func restoreEntryWithoutSave(_ entry: MangaEntry) {
         entry.deletedAt = nil
         deletedIDs.remove(entry.id)
+        if entry.isHidden {
+            hiddenIDs.insert(entry.id)
+        }
         // Recalculate sortOrder to end of its day group
         let day = entry.dayOfWeekRawValue
         let descriptor = FetchDescriptor<MangaEntry>(predicate: #Predicate { $0.dayOfWeekRawValue == day && $0.deletedAt == nil })
@@ -441,12 +448,17 @@ final class MangaViewModel {
     func deletedEntries() -> [MangaEntry] {
         let currentDeletedIDs = deletedIDs
         let descriptor = FetchDescriptor<MangaEntry>(
-            predicate: #Predicate { $0.deletedAt != nil && $0.isHidden == false }
+            predicate: #Predicate { $0.deletedAt != nil }
         )
         let results = modelContext.fetchLogged(descriptor)
         // SwiftData stale fetch 対策: in-memory deletedIDs でも照合
         return results.filter { currentDeletedIDs.contains($0.id) }
             .sorted { ($0.deletedAt ?? .distantPast) > ($1.deletedAt ?? .distantPast) }
+    }
+
+    /// 非表示の削除済みエントリが存在するか
+    func hasHiddenDeletedEntries() -> Bool {
+        deletedEntries().contains { $0.isHidden }
     }
 
     func deletedEntryCount() -> Int {

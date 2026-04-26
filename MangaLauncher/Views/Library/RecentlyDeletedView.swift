@@ -3,6 +3,8 @@ import PlatformKit
 
 struct RecentlyDeletedView: View {
     var viewModel: MangaViewModel
+    @State private var isAuthenticated = false
+    @State private var needsAuth = false
     @State private var entries: [MangaEntry] = []
     @State private var showDeleteAllConfirmation = false
     @State private var showDeleteConfirmation: MangaEntry?
@@ -11,7 +13,9 @@ struct RecentlyDeletedView: View {
 
     var body: some View {
         Group {
-            if entries.isEmpty {
+            if needsAuth && !isAuthenticated {
+                lockedView
+            } else if entries.isEmpty {
                 ContentUnavailableView {
                     Label("最近削除した項目はありません", systemImage: "trash")
                         .foregroundStyle(theme.onSurfaceVariant)
@@ -22,68 +26,35 @@ struct RecentlyDeletedView: View {
             } else {
                 List {
                     ForEach(entries, id: \.id) { entry in
-                        HStack(spacing: 12) {
-                            if let data = entry.imageData, let image = data.toSwiftUIImage() {
-                                image
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 44, height: 44)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                            } else {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color.fromName(entry.iconColor))
-                                    .frame(width: 44, height: 44)
-                                    .overlay {
-                                        Text(entry.name.prefix(1))
-                                            .font(.headline.bold())
-                                            .foregroundStyle(.white)
-                                    }
+                        entryRow(entry)
+                            .swipeActions(edge: .leading) {
+                                Button {
+                                    restore(entry)
+                                } label: {
+                                    Label("復元", systemImage: "arrow.uturn.backward")
+                                }
+                                .tint(.blue)
                             }
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(entry.name)
-                                    .font(theme.bodyFont)
-                                    .foregroundStyle(theme.onSurface)
-                                if !entry.publisher.isEmpty {
-                                    Text(entry.publisher)
-                                        .font(theme.captionFont)
-                                        .foregroundStyle(theme.onSurfaceVariant)
+                            .swipeActions(edge: .trailing) {
+                                Button(role: .destructive) {
+                                    showDeleteConfirmation = entry
+                                } label: {
+                                    Label("完全に削除", systemImage: "trash")
                                 }
                             }
-                            Spacer()
-                            if let deletedAt = entry.deletedAt {
-                                Text(remainingDaysText(from: deletedAt))
-                                    .font(.caption2)
-                                    .foregroundStyle(theme.onSurfaceVariant)
+                            .contextMenu {
+                                Button {
+                                    restore(entry)
+                                } label: {
+                                    Label("復元", systemImage: "arrow.uturn.backward")
+                                }
+                                Divider()
+                                Button(role: .destructive) {
+                                    showDeleteConfirmation = entry
+                                } label: {
+                                    Label("完全に削除", systemImage: "trash")
+                                }
                             }
-                        }
-                        .swipeActions(edge: .leading) {
-                            Button {
-                                restore(entry)
-                            } label: {
-                                Label("復元", systemImage: "arrow.uturn.backward")
-                            }
-                            .tint(.blue)
-                        }
-                        .swipeActions(edge: .trailing) {
-                            Button(role: .destructive) {
-                                showDeleteConfirmation = entry
-                            } label: {
-                                Label("完全に削除", systemImage: "trash")
-                            }
-                        }
-                        .contextMenu {
-                            Button {
-                                restore(entry)
-                            } label: {
-                                Label("復元", systemImage: "arrow.uturn.backward")
-                            }
-                            Divider()
-                            Button(role: .destructive) {
-                                showDeleteConfirmation = entry
-                            } label: {
-                                Label("完全に削除", systemImage: "trash")
-                            }
-                        }
                     }
                 }
                 .listStyle(.plain)
@@ -115,7 +86,7 @@ struct RecentlyDeletedView: View {
             }
         }
         .onAppear {
-            entries = viewModel.deletedEntries()
+            loadEntries()
         }
         .alert("完全に削除", isPresented: $showDeleteAllConfirmation) {
             Button("すべて削除", role: .destructive) {
@@ -138,6 +109,86 @@ struct RecentlyDeletedView: View {
         } message: {
             if let entry = showDeleteConfirmation {
                 Text("「\(entry.name)」を完全に削除します。この操作は取り消せません。")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var lockedView: some View {
+        ContentUnavailableView {
+            Label("認証が必要です", systemImage: "lock.fill")
+                .foregroundStyle(theme.onSurfaceVariant)
+        } description: {
+            Text("非表示のマンガが含まれているため認証が必要です")
+                .foregroundStyle(theme.onSurfaceVariant.opacity(0.7))
+        } actions: {
+            Button("認証する") { authenticate() }
+        }
+    }
+
+    @ViewBuilder
+    private func entryRow(_ entry: MangaEntry) -> some View {
+        HStack(spacing: 12) {
+            if let data = entry.imageData, let image = data.toSwiftUIImage() {
+                image
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 44, height: 44)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            } else {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.fromName(entry.iconColor))
+                    .frame(width: 44, height: 44)
+                    .overlay {
+                        Text(entry.name.prefix(1))
+                            .font(.headline.bold())
+                            .foregroundStyle(.white)
+                    }
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 4) {
+                    Text(entry.name)
+                        .font(theme.bodyFont)
+                        .foregroundStyle(theme.onSurface)
+                    if entry.isHidden {
+                        Image(systemName: "eye.slash")
+                            .font(.caption2)
+                            .foregroundStyle(theme.onSurfaceVariant)
+                    }
+                }
+                if !entry.publisher.isEmpty {
+                    Text(entry.publisher)
+                        .font(theme.captionFont)
+                        .foregroundStyle(theme.onSurfaceVariant)
+                }
+            }
+            Spacer()
+            if let deletedAt = entry.deletedAt {
+                Text(remainingDaysText(from: deletedAt))
+                    .font(.caption2)
+                    .foregroundStyle(theme.onSurfaceVariant)
+            }
+        }
+    }
+
+    private func loadEntries() {
+        if viewModel.hasHiddenDeletedEntries() {
+            needsAuth = true
+            authenticate()
+        } else {
+            needsAuth = false
+            entries = viewModel.deletedEntries()
+        }
+    }
+
+    private func authenticate() {
+        Task {
+            let success = await BiometricAuthService.authenticate(
+                reason: "削除した項目を表示するために認証が必要です"
+            )
+            isAuthenticated = success
+            if success {
+                entries = viewModel.deletedEntries()
             }
         }
     }

@@ -42,7 +42,14 @@ struct HiddenEntriesView: View {
             }
         }
         .onAppear { authenticate() }
-        .sheet(item: $editingEntry) { entry in
+        .onChange(of: viewModel.refreshCounter) { _, _ in
+            if isAuthenticated {
+                entries = viewModel.hiddenEntries()
+            }
+        }
+        .sheet(item: $editingEntry, onDismiss: {
+            entries = viewModel.hiddenEntries()
+        }) { entry in
             EditEntryView(viewModel: viewModel, entry: entry)
         }
         .sheet(item: $commentingEntry) { entry in
