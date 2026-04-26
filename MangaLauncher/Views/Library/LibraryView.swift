@@ -87,6 +87,7 @@ struct LibraryView: View {
                 LazyVStack(alignment: .leading, spacing: 24) {
                     timelineLink
                     hiddenSectionLink
+                    recentlyDeletedLink
                     if !recentActivity.isEmpty {
                         recentActivitySection(items: recentActivity, totalCount: totalActivityCount)
                     }
@@ -122,6 +123,8 @@ struct LibraryView: View {
             TimelineView(viewModel: viewModel)
         case .hiddenEntries:
             HiddenEntriesView(viewModel: viewModel)
+        case .recentlyDeleted:
+            RecentlyDeletedView(viewModel: viewModel)
         }
     }
 
@@ -173,6 +176,40 @@ struct LibraryView: View {
                             .font(theme.captionFont)
                             .foregroundStyle(theme.onSurfaceVariant)
                     }
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(theme.onSurfaceVariant)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(theme.surfaceContainerHigh)
+                )
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal)
+        }
+    }
+
+    @ViewBuilder
+    private var recentlyDeletedLink: some View {
+        let count = viewModel.deletedEntryCount()
+        if count > 0 {
+            NavigationLink(value: LibraryDestination.recentlyDeleted) {
+                HStack(spacing: 10) {
+                    Image(systemName: "trash.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 28, height: 28)
+                        .background(Color.red, in: RoundedRectangle(cornerRadius: 6))
+                    Text("最近削除した項目")
+                        .font(theme.subheadlineFont.weight(.semibold))
+                        .foregroundStyle(theme.onSurface)
+                    Spacer()
+                    Text("\(count)")
+                        .font(theme.captionFont)
+                        .foregroundStyle(theme.onSurfaceVariant)
                     Image(systemName: "chevron.right")
                         .font(.caption)
                         .foregroundStyle(theme.onSurfaceVariant)

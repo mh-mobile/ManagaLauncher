@@ -117,6 +117,8 @@ final class MangaEntry {
     var episodeLabel: String?
     /// 非表示フラグ（シークレットモード）
     var isHidden: Bool = false
+    /// ソフトデリート日時（nil = 未削除）
+    var deletedAt: Date?
 
     /// 掲載状況の Int 値（PublicationStatus.rawValue）
     var publicationStatusRawValue: Int = 0

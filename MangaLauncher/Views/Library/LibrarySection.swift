@@ -30,4 +30,5 @@ enum LibraryDestination: Hashable {
     case allPublishers
     case timeline
     case hiddenEntries
+    case recentlyDeleted
 }

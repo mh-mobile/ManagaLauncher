@@ -12,6 +12,7 @@ final class MangaViewModel {
     var selectedDay: DayOfWeek = .today
     private(set) var refreshCounter = 0
     private(set) var hiddenIDs: Set<UUID> = []
+    private(set) var deletedIDs: Set<UUID> = []
     var pendingDeleteEntries: [MangaEntry] = []
     private var deleteTimer: Timer?
     var pendingDeleteComments: [MangaComment] = []
@@ -36,6 +37,7 @@ final class MangaViewModel {
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
         reloadHiddenIDs()
+        reloadDeletedIDs()
         // 起動時の重い処理 (migration / backfill) は init では実行しない。
         // CloudKit 同期前のローカル DB を書き換えると、cloud で持っている値を
         // デフォルトで上書きしてしまうリスクがある (Vision Pro 初回起動などで観測)。
@@ -50,6 +52,7 @@ final class MangaViewModel {
         didRunStartupMigrations = true
         migrateLegacyStateIfNeeded()
         backfillMemoUpdatedAtIfNeeded()
+        purgeExpiredSoftDeletes()
     }
 
     /// 旧 Bool 状態（isOnHiatus / isCompleted / isBacklog）を
@@ -117,16 +120,19 @@ final class MangaViewModel {
                 $0.dayOfWeekRawValue == dayRawValue
                     && $0.readingStateRawValue == followingRaw
                     && $0.publicationStatusRawValue == activeRaw
+                    && $0.deletedAt == nil
             },
             sortBy: [SortDescriptor(\.sortOrder)]
         )
         let results = modelContext.fetchLogged(descriptor)
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
         let currentHiddenIDs = hiddenIDs
+        let currentDeletedIDs = deletedIDs
         var seenIDs = Set<UUID>()
         return results.filter { entry in
             guard !currentHiddenIDs.contains(entry.id) else { return false }
             guard !pendingIDs.contains(entry.id) else { return false }
+            guard !currentDeletedIDs.contains(entry.id) else { return false }
             return seenIDs.insert(entry.id).inserted
         }
     }
@@ -172,10 +178,18 @@ final class MangaViewModel {
 
     func reloadHiddenIDs() {
         let descriptor = FetchDescriptor<MangaEntry>(
-            predicate: #Predicate { $0.isHidden == true }
+            predicate: #Predicate { $0.isHidden == true && $0.deletedAt == nil }
         )
         let entries = (try? modelContext.fetch(descriptor)) ?? []
         hiddenIDs = Set(entries.map(\.id))
+    }
+
+    func reloadDeletedIDs() {
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.deletedAt != nil }
+        )
+        let entries = (try? modelContext.fetch(descriptor)) ?? []
+        deletedIDs = Set(entries.map(\.id))
     }
 
     func hiddenEntries() -> [MangaEntry] {
@@ -183,7 +197,11 @@ final class MangaViewModel {
             predicate: #Predicate { $0.isHidden == true },
             sortBy: [SortDescriptor(\.name)]
         )
-        return modelContext.fetchLogged(descriptor)
+        let pendingIDs = Set(pendingDeleteEntries.map(\.id))
+        let currentDeletedIDs = deletedIDs
+        return modelContext.fetchLogged(descriptor).filter { entry in
+            !pendingIDs.contains(entry.id) && !currentDeletedIDs.contains(entry.id)
+        }
     }
 
     func recordSpecialEpisode(_ entry: MangaEntry, label: String) {
@@ -309,14 +327,17 @@ final class MangaViewModel {
         invalidateCacheIfStale()
         if let cached = cachedEntries { return cached }
         let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.deletedAt == nil },
             sortBy: [SortDescriptor(\.lastReadDate, order: .reverse), SortDescriptor(\.name)]
         )
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
         let currentHiddenIDs = hiddenIDs
+        let currentDeletedIDs = deletedIDs
         var seenIDs = Set<UUID>()
         let result = modelContext.fetchLogged(descriptor).filter { entry in
             guard !currentHiddenIDs.contains(entry.id) else { return false }
             guard !pendingIDs.contains(entry.id) else { return false }
+            guard !currentDeletedIDs.contains(entry.id) else { return false }
             return seenIDs.insert(entry.id).inserted
         }
         cachedEntries = result
@@ -324,15 +345,20 @@ final class MangaViewModel {
     }
 
     func allPublishers() -> [String] {
-        let descriptor = FetchDescriptor<MangaEntry>()
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.deletedAt == nil }
+        )
         let entries = modelContext.fetchLogged(descriptor)
         let currentHiddenIDs = hiddenIDs
-        let publishers = Set(entries.filter { !currentHiddenIDs.contains($0.id) }.map(\.publisher)).filter { !$0.isEmpty }
+        let currentDeletedIDs = deletedIDs
+        let publishers = Set(entries.filter { !currentHiddenIDs.contains($0.id) && !currentDeletedIDs.contains($0.id) }.map(\.publisher)).filter { !$0.isEmpty }
         return publishers.sorted()
     }
 
     func deleteEntry(_ entry: MangaEntry) {
-        modelContext.delete(entry)
+        entry.deletedAt = Date()
+        deletedIDs.insert(entry.id)
+        hiddenIDs.remove(entry.id)
         save()
     }
 
@@ -353,7 +379,9 @@ final class MangaViewModel {
         deleteTimer?.invalidate()
         deleteTimer = nil
         for entry in pendingDeleteEntries {
-            modelContext.delete(entry)
+            entry.deletedAt = Date()
+            deletedIDs.insert(entry.id)
+            hiddenIDs.remove(entry.id)
         }
         pendingDeleteEntries.removeAll()
         save()
@@ -366,6 +394,86 @@ final class MangaViewModel {
                 self?.commitPendingDeletes()
             }
         }
+    }
+
+    // MARK: - Soft Delete
+
+    func permanentlyDelete(_ entry: MangaEntry) {
+        permanentlyDeleteWithoutSave(entry)
+        save()
+    }
+
+    private func permanentlyDeleteWithoutSave(_ entry: MangaEntry) {
+        deletedIDs.remove(entry.id)
+        hiddenIDs.remove(entry.id)
+        let entryID = entry.id
+        let activityDescriptor = FetchDescriptor<ReadingActivity>(predicate: #Predicate { $0.mangaEntryID == entryID })
+        if let activities = try? modelContext.fetch(activityDescriptor) {
+            for activity in activities { modelContext.delete(activity) }
+        }
+        let commentDescriptor = FetchDescriptor<MangaComment>(predicate: #Predicate { $0.mangaEntryID == entryID })
+        if let comments = try? modelContext.fetch(commentDescriptor) {
+            for comment in comments { modelContext.delete(comment) }
+        }
+        modelContext.delete(entry)
+    }
+
+    func restoreEntry(_ entry: MangaEntry) {
+        restoreEntryWithoutSave(entry)
+        save()
+    }
+
+    private func restoreEntryWithoutSave(_ entry: MangaEntry) {
+        entry.deletedAt = nil
+        deletedIDs.remove(entry.id)
+        if entry.isHidden {
+            hiddenIDs.insert(entry.id)
+        }
+        // Recalculate sortOrder to end of its day group
+        let day = entry.dayOfWeekRawValue
+        let descriptor = FetchDescriptor<MangaEntry>(predicate: #Predicate { $0.dayOfWeekRawValue == day && $0.deletedAt == nil })
+        let maxOrder = (try? modelContext.fetch(descriptor))?.map(\.sortOrder).max() ?? -1
+        entry.sortOrder = maxOrder + 1
+    }
+
+    func restoreEntries(_ entries: [MangaEntry]) {
+        for entry in entries { restoreEntryWithoutSave(entry) }
+        save()
+    }
+
+    func permanentlyDeleteEntries(_ entries: [MangaEntry]) {
+        for entry in entries { permanentlyDeleteWithoutSave(entry) }
+        save()
+    }
+
+    func deletedEntries() -> [MangaEntry] {
+        let currentDeletedIDs = deletedIDs
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.deletedAt != nil }
+        )
+        let results = modelContext.fetchLogged(descriptor)
+        // SwiftData stale fetch 対策: in-memory deletedIDs でも照合
+        return results.filter { currentDeletedIDs.contains($0.id) }
+            .sorted { ($0.deletedAt ?? .distantPast) > ($1.deletedAt ?? .distantPast) }
+    }
+
+    /// 非表示の削除済みエントリが存在するか
+    func hasHiddenDeletedEntries() -> Bool {
+        deletedEntries().contains { $0.isHidden }
+    }
+
+    func deletedEntryCount() -> Int {
+        deletedEntries().count
+    }
+
+    func purgeExpiredSoftDeletes() {
+        let cutoff = Calendar.current.date(byAdding: .day, value: -30, to: Date())!
+        let descriptor = FetchDescriptor<MangaEntry>(predicate: #Predicate { $0.deletedAt != nil && $0.deletedAt! < cutoff })
+        guard let expired = try? modelContext.fetch(descriptor), !expired.isEmpty else { return }
+        for entry in expired {
+            permanentlyDeleteWithoutSave(entry)
+        }
+        save()
     }
 
     /// 別の曜日に移動。曜日のみ変更し、状態は触らない。
@@ -410,6 +518,8 @@ final class MangaViewModel {
         }
         UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.lastStreakShownDate)
         UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.shownMilestones)
+        deletedIDs.removeAll()
+        hiddenIDs.removeAll()
         do {
             try modelContext.save()
         } catch {
@@ -425,26 +535,34 @@ final class MangaViewModel {
 
     func totalEntryCount() -> Int {
         let _ = refreshCounter
-        let descriptor = FetchDescriptor<MangaEntry>()
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.deletedAt == nil }
+        )
         let results = modelContext.fetchLogged(descriptor)
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
         let currentHiddenIDs = hiddenIDs
+        let currentDeletedIDs = deletedIDs
         var seenIDs = Set<UUID>()
         return results.filter { entry in
             guard !currentHiddenIDs.contains(entry.id) else { return false }
             guard !pendingIDs.contains(entry.id) else { return false }
+            guard !currentDeletedIDs.contains(entry.id) else { return false }
             return seenIDs.insert(entry.id).inserted
         }.count
     }
 
     func exportBackupData() -> Data? {
-        let descriptor = FetchDescriptor<MangaEntry>(sortBy: [SortDescriptor(\.dayOfWeekRawValue), SortDescriptor(\.sortOrder)])
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.deletedAt == nil },
+            sortBy: [SortDescriptor(\.dayOfWeekRawValue), SortDescriptor(\.sortOrder)]
+        )
         let entries = modelContext.fetchLogged(descriptor)
         guard !entries.isEmpty else { return nil }
+        let activeEntryIDs = Set(entries.map(\.id))
         let activityDescriptor = FetchDescriptor<ReadingActivity>(sortBy: [SortDescriptor(\.date)])
-        let activities = modelContext.fetchLogged(activityDescriptor)
+        let activities = modelContext.fetchLogged(activityDescriptor).filter { activeEntryIDs.contains($0.mangaEntryID) }
         let commentDescriptor = FetchDescriptor<MangaComment>(sortBy: [SortDescriptor(\.createdAt)])
-        let comments = modelContext.fetchLogged(commentDescriptor)
+        let comments = modelContext.fetchLogged(commentDescriptor).filter { activeEntryIDs.contains($0.mangaEntryID) }
         let backup = BackupData.from(entries, activities: activities, comments: comments)
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
@@ -535,6 +653,7 @@ final class MangaViewModel {
         if importedCount > 0 {
             save()
             reloadHiddenIDs()
+            reloadDeletedIDs()
         }
         return importedCount
     }
@@ -741,6 +860,7 @@ final class MangaViewModel {
     func refresh() {
         modelContext = ModelContext(modelContext.container)
         reloadHiddenIDs()
+        reloadDeletedIDs()
         refreshCounter += 1
     }
 

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		AB50040000112233AA000003 /* HiddenEntriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50040000112233AA000004 /* HiddenEntriesView.swift */; };
+		AB50040000112233AA000005 /* RecentlyDeletedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50040000112233AA000006 /* RecentlyDeletedView.swift */; };
 		AB50040000112233AA000001 /* BiometricAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50040000112233AA000002 /* BiometricAuthService.swift */; };
 		AB50050000112233AA000001 /* SpecialEpisodeAlertModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50050000112233AA000002 /* SpecialEpisodeAlertModifier.swift */; };
 		AB50030000112233AA000003 /* MangaLifetimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50030000112233AA000004 /* MangaLifetimeView.swift */; };
@@ -177,6 +178,7 @@
 
 /* Begin PBXFileReference section */
 		AB50040000112233AA000004 /* HiddenEntriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HiddenEntriesView.swift; sourceTree = "<group>"; };
+		AB50040000112233AA000006 /* RecentlyDeletedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentlyDeletedView.swift; sourceTree = "<group>"; };
 		AB50040000112233AA000002 /* BiometricAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuthService.swift; sourceTree = "<group>"; };
 		AB50050000112233AA000002 /* SpecialEpisodeAlertModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecialEpisodeAlertModifier.swift; sourceTree = "<group>"; };
 		AB50030000112233AA000004 /* MangaLifetimeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaLifetimeView.swift; sourceTree = "<group>"; };
@@ -467,6 +469,7 @@
 			children = (
 				BB000104 /* LibraryView.swift */,
 				AB50040000112233AA000004 /* HiddenEntriesView.swift */,
+				AB50040000112233AA000006 /* RecentlyDeletedView.swift */,
 				BB000105 /* LibraryCard.swift */,
 				BC000610 /* ActivityRowView.swift */,
 				BC000620 /* AllActivityView.swift */,
@@ -825,6 +828,7 @@
 				A1000002 /* MangaEntry.swift in Sources */,
 				AB50040000112233AA000001 /* BiometricAuthService.swift in Sources */,
 				AB50040000112233AA000003 /* HiddenEntriesView.swift in Sources */,
+				AB50040000112233AA000005 /* RecentlyDeletedView.swift in Sources */,
 				AB50050000112233AA000001 /* SpecialEpisodeAlertModifier.swift in Sources */,
 				AB50030000112233AA000001 /* MangaLifetime.swift in Sources */,
 				AB50030000112233AA000003 /* MangaLifetimeView.swift in Sources */,
