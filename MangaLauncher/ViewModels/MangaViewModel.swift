@@ -127,10 +127,12 @@ final class MangaViewModel {
         let results = modelContext.fetchLogged(descriptor)
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
         let currentHiddenIDs = hiddenIDs
+        let currentDeletedIDs = deletedIDs
         var seenIDs = Set<UUID>()
         return results.filter { entry in
             guard !currentHiddenIDs.contains(entry.id) else { return false }
             guard !pendingIDs.contains(entry.id) else { return false }
+            guard !currentDeletedIDs.contains(entry.id) else { return false }
             return seenIDs.insert(entry.id).inserted
         }
     }
@@ -326,10 +328,12 @@ final class MangaViewModel {
         )
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
         let currentHiddenIDs = hiddenIDs
+        let currentDeletedIDs = deletedIDs
         var seenIDs = Set<UUID>()
         let result = modelContext.fetchLogged(descriptor).filter { entry in
             guard !currentHiddenIDs.contains(entry.id) else { return false }
             guard !pendingIDs.contains(entry.id) else { return false }
+            guard !currentDeletedIDs.contains(entry.id) else { return false }
             return seenIDs.insert(entry.id).inserted
         }
         cachedEntries = result
@@ -348,6 +352,7 @@ final class MangaViewModel {
 
     func deleteEntry(_ entry: MangaEntry) {
         entry.deletedAt = Date()
+        deletedIDs.insert(entry.id)
         save()
     }
 
@@ -369,6 +374,7 @@ final class MangaViewModel {
         deleteTimer = nil
         for entry in pendingDeleteEntries {
             entry.deletedAt = Date()
+            deletedIDs.insert(entry.id)
         }
         pendingDeleteEntries.removeAll()
         save()
