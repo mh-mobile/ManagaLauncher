@@ -350,7 +350,8 @@ final class MangaViewModel {
         )
         let entries = modelContext.fetchLogged(descriptor)
         let currentHiddenIDs = hiddenIDs
-        let publishers = Set(entries.filter { !currentHiddenIDs.contains($0.id) }.map(\.publisher)).filter { !$0.isEmpty }
+        let currentDeletedIDs = deletedIDs
+        let publishers = Set(entries.filter { !currentHiddenIDs.contains($0.id) && !currentDeletedIDs.contains($0.id) }.map(\.publisher)).filter { !$0.isEmpty }
         return publishers.sorted()
     }
 
