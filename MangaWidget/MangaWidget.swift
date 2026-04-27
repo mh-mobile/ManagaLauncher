@@ -60,14 +60,28 @@ struct MangaTimelineProvider: TimelineProvider {
             sortBy: [SortDescriptor(\.sortOrder)]
         )
         let results = (try? context.fetch(descriptor)) ?? []
-        let items = results.map {
-            MangaWidgetItem(
-                id: $0.id, name: $0.name, url: $0.url,
-                iconColor: $0.iconColor, publisher: $0.publisher,
-                imageData: $0.imageData,
-                isRead: $0.isRead
-            )
+        var orderedURLs: [String] = []
+        var itemsByURL: [String: MangaWidgetItem] = [:]
+        for entry in results {
+            if let existing = itemsByURL[entry.url] {
+                // 重複がある場合、いずれか未読なら未読扱い
+                itemsByURL[entry.url] = MangaWidgetItem(
+                    id: existing.id, name: existing.name, url: existing.url,
+                    iconColor: existing.iconColor, publisher: existing.publisher,
+                    imageData: existing.imageData,
+                    isRead: existing.isRead && entry.isRead
+                )
+            } else {
+                orderedURLs.append(entry.url)
+                itemsByURL[entry.url] = MangaWidgetItem(
+                    id: entry.id, name: entry.name, url: entry.url,
+                    iconColor: entry.iconColor, publisher: entry.publisher,
+                    imageData: entry.imageData,
+                    isRead: entry.isRead
+                )
+            }
         }
+        let items = orderedURLs.compactMap { itemsByURL[$0] }
         return MangaTimelineEntry(
             date: date, items: items, dayOfWeek: selectedDay,
             isToday: selectedDay == DayOfWeek.today
@@ -342,7 +356,7 @@ struct MangaWidgetEntryView: View {
                 if let imageData = item.imageData, let image = imageData.toSwiftUIImage() {
                     image
                         .resizable()
-                        .scaledToFit()
+                        .scaledToFill()
                 } else {
                     Rectangle()
                         .fill(Color.fromName(item.iconColor))

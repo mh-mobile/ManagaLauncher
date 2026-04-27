@@ -250,6 +250,8 @@ final class MangaViewModel {
 
     func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, publicationStatus: PublicationStatus = .active, readingState: ReadingState = .following, isOneShot: Bool = false, memo: String = "", currentEpisode: Int? = nil, episodeLabel: String? = nil) {
         for day in days {
+            // 同一URL + 同一曜日の重複登録を防止（状態問わず全エントリ対象）
+            if allEntries().contains(where: { $0.dayOfWeek == day && $0.url == url }) { continue }
             let existingEntries = fetchEntries(for: day)
             let maxOrder = existingEntries.map(\.sortOrder).max() ?? -1
             let entry = MangaEntry(
@@ -296,6 +298,15 @@ final class MangaViewModel {
         episodeLabel: String? = nil,
         markAsReadOnSave: Bool = false
     ) {
+        // URL または曜日が変更された場合、同一URL+曜日の重複を防止
+        let urlOrDayChanged = entry.url != url || entry.dayOfWeek != dayOfWeek
+        if urlOrDayChanged {
+            let conflict = allEntries().contains { existing in
+                existing.id != entry.id && existing.dayOfWeek == dayOfWeek && existing.url == url
+            }
+            if conflict { return }
+        }
+
         let memoChanged = entry.memo != memo
         entry.name = name
         entry.url = url
