@@ -293,7 +293,8 @@ final class MangaViewModel {
         readingState: ReadingState,
         memo: String,
         currentEpisode: Int? = nil,
-        episodeLabel: String? = nil
+        episodeLabel: String? = nil,
+        markAsReadOnSave: Bool = false
     ) {
         let memoChanged = entry.memo != memo
         entry.name = name
@@ -315,6 +316,45 @@ final class MangaViewModel {
         }
         entry.currentEpisode = currentEpisode
         entry.episodeLabel = episodeLabel
+
+        // 「保存時に既読にする」を同一トランザクション内で処理し、save() を1回に統合
+        if markAsReadOnSave, entry.modelContext != nil {
+            let now = Date()
+            let trimmedLabel = episodeLabel?.trimmingCharacters(in: .whitespacesAndNewlines)
+            if let label = trimmedLabel, !label.isEmpty {
+                entry.episodeLabel = label
+                entry.lastReadDate = now
+                let activity = ReadingActivity(
+                    date: now,
+                    mangaName: entry.name,
+                    mangaEntryID: entry.id,
+                    episodeLabel: label
+                )
+                // ReadingActivity は entry と同じ context に挿入
+                (entry.modelContext ?? modelContext).insert(activity)
+            } else if let ep = currentEpisode {
+                entry.lastReadDate = now
+                let activity = ReadingActivity(
+                    date: now,
+                    mangaName: entry.name,
+                    mangaEntryID: entry.id,
+                    episodeNumber: ep
+                )
+                (entry.modelContext ?? modelContext).insert(activity)
+            } else {
+                entry.lastReadDate = now
+            }
+        }
+
+        // entry が属するコンテキストで保存する（refresh() で modelContext が
+        // 差し替わっている場合、self.modelContext と異なる可能性がある）
+        if let entryCtx = entry.modelContext, entryCtx !== modelContext {
+            do {
+                try entryCtx.save()
+            } catch {
+                print("[MangaViewModel] updateEntry entryCtx save failed: \(error)")
+            }
+        }
         save()
     }
 

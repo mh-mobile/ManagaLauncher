@@ -313,6 +313,10 @@ struct CatchUpView: View {
         }
 
         unreadItems = newItems
+        // リロード後に currentIndex が範囲外にならないよう検証
+        if currentIndex > newItems.count {
+            currentIndex = newItems.count
+        }
         undoStack = undoStack.compactMap { item in
             guard let fresh = freshEntries[item.entry.id] else { return nil }
             return (entry: fresh, action: item.action)
