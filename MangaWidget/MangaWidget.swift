@@ -342,7 +342,7 @@ struct MangaWidgetEntryView: View {
                 if let imageData = item.imageData, let image = imageData.toSwiftUIImage() {
                     image
                         .resizable()
-                        .scaledToFit()
+                        .scaledToFill()
                 } else {
                     Rectangle()
                         .fill(Color.fromName(item.iconColor))
