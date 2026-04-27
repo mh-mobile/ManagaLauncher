@@ -194,6 +194,7 @@ struct SearchView: View {
             #endif
         }
         .onAppear { refreshResults() }
+        .onDisappear { searchTask?.cancel() }
         .onChange(of: searchText) { _, _ in
             searchTask?.cancel()
             searchTask = Task {
