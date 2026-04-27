@@ -386,9 +386,11 @@ final class MangaViewModel {
             sortBy: [SortDescriptor(\.lastReadDate, order: .reverse), SortDescriptor(\.name)]
         )
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
+        let currentHiddenIDs = hiddenIDs
         let currentDeletedIDs = deletedIDs
         var seenIDs = Set<UUID>()
         let result = modelContext.fetchLogged(descriptor).filter { entry in
+            guard !currentHiddenIDs.contains(entry.id) else { return false }
             guard !pendingIDs.contains(entry.id) else { return false }
             guard !currentDeletedIDs.contains(entry.id) else { return false }
             return seenIDs.insert(entry.id).inserted
