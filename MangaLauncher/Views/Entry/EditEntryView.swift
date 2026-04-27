@@ -500,17 +500,9 @@ struct EditEntryView: View {
                 readingState: readingState,
                 memo: memo,
                 currentEpisode: currentEpisode,
-                episodeLabel: labelToSave
+                episodeLabel: labelToSave,
+                markAsReadOnSave: markAsReadOnSave
             )
-            if markAsReadOnSave {
-                if let labelToSave {
-                    viewModel.recordSpecialEpisode(entry, label: labelToSave)
-                } else if let ep = currentEpisode {
-                    viewModel.recordEpisodeRead(entry, episodeNumber: ep)
-                } else {
-                    entry.lastReadDate = Date()
-                }
-            }
         } else {
             viewModel.addEntry(
                 name: name,
