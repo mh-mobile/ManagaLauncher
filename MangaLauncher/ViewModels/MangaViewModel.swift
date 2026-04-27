@@ -1,5 +1,5 @@
 import Foundation
-import Observation
+import SwiftUI
 import SwiftData
 import NotificationKit
 #if canImport(WidgetKit)
@@ -916,5 +916,28 @@ final class MangaViewModel {
         #endif
         BadgeManager.updateBadge(unreadCount: unreadCount(for: .today))
         rescheduleNotifications()
+    }
+}
+
+// MARK: - MangaURLOpener Factory
+
+extension MangaURLOpener {
+    @MainActor
+    static func make(
+        browserMode: String,
+        openURL: OpenURLAction,
+        safariURL: Binding<URL?>,
+        viewModel: MangaViewModel
+    ) -> MangaURLOpener {
+        MangaURLOpener(
+            browserMode: browserMode,
+            openURL: openURL,
+            onSafariURL: { safariURL.wrappedValue = $0 },
+            onQuickView: { viewModel.browserContext = $0 },
+            entryLookup: { url in
+                guard let e = viewModel.allEntries().first(where: { $0.url == url }) else { return nil }
+                return (e.name, e.publisher, e.imageData)
+            }
+        )
     }
 }

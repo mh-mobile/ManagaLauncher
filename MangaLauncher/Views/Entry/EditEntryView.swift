@@ -132,128 +132,9 @@ struct EditEntryView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("基本情報") {
-                    TextField("名前", text: $name)
-                        #if os(iOS) || os(visionOS)
-                        .textInputAutocapitalization(.never)
-                        #endif
-                    TextField("URL", text: $url)
-                        #if os(iOS) || os(visionOS)
-                        .textInputAutocapitalization(.never)
-                        .keyboardType(.URL)
-                        #endif
-                        .autocorrectionDisabled()
-                    if !url.isEmpty && !isValidURL {
-                        Text("有効なURLを入力してください（例: https://...）")
-                            .font(theme.captionFont)
-                            .foregroundStyle(theme.error)
-                    }
-                    NavigationLink {
-                        PublisherPickerView(publisher: $publisher, viewModel: viewModel)
-                    } label: {
-                        HStack {
-                            Text("掲載誌")
-                                .foregroundStyle(theme.onSurface)
-                            Spacer()
-                            Text(publisher.isEmpty ? "未設定" : publisher)
-                                .foregroundStyle(publisher.isEmpty ? theme.onSurfaceVariant.opacity(0.5) : theme.onSurfaceVariant)
-                        }
-                    }
-                }
-
-                Section("画像") {
-                    if let imageData, let image = imageData.toSwiftUIImage() {
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 80, height: 80)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                        #if canImport(UIKit)
-                        Button {
-                            showingCropView = true
-                        } label: {
-                            Label("画像を編集", systemImage: "crop")
-                        }
-                        #endif
-                        Button(role: .destructive) {
-                            self.imageData = nil
-                            selectedPhotoItem = nil
-                        } label: {
-                            Label("画像を削除", systemImage: "trash")
-                        }
-                    } else if isLoadingImage {
-                        HStack {
-                            ProgressView()
-                            Text("画像を取得中...")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    } else {
-                        PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                            Label("カメラロールから選択", systemImage: "photo")
-                        }
-                        #if canImport(UIKit)
-                        PasteButton(payloadType: PasteImage.self) { items in
-                            guard let item = items.first,
-                                  let jpeg = downsizedJPEGData(item.data, maxDimension: 600) else { return }
-                            imageData = jpeg
-                        }
-                        #endif
-                        if isValidURL {
-                            Button {
-                                fetchOGPImage()
-                            } label: {
-                                Label("URLからサムネイル画像を取得", systemImage: "link")
-                            }
-                        }
-                        if ogpFetchFailed {
-                            Text("サムネイル画像を取得できませんでした")
-                                .font(.caption)
-                                .foregroundStyle(.red)
-                        }
-                    }
-                }
-                .onChange(of: selectedPhotoItem) { _, newItem in
-                    Task {
-                        if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                            if let jpeg = downsizedJPEGData(data, maxDimension: 600) {
-                                imageData = jpeg
-                            }
-                        }
-                    }
-                }
-
-                Section("曜日") {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
-                        ForEach(DayOfWeek.orderedDays) { day in
-                            Text(day.shortName)
-                                .font(theme.subheadlineFont)
-                                .frame(width: 36, height: 36)
-                                .background(
-                                    selectedDay == day
-                                        ? theme.primary
-                                        : theme.surfaceContainerHighest
-                                )
-                                .foregroundStyle(
-                                    selectedDay == day
-                                        ? theme.onPrimary
-                                        : theme.onSurface
-                                )
-                                .clipShape(theme.chipShape)
-                                .onTapGesture {
-                                    selectedDay = day
-                                    // nextUpdateCandidatesはselectedDayに依存するので
-                                    // 先に更新してから候補の先頭を設定
-                                    DispatchQueue.main.async {
-                                        if let first = nextUpdateCandidates.first {
-                                            nextUpdateDate = first
-                                        }
-                                    }
-                                }
-                        }
-                    }
-                    .padding(.vertical, 4)
-                }
+                basicInfoSection
+                imageSection
+                daySection
 
                 EditEntryStatusSection(
                     isOneShot: $isOneShot,
@@ -262,134 +143,15 @@ struct EditEntryView: View {
                 )
 
                 if !isOneShot && publicationStatus == .active && readingState == .following {
-                    Section("更新頻度") {
-                        Picker("頻度", selection: pickerValue) {
-                            Text("毎週").tag(1)
-                            Text("隔週").tag(2)
-                            Text("3週ごと").tag(3)
-                            Text("月1回").tag(4)
-                            Text("2ヶ月ごと").tag(8)
-                            Text("カスタム").tag(-1)
-                        }
-                        if isCustomInterval {
-                            Stepper("\(updateIntervalWeeks)週ごと", value: $updateIntervalWeeks, in: 1...52)
-                        }
-                        if actualIntervalWeeks >= 1 {
-                            Picker("次の更新日", selection: $nextUpdateDate) {
-                                ForEach(nextUpdateCandidates, id: \.self) { date in
-                                    Text(date.formatted(.dateTime.month().day().weekday()))
-                                        .tag(date)
-                                }
-                            }
-                        }
-                    }
+                    frequencySection
                 }
 
-                Section {
-                    HStack {
-                        Text("話数")
-                        Spacer()
-                        TextField("未設定", text: $episodeText)
-                            #if os(iOS) || os(visionOS)
-                            .keyboardType(.numberPad)
-                            #endif
-                            .multilineTextAlignment(.trailing)
-                            .onChange(of: episodeText) { _, newValue in
-                                if newValue.isEmpty {
-                                    currentEpisode = nil
-                                } else if let val = Int(newValue), val > 0 {
-                                    currentEpisode = val
-                                }
-                            }
-                        if currentEpisode != nil {
-                            Button {
-                                currentEpisode = nil
-                                episodeText = ""
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(.secondary)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    HStack {
-                        Text("ラベル")
-                        Spacer()
-                        TextField("おまけ、1.5話 など", text: $episodeLabel)
-                            .multilineTextAlignment(.trailing)
-                            #if os(iOS) || os(visionOS)
-                            .textInputAutocapitalization(.none)
-                            #endif
-                    }
-                    Toggle("保存時に既読にする", isOn: $markAsReadOnSave)
-                        .onChange(of: markAsReadOnSave) { _, isOn in
-                            if isOn { episodeLabel = "" }
-                        }
-                } header: {
-                    Text("話数")
-                } footer: {
-                    Text("読んだ話数を記録します。「保存時に既読にする」をオンにすると、保存と同時に読書記録が作成されます。")
-                }
-
-                Section {
-                    TextField("メモ（あらすじ・キャラ相関図など）", text: $memo, axis: .vertical)
-                        .lineLimit(3...10)
-                        #if os(iOS) || os(visionOS)
-                        .textInputAutocapitalization(.none)
-                        #endif
-                } header: {
-                    Text("メモ")
-                } footer: {
-                    Text("作品ごとに 1 つの長文メモを保存できます。コメントとは別物です。")
-                }
-
-                Section {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 8), spacing: 12) {
-                        ForEach(colorOptions, id: \.name) { option in
-                            Circle()
-                                .fill(option.color)
-                                .frame(width: 32, height: 32)
-                                .overlay {
-                                    if selectedColor == option.name {
-                                        Image(systemName: "checkmark")
-                                            .font(.caption.bold())
-                                            .foregroundStyle(.white)
-                                    }
-                                }
-                                .onTapGesture {
-                                    selectedColor = option.name
-                                }
-                        }
-                    }
-                    .padding(.vertical, 4)
-                    if let label = ColorLabelStore.shared.label(for: selectedColor) {
-                        HStack {
-                            Text("ラベル")
-                                .foregroundStyle(theme.onSurfaceVariant)
-                            Spacer()
-                            Text(label)
-                                .foregroundStyle(theme.onSurface)
-                        }
-                    }
-                } header: {
-                    Text("アイコンカラー")
-                }
+                episodeSection
+                memoSection
+                colorSection
 
                 if isEditing && showsDeleteButton {
-                    Section {
-                        Button(role: .destructive) {
-                            if let entry {
-                                viewModel.queueDelete(entry)
-                            }
-                            dismiss()
-                        } label: {
-                            HStack {
-                                Spacer()
-                                Text("削除")
-                                Spacer()
-                            }
-                        }
-                    }
+                    deleteSection
                 }
             }
             .themedNavigationStyle()
@@ -417,35 +179,7 @@ struct EditEntryView: View {
                     }
                 }
             }
-            .onAppear {
-                if let entry, !didLoadEntry {
-                    name = entry.name
-                    url = entry.url
-                    selectedColor = entry.iconColor
-                    selectedDay = entry.dayOfWeek
-                    publisher = entry.publisher
-                    imageData = entry.imageData
-                    updateIntervalWeeks = entry.updateIntervalWeeks
-                    isCustomInterval = !Self.presetIntervals.contains(entry.updateIntervalWeeks)
-                    let candidates = nextUpdateCandidates
-                    if let saved = entry.nextExpectedUpdate, candidates.contains(saved) {
-                        nextUpdateDate = saved
-                    } else {
-                        nextUpdateDate = candidates.first ?? nextOccurrence(of: entry.dayOfWeek)
-                    }
-                    publicationStatus = entry.publicationStatus
-                    readingState = entry.readingState
-                    isOneShot = entry.isOneShot
-                    memo = entry.memo
-                    currentEpisode = entry.currentEpisode
-                    episodeText = entry.currentEpisode.map { String($0) } ?? ""
-                    episodeLabel = entry.episodeLabel ?? ""
-                    didLoadEntry = true
-                } else if entry == nil, !didLoadEntry {
-                    nextUpdateDate = nextUpdateCandidates.first ?? nextOccurrence(of: selectedDay)
-                    didLoadEntry = true
-                }
-            }
+            .onAppear { loadEntryIfNeeded() }
             #if canImport(UIKit)
             .fullScreenCover(isPresented: $showingCropView) {
                 if let imageData {
@@ -466,6 +200,323 @@ struct EditEntryView: View {
         }
     }
 
+    // MARK: - Sub-views
+
+    @ViewBuilder
+    private var basicInfoSection: some View {
+        Section("基本情報") {
+            TextField("名前", text: $name)
+                #if os(iOS) || os(visionOS)
+                .textInputAutocapitalization(.never)
+                #endif
+            TextField("URL", text: $url)
+                #if os(iOS) || os(visionOS)
+                .textInputAutocapitalization(.never)
+                .keyboardType(.URL)
+                #endif
+                .autocorrectionDisabled()
+            if !url.isEmpty && !isValidURL {
+                Text("有効なURLを入力してください（例: https://...）")
+                    .font(theme.captionFont)
+                    .foregroundStyle(theme.error)
+            }
+            NavigationLink {
+                PublisherPickerView(publisher: $publisher, viewModel: viewModel)
+            } label: {
+                HStack {
+                    Text("掲載誌")
+                        .foregroundStyle(theme.onSurface)
+                    Spacer()
+                    Text(publisher.isEmpty ? "未設定" : publisher)
+                        .foregroundStyle(publisher.isEmpty ? theme.onSurfaceVariant.opacity(0.5) : theme.onSurfaceVariant)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var imageSection: some View {
+        Section("画像") {
+            if let imageData, let image = imageData.toSwiftUIImage() {
+                image
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 80, height: 80)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                #if canImport(UIKit)
+                Button {
+                    showingCropView = true
+                } label: {
+                    Label("画像を編集", systemImage: "crop")
+                }
+                #endif
+                Button(role: .destructive) {
+                    self.imageData = nil
+                    selectedPhotoItem = nil
+                } label: {
+                    Label("画像を削除", systemImage: "trash")
+                }
+            } else if isLoadingImage {
+                HStack {
+                    ProgressView()
+                    Text("画像を取得中...")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                    Label("カメラロールから選択", systemImage: "photo")
+                }
+                #if canImport(UIKit)
+                PasteButton(payloadType: PasteImage.self) { items in
+                    guard let item = items.first,
+                          UIImage(data: item.data) != nil,
+                          let jpeg = downsizedJPEGData(item.data, maxDimension: 600) else { return }
+                    imageData = jpeg
+                }
+                #endif
+                if isValidURL {
+                    Button {
+                        fetchOGPImage()
+                    } label: {
+                        Label("URLからサムネイル画像を取得", systemImage: "link")
+                    }
+                }
+                if ogpFetchFailed {
+                    Text("サムネイル画像を取得できませんでした")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+            }
+        }
+        .onChange(of: selectedPhotoItem) { _, newItem in
+            Task {
+                if let data = try? await newItem?.loadTransferable(type: Data.self) {
+                    #if canImport(UIKit)
+                    guard UIImage(data: data) != nil else { return }
+                    #endif
+                    if let jpeg = downsizedJPEGData(data, maxDimension: 600) {
+                        imageData = jpeg
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var daySection: some View {
+        Section("曜日") {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
+                ForEach(DayOfWeek.orderedDays) { day in
+                    Text(day.shortName)
+                        .font(theme.subheadlineFont)
+                        .frame(width: 36, height: 36)
+                        .background(
+                            selectedDay == day
+                                ? theme.primary
+                                : theme.surfaceContainerHighest
+                        )
+                        .foregroundStyle(
+                            selectedDay == day
+                                ? theme.onPrimary
+                                : theme.onSurface
+                        )
+                        .clipShape(theme.chipShape)
+                        .onTapGesture {
+                            selectedDay = day
+                            if let first = nextUpdateCandidates.first {
+                                nextUpdateDate = first
+                            }
+                        }
+                }
+            }
+            .padding(.vertical, 4)
+        }
+    }
+
+    @ViewBuilder
+    private var frequencySection: some View {
+        Section("更新頻度") {
+            Picker("頻度", selection: pickerValue) {
+                Text("毎週").tag(1)
+                Text("隔週").tag(2)
+                Text("3週ごと").tag(3)
+                Text("月1回").tag(4)
+                Text("2ヶ月ごと").tag(8)
+                Text("カスタム").tag(-1)
+            }
+            if isCustomInterval {
+                Stepper("\(updateIntervalWeeks)週ごと", value: $updateIntervalWeeks, in: 1...52)
+            }
+            if actualIntervalWeeks >= 1 {
+                let candidates = nextUpdateCandidates
+                let safeBinding = Binding<Date>(
+                    get: {
+                        candidates.contains(nextUpdateDate)
+                            ? nextUpdateDate
+                            : candidates.first ?? nextUpdateDate
+                    },
+                    set: { nextUpdateDate = $0 }
+                )
+                Picker("次の更新日", selection: safeBinding) {
+                    ForEach(candidates, id: \.self) { date in
+                        Text(date.formatted(.dateTime.month().day().weekday()))
+                            .tag(date)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var episodeSection: some View {
+        Section {
+            HStack {
+                Text("話数")
+                Spacer()
+                TextField("未設定", text: $episodeText)
+                    #if os(iOS) || os(visionOS)
+                    .keyboardType(.numberPad)
+                    #endif
+                    .multilineTextAlignment(.trailing)
+                    .onChange(of: episodeText) { _, newValue in
+                        if newValue.isEmpty {
+                            currentEpisode = nil
+                        } else if let val = Int(newValue), val > 0 {
+                            currentEpisode = val
+                        }
+                    }
+                if currentEpisode != nil {
+                    Button {
+                        currentEpisode = nil
+                        episodeText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            HStack {
+                Text("ラベル")
+                Spacer()
+                TextField("おまけ、1.5話 など", text: $episodeLabel)
+                    .multilineTextAlignment(.trailing)
+                    #if os(iOS) || os(visionOS)
+                    .textInputAutocapitalization(.none)
+                    #endif
+            }
+            Toggle("保存時に既読にする", isOn: $markAsReadOnSave)
+                .onChange(of: markAsReadOnSave) { _, isOn in
+                    if isOn { episodeLabel = "" }
+                }
+        } header: {
+            Text("話数")
+        } footer: {
+            Text("読んだ話数を記録します。「保存時に既読にする」をオンにすると、保存と同時に読書記録が作成されます。")
+        }
+    }
+
+    @ViewBuilder
+    private var memoSection: some View {
+        Section {
+            TextField("メモ（あらすじ・キャラ相関図など）", text: $memo, axis: .vertical)
+                .lineLimit(3...10)
+                #if os(iOS) || os(visionOS)
+                .textInputAutocapitalization(.none)
+                #endif
+        } header: {
+            Text("メモ")
+        } footer: {
+            Text("作品ごとに 1 つの長文メモを保存できます。コメントとは別物です。")
+        }
+    }
+
+    @ViewBuilder
+    private var colorSection: some View {
+        Section {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 8), spacing: 12) {
+                ForEach(colorOptions, id: \.name) { option in
+                    Circle()
+                        .fill(option.color)
+                        .frame(width: 32, height: 32)
+                        .overlay {
+                            if selectedColor == option.name {
+                                Image(systemName: "checkmark")
+                                    .font(.caption.bold())
+                                    .foregroundStyle(.white)
+                            }
+                        }
+                        .onTapGesture {
+                            selectedColor = option.name
+                        }
+                }
+            }
+            .padding(.vertical, 4)
+            if let label = ColorLabelStore.shared.label(for: selectedColor) {
+                HStack {
+                    Text("ラベル")
+                        .foregroundStyle(theme.onSurfaceVariant)
+                    Spacer()
+                    Text(label)
+                        .foregroundStyle(theme.onSurface)
+                }
+            }
+        } header: {
+            Text("アイコンカラー")
+        }
+    }
+
+    @ViewBuilder
+    private var deleteSection: some View {
+        Section {
+            Button(role: .destructive) {
+                if let entry {
+                    viewModel.queueDelete(entry)
+                }
+                dismiss()
+            } label: {
+                HStack {
+                    Spacer()
+                    Text("削除")
+                    Spacer()
+                }
+            }
+        }
+    }
+
+    // MARK: - Entry Loading
+
+    private func loadEntryIfNeeded() {
+        if let entry, !didLoadEntry {
+            name = entry.name
+            url = entry.url
+            selectedColor = entry.iconColor
+            selectedDay = entry.dayOfWeek
+            publisher = entry.publisher
+            imageData = entry.imageData
+            updateIntervalWeeks = entry.updateIntervalWeeks
+            isCustomInterval = !Self.presetIntervals.contains(entry.updateIntervalWeeks)
+            let candidates = nextUpdateCandidates
+            if let saved = entry.nextExpectedUpdate, candidates.contains(saved) {
+                nextUpdateDate = saved
+            } else {
+                nextUpdateDate = candidates.first ?? nextOccurrence(of: entry.dayOfWeek)
+            }
+            publicationStatus = entry.publicationStatus
+            readingState = entry.readingState
+            isOneShot = entry.isOneShot
+            memo = entry.memo
+            currentEpisode = entry.currentEpisode
+            episodeText = entry.currentEpisode.map { String($0) } ?? ""
+            episodeLabel = entry.episodeLabel ?? ""
+            didLoadEntry = true
+        } else if entry == nil, !didLoadEntry {
+            nextUpdateDate = nextUpdateCandidates.first ?? nextOccurrence(of: selectedDay)
+            didLoadEntry = true
+        }
+    }
+
     private func fetchOGPImage() {
         guard isValidURL else { return }
         isLoadingImage = true
@@ -473,6 +524,13 @@ struct EditEntryView: View {
         Task {
             let ogp = await OGPFetcher.fetch(from: url)
             if let ogpImageData = ogp.imageData {
+                #if canImport(UIKit)
+                guard UIImage(data: ogpImageData) != nil else {
+                    ogpFetchFailed = true
+                    isLoadingImage = false
+                    return
+                }
+                #endif
                 imageData = ogpImageData
             } else {
                 ogpFetchFailed = true
