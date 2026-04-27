@@ -364,6 +364,8 @@ final class MangaViewModel {
                 try entryCtx.save()
             } catch {
                 print("[MangaViewModel] updateEntry entryCtx save failed: \(error)")
+                lastError = .save(error)
+                return
             }
         }
         save()
@@ -378,15 +380,13 @@ final class MangaViewModel {
         invalidateCacheIfStale()
         if let cached = cachedEntries { return cached }
         let descriptor = FetchDescriptor<MangaEntry>(
-            predicate: #Predicate { $0.deletedAt == nil },
+            predicate: #Predicate { $0.deletedAt == nil && $0.isHidden == false },
             sortBy: [SortDescriptor(\.lastReadDate, order: .reverse), SortDescriptor(\.name)]
         )
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
-        let currentHiddenIDs = hiddenIDs
         let currentDeletedIDs = deletedIDs
         var seenIDs = Set<UUID>()
         let result = modelContext.fetchLogged(descriptor).filter { entry in
-            guard !currentHiddenIDs.contains(entry.id) else { return false }
             guard !pendingIDs.contains(entry.id) else { return false }
             guard !currentDeletedIDs.contains(entry.id) else { return false }
             return seenIDs.insert(entry.id).inserted
@@ -920,6 +920,7 @@ final class MangaViewModel {
             try modelContext.save()
         } catch {
             print("[MangaViewModel] save failed: \(error)")
+            lastError = .save(error)
         }
         refreshCounter += 1
         #if canImport(WidgetKit)
