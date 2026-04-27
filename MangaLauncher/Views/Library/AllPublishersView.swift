@@ -10,10 +10,7 @@ struct AllPublishersView: View {
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
-    private var publisherCounts: [(publisher: String, count: Int)] {
-        let _ = viewModel.refreshCounter
-        return PublisherIndex.counts(from: viewModel.allEntries())
-    }
+    @State private var publisherCounts: [(publisher: String, count: Int)] = []
 
     var body: some View {
         ZStack {
@@ -49,6 +46,8 @@ struct AllPublishersView: View {
         #if os(iOS) || os(visionOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .onAppear { refreshPublisherCounts() }
+        .onChange(of: viewModel.refreshCounter) { _, _ in refreshPublisherCounts() }
         .navigationDestination(for: PublisherSelection.self) { selection in
             PublisherEntriesView(
                 publisher: selection.name,
@@ -58,6 +57,10 @@ struct AllPublishersView: View {
                 onOpenURL: onOpenURL
             )
         }
+    }
+
+    private func refreshPublisherCounts() {
+        publisherCounts = PublisherIndex.counts(from: viewModel.allEntries())
     }
 }
 
