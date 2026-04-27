@@ -426,7 +426,7 @@ final class MangaViewModel {
     }
 
     func deletedEntryCount() -> Int {
-        deletedIDs.count
+        deletedEntries().count
     }
 
     func purgeExpiredSoftDeletes() {
@@ -480,6 +480,8 @@ final class MangaViewModel {
         }
         UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.lastStreakShownDate)
         UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.shownMilestones)
+        deletedIDs.removeAll()
+        hiddenIDs.removeAll()
         do {
             try modelContext.save()
         } catch {
@@ -501,22 +503,28 @@ final class MangaViewModel {
         let results = modelContext.fetchLogged(descriptor)
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
         let currentHiddenIDs = hiddenIDs
+        let currentDeletedIDs = deletedIDs
         var seenIDs = Set<UUID>()
         return results.filter { entry in
             guard !currentHiddenIDs.contains(entry.id) else { return false }
             guard !pendingIDs.contains(entry.id) else { return false }
+            guard !currentDeletedIDs.contains(entry.id) else { return false }
             return seenIDs.insert(entry.id).inserted
         }.count
     }
 
     func exportBackupData() -> Data? {
-        let descriptor = FetchDescriptor<MangaEntry>(sortBy: [SortDescriptor(\.dayOfWeekRawValue), SortDescriptor(\.sortOrder)])
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.deletedAt == nil },
+            sortBy: [SortDescriptor(\.dayOfWeekRawValue), SortDescriptor(\.sortOrder)]
+        )
         let entries = modelContext.fetchLogged(descriptor)
         guard !entries.isEmpty else { return nil }
+        let activeEntryIDs = Set(entries.map(\.id))
         let activityDescriptor = FetchDescriptor<ReadingActivity>(sortBy: [SortDescriptor(\.date)])
-        let activities = modelContext.fetchLogged(activityDescriptor)
+        let activities = modelContext.fetchLogged(activityDescriptor).filter { activeEntryIDs.contains($0.mangaEntryID) }
         let commentDescriptor = FetchDescriptor<MangaComment>(sortBy: [SortDescriptor(\.createdAt)])
-        let comments = modelContext.fetchLogged(commentDescriptor)
+        let comments = modelContext.fetchLogged(commentDescriptor).filter { activeEntryIDs.contains($0.mangaEntryID) }
         let backup = BackupData.from(entries, activities: activities, comments: comments)
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
