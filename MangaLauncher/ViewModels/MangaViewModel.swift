@@ -93,6 +93,7 @@ final class MangaViewModel {
             pending = try modelContext.fetch(descriptor)
         } catch {
             print("[MangaViewModel] memo backfill fetch failed: \(error)")
+            lastError = .migration(error)
             return
         }
         guard !pending.isEmpty else { return }
@@ -104,6 +105,7 @@ final class MangaViewModel {
             try modelContext.save()
         } catch {
             print("[MangaViewModel] memo backfill save failed: \(error)")
+            lastError = .migration(error)
         }
     }
 
