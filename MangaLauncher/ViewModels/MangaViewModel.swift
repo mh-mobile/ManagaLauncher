@@ -923,6 +923,7 @@ final class MangaViewModel {
         } catch {
             print("[MangaViewModel] save failed: \(error)")
             lastError = .save(error)
+            return
         }
         refreshCounter += 1
         #if canImport(WidgetKit)
