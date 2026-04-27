@@ -163,18 +163,14 @@ struct RecentlyDeletedView: View {
     }
 
     private func restoreAll() {
-        for entry in entries {
-            viewModel.restoreEntry(entry)
-        }
+        viewModel.restoreEntries(entries)
         withAnimation {
             entries.removeAll()
         }
     }
 
     private func permanentlyDeleteAll() {
-        for entry in entries {
-            viewModel.permanentlyDelete(entry)
-        }
+        viewModel.permanentlyDeleteEntries(entries)
         withAnimation {
             entries.removeAll()
         }

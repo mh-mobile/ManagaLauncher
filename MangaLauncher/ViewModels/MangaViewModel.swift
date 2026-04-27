@@ -353,6 +353,7 @@ final class MangaViewModel {
     func deleteEntry(_ entry: MangaEntry) {
         entry.deletedAt = Date()
         deletedIDs.insert(entry.id)
+        hiddenIDs.remove(entry.id)
         save()
     }
 
@@ -375,6 +376,7 @@ final class MangaViewModel {
         for entry in pendingDeleteEntries {
             entry.deletedAt = Date()
             deletedIDs.insert(entry.id)
+            hiddenIDs.remove(entry.id)
         }
         pendingDeleteEntries.removeAll()
         save()
@@ -392,7 +394,13 @@ final class MangaViewModel {
     // MARK: - Soft Delete
 
     func permanentlyDelete(_ entry: MangaEntry) {
+        permanentlyDeleteWithoutSave(entry)
+        save()
+    }
+
+    private func permanentlyDeleteWithoutSave(_ entry: MangaEntry) {
         deletedIDs.remove(entry.id)
+        hiddenIDs.remove(entry.id)
         let entryID = entry.id
         let activityDescriptor = FetchDescriptor<ReadingActivity>(predicate: #Predicate { $0.mangaEntryID == entryID })
         if let activities = try? modelContext.fetch(activityDescriptor) {
@@ -403,25 +411,41 @@ final class MangaViewModel {
             for comment in comments { modelContext.delete(comment) }
         }
         modelContext.delete(entry)
-        save()
     }
 
     func restoreEntry(_ entry: MangaEntry) {
+        restoreEntryWithoutSave(entry)
+        save()
+    }
+
+    private func restoreEntryWithoutSave(_ entry: MangaEntry) {
         entry.deletedAt = nil
         deletedIDs.remove(entry.id)
         // Recalculate sortOrder to end of its day group
         let day = entry.dayOfWeekRawValue
         let descriptor = FetchDescriptor<MangaEntry>(predicate: #Predicate { $0.dayOfWeekRawValue == day && $0.deletedAt == nil })
-        let maxOrder = (try? modelContext.fetch(descriptor))?.map(\.sortOrder).max() ?? 0
+        let maxOrder = (try? modelContext.fetch(descriptor))?.map(\.sortOrder).max() ?? -1
         entry.sortOrder = maxOrder + 1
+    }
+
+    func restoreEntries(_ entries: [MangaEntry]) {
+        for entry in entries { restoreEntryWithoutSave(entry) }
+        save()
+    }
+
+    func permanentlyDeleteEntries(_ entries: [MangaEntry]) {
+        for entry in entries { permanentlyDeleteWithoutSave(entry) }
         save()
     }
 
     func deletedEntries() -> [MangaEntry] {
         let currentDeletedIDs = deletedIDs
-        let descriptor = FetchDescriptor<MangaEntry>(sortBy: [SortDescriptor(\.name)])
-        let all = modelContext.fetchLogged(descriptor)
-        return all.filter { currentDeletedIDs.contains($0.id) && !$0.isHidden }
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.deletedAt != nil && $0.isHidden == false }
+        )
+        let results = modelContext.fetchLogged(descriptor)
+        // SwiftData stale fetch 対策: in-memory deletedIDs でも照合
+        return results.filter { currentDeletedIDs.contains($0.id) }
             .sorted { ($0.deletedAt ?? .distantPast) > ($1.deletedAt ?? .distantPast) }
     }
 
@@ -434,8 +458,9 @@ final class MangaViewModel {
         let descriptor = FetchDescriptor<MangaEntry>(predicate: #Predicate { $0.deletedAt != nil && $0.deletedAt! < cutoff })
         guard let expired = try? modelContext.fetch(descriptor), !expired.isEmpty else { return }
         for entry in expired {
-            permanentlyDelete(entry)
+            permanentlyDeleteWithoutSave(entry)
         }
+        save()
     }
 
     /// 別の曜日に移動。曜日のみ変更し、状態は触らない。
