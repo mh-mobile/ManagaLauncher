@@ -60,12 +60,14 @@ struct MangaTimelineProvider: TimelineProvider {
             sortBy: [SortDescriptor(\.sortOrder)]
         )
         let results = (try? context.fetch(descriptor)) ?? []
-        let items = results.map {
-            MangaWidgetItem(
-                id: $0.id, name: $0.name, url: $0.url,
-                iconColor: $0.iconColor, publisher: $0.publisher,
-                imageData: $0.imageData,
-                isRead: $0.isRead
+        var seenURLs = Set<String>()
+        let items = results.compactMap { entry -> MangaWidgetItem? in
+            guard seenURLs.insert(entry.url).inserted else { return nil }
+            return MangaWidgetItem(
+                id: entry.id, name: entry.name, url: entry.url,
+                iconColor: entry.iconColor, publisher: entry.publisher,
+                imageData: entry.imageData,
+                isRead: entry.isRead
             )
         }
         return MangaTimelineEntry(
