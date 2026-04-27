@@ -330,7 +330,8 @@ final class MangaViewModel {
                     mangaEntryID: entry.id,
                     episodeLabel: label
                 )
-                modelContext.insert(activity)
+                // ReadingActivity は entry と同じ context に挿入
+                (entry.modelContext ?? modelContext).insert(activity)
             } else if let ep = currentEpisode {
                 entry.lastReadDate = now
                 let activity = ReadingActivity(
@@ -339,12 +340,21 @@ final class MangaViewModel {
                     mangaEntryID: entry.id,
                     episodeNumber: ep
                 )
-                modelContext.insert(activity)
+                (entry.modelContext ?? modelContext).insert(activity)
             } else {
                 entry.lastReadDate = now
             }
         }
 
+        // entry が属するコンテキストで保存する（refresh() で modelContext が
+        // 差し替わっている場合、self.modelContext と異なる可能性がある）
+        if let entryCtx = entry.modelContext, entryCtx !== modelContext {
+            do {
+                try entryCtx.save()
+            } catch {
+                print("[MangaViewModel] updateEntry entryCtx save failed: \(error)")
+            }
+        }
         save()
     }
 
