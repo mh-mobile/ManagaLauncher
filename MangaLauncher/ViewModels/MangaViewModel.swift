@@ -392,6 +392,7 @@ final class MangaViewModel {
     // MARK: - Soft Delete
 
     func permanentlyDelete(_ entry: MangaEntry) {
+        deletedIDs.remove(entry.id)
         let entryID = entry.id
         let activityDescriptor = FetchDescriptor<ReadingActivity>(predicate: #Predicate { $0.mangaEntryID == entryID })
         if let activities = try? modelContext.fetch(activityDescriptor) {
@@ -407,6 +408,7 @@ final class MangaViewModel {
 
     func restoreEntry(_ entry: MangaEntry) {
         entry.deletedAt = nil
+        deletedIDs.remove(entry.id)
         // Recalculate sortOrder to end of its day group
         let day = entry.dayOfWeekRawValue
         let descriptor = FetchDescriptor<MangaEntry>(predicate: #Predicate { $0.dayOfWeekRawValue == day && $0.deletedAt == nil })
@@ -416,16 +418,15 @@ final class MangaViewModel {
     }
 
     func deletedEntries() -> [MangaEntry] {
-        let descriptor = FetchDescriptor<MangaEntry>(
-            predicate: #Predicate { $0.deletedAt != nil && $0.isHidden == false },
-            sortBy: [SortDescriptor(\.deletedAt, order: .reverse)]
-        )
-        return (try? modelContext.fetch(descriptor)) ?? []
+        let currentDeletedIDs = deletedIDs
+        let descriptor = FetchDescriptor<MangaEntry>(sortBy: [SortDescriptor(\.name)])
+        let all = modelContext.fetchLogged(descriptor)
+        return all.filter { currentDeletedIDs.contains($0.id) && !$0.isHidden }
+            .sorted { ($0.deletedAt ?? .distantPast) > ($1.deletedAt ?? .distantPast) }
     }
 
     func deletedEntryCount() -> Int {
-        let descriptor = FetchDescriptor<MangaEntry>(predicate: #Predicate { $0.deletedAt != nil && $0.isHidden == false })
-        return (try? modelContext.fetchCount(descriptor)) ?? 0
+        deletedIDs.count
     }
 
     func purgeExpiredSoftDeletes() {
