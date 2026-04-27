@@ -21,6 +21,7 @@ struct SearchView: View {
     @State private var commentingEntry: MangaEntry?
     @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
 
+    @State private var searchTask: Task<Void, Never>?
     @State private var cachedResults = SearchResults()
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
@@ -193,7 +194,15 @@ struct SearchView: View {
             #endif
         }
         .onAppear { refreshResults() }
-        .onChange(of: searchText) { _, _ in refreshResults() }
+        .onDisappear { searchTask?.cancel() }
+        .onChange(of: searchText) { _, _ in
+            searchTask?.cancel()
+            searchTask = Task {
+                try? await Task.sleep(for: .milliseconds(300))
+                guard !Task.isCancelled else { return }
+                refreshResults()
+            }
+        }
         .onChange(of: contentMode) { _, _ in refreshResults() }
         .onChange(of: publicationFilter) { _, _ in refreshResults() }
         .onChange(of: readingFilter) { _, _ in refreshResults() }
@@ -325,15 +334,11 @@ struct SearchView: View {
     }
 
     private func openMangaURL(_ urlString: String) {
-        MangaURLOpener(
+        MangaURLOpener.make(
             browserMode: browserMode,
             openURL: openURL,
-            onSafariURL: { safariURL = $0 },
-            onQuickView: { viewModel.browserContext = $0 },
-            entryLookup: { url in
-                guard let e = viewModel.allEntries().first(where: { $0.url == url }) else { return nil }
-                return (e.name, e.publisher, e.imageData)
-            }
+            safariURL: $safariURL,
+            viewModel: viewModel
         ).open(urlString)
     }
 }
