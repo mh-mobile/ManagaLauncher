@@ -251,6 +251,8 @@ final class MangaViewModel {
     func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, publicationStatus: PublicationStatus = .active, readingState: ReadingState = .following, isOneShot: Bool = false, memo: String = "", currentEpisode: Int? = nil, episodeLabel: String? = nil) {
         for day in days {
             let existingEntries = fetchEntries(for: day)
+            // 同一URL + 同一曜日の重複登録を防止
+            if existingEntries.contains(where: { $0.url == url }) { continue }
             let maxOrder = existingEntries.map(\.sortOrder).max() ?? -1
             let entry = MangaEntry(
                 name: name,
