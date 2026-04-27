@@ -206,7 +206,8 @@ final class MangaEntry {
         let todayWeekday = calendar.component(.weekday, from: date) - 1 // 0=Sun
         let targetWeekday = day.rawValue
         let daysBack = (todayWeekday - targetWeekday + 7) % 7
-        return calendar.startOfDay(for: calendar.date(byAdding: .day, value: -daysBack, to: date)!)
+        let adjustedDate = calendar.date(byAdding: .day, value: -daysBack, to: date) ?? date
+        return calendar.startOfDay(for: adjustedDate)
     }
 
     func advanceToNextUpdate() {
@@ -220,7 +221,7 @@ final class MangaEntry {
         let todayWeekday = calendar.component(.weekday, from: today) - 1
         let target = dayOfWeek.rawValue
         let daysAhead = (target - todayWeekday + 7) % 7
-        let nextDay = daysAhead == 0 ? today : calendar.date(byAdding: .day, value: daysAhead, to: today)!
+        let nextDay = daysAhead == 0 ? today : (calendar.date(byAdding: .day, value: daysAhead, to: today) ?? today)
         nextExpectedUpdate = nextDay
     }
 

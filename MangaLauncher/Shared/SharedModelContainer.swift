@@ -49,6 +49,9 @@ enum SharedModelContainer {
     }
 
     private static var fallbackURL: URL {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        guard let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            fatalError("Application Support directory not found")
+        }
+        return url
     }
 }

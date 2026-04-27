@@ -93,6 +93,7 @@ final class MangaViewModel {
             pending = try modelContext.fetch(descriptor)
         } catch {
             print("[MangaViewModel] memo backfill fetch failed: \(error)")
+            lastError = .migration(error)
             return
         }
         guard !pending.isEmpty else { return }
@@ -104,6 +105,7 @@ final class MangaViewModel {
             try modelContext.save()
         } catch {
             print("[MangaViewModel] memo backfill save failed: \(error)")
+            lastError = .migration(error)
         }
     }
 
@@ -364,6 +366,8 @@ final class MangaViewModel {
                 try entryCtx.save()
             } catch {
                 print("[MangaViewModel] updateEntry entryCtx save failed: \(error)")
+                lastError = .save(error)
+                return
             }
         }
         save()
@@ -378,7 +382,7 @@ final class MangaViewModel {
         invalidateCacheIfStale()
         if let cached = cachedEntries { return cached }
         let descriptor = FetchDescriptor<MangaEntry>(
-            predicate: #Predicate { $0.deletedAt == nil },
+            predicate: #Predicate { $0.deletedAt == nil && $0.isHidden == false },
             sortBy: [SortDescriptor(\.lastReadDate, order: .reverse), SortDescriptor(\.name)]
         )
         let pendingIDs = Set(pendingDeleteEntries.map(\.id))
@@ -920,6 +924,8 @@ final class MangaViewModel {
             try modelContext.save()
         } catch {
             print("[MangaViewModel] save failed: \(error)")
+            lastError = .save(error)
+            return
         }
         refreshCounter += 1
         #if canImport(WidgetKit)
