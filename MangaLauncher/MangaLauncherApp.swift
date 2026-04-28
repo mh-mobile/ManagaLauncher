@@ -52,8 +52,6 @@ struct MangaLauncherApp: App {
     /// 各タブが独自インスタンスを持つと ModelContext が分散して
     /// CloudKit sync 時に複数 refresh が走るので、ここで 1 つだけ作る。
     @State private var viewModel: MangaViewModel
-    /// CloudKit 接続失敗時に local-only にフォールバックしたことを示すフラグ。
-    /// アラートは表示せず、同期状態は設定画面の iCloud 同期セクションで確認できる。
     /// startup migration の待機 Task が既に起動しているか。
     /// onAppear と scenePhase=.active が近接して発火した場合に Task を 2 つ
     /// 立ち上げないためのガード。後発 Task が「sync 開始前に return」して

@@ -21,19 +21,23 @@ enum SharedModelContainer {
             url: storeURL,
             cloudKitDatabase: .automatic
         )
+        let attempts = max(1, maxAttempts)
         var lastError: Error?
-        for attempt in 1...maxAttempts {
+        for attempt in 1...attempts {
             do {
                 return try ModelContainer(for: schema, configurations: [config])
             } catch {
                 lastError = error
-                print("[SharedModelContainer] create() attempt \(attempt)/\(maxAttempts) failed: \(error)")
-                if attempt < maxAttempts {
+                print("[SharedModelContainer] create() attempt \(attempt)/\(attempts) failed: \(error)")
+                if attempt < attempts {
                     Thread.sleep(forTimeInterval: 0.5)
                 }
             }
         }
-        throw lastError!
+        guard let error = lastError else {
+            fatalError("[SharedModelContainer] create() ended without error or container – should be unreachable")
+        }
+        throw error
     }
 
     /// CloudKit 付きコンテナの生成が全リトライで失敗した場合の最終フォールバック。
