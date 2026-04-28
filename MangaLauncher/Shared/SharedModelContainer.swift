@@ -10,7 +10,10 @@ enum SharedModelContainer {
     static let appGroupIdentifier = "group.com.mh-mobile.MangaYoubi"
     #endif
 
-    static func create() throws -> ModelContainer {
+    /// CloudKit 付きの ModelContainer を最大 `maxAttempts` 回リトライして生成する。
+    /// アプリ更新直後など CloudKit の準備が間に合わない一時的な失敗を吸収する。
+    /// 全試行失敗時は最後のエラーを throw する。
+    static func create(maxAttempts: Int = 3) throws -> ModelContainer {
         let schema = Schema([MangaEntry.self, ReadingActivity.self, MangaComment.self])
         let config = ModelConfiguration(
             "MangaLauncher",
@@ -18,10 +21,26 @@ enum SharedModelContainer {
             url: storeURL,
             cloudKitDatabase: .automatic
         )
-        return try ModelContainer(for: schema, configurations: [config])
+        let attempts = max(1, maxAttempts)
+        var lastError: Error?
+        for attempt in 1...attempts {
+            do {
+                return try ModelContainer(for: schema, configurations: [config])
+            } catch {
+                lastError = error
+                print("[SharedModelContainer] create() attempt \(attempt)/\(attempts) failed: \(error)")
+                if attempt < attempts {
+                    Thread.sleep(forTimeInterval: 0.5)
+                }
+            }
+        }
+        guard let error = lastError else {
+            fatalError("[SharedModelContainer] create() ended without error or container – should be unreachable")
+        }
+        throw error
     }
 
-    /// CloudKit 設定が原因で create() が失敗した場合のフォールバック。
+    /// CloudKit 付きコンテナの生成が全リトライで失敗した場合の最終フォールバック。
     /// CloudKit を切ってローカル only で起動を試みる。
     /// 同期は止まるが、最低限アプリが立ち上がりデータ閲覧/編集ができる状態を保つ。
     ///
