@@ -48,7 +48,7 @@ enum ActivityBuilder {
     }
 
     private static func merged(entries: [MangaEntry], comments: [MangaComment]) -> [ActivityItem] {
-        let entriesByID = Dictionary(uniqueKeysWithValues: entries.map { ($0.id, $0) })
+        let entriesByID = Dictionary(entries.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         var items: [ActivityItem] = entries
             .filter { !$0.memo.isEmpty }
             .map { .memo($0) }

@@ -726,7 +726,7 @@ final class MangaViewModel {
             predicate: #Predicate { idArray.contains($0.id) }
         )
         let entries = modelContext.fetchLogged(descriptor)
-        return Dictionary(uniqueKeysWithValues: entries.map { ($0.id, $0) })
+        return Dictionary(entries.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
     }
 
     func markAsRead(_ entry: MangaEntry) {

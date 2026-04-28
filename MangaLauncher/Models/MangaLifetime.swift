@@ -35,7 +35,7 @@ enum LifetimeBuilder {
             }
         }
 
-        let entriesByID = Dictionary(uniqueKeysWithValues: entries.map { ($0.id, $0) })
+        let entriesByID = Dictionary(entries.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
 
         return activityDatesByEntry.compactMap { entryID, dates in
             guard let entry = entriesByID[entryID],
