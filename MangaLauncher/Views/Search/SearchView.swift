@@ -53,7 +53,7 @@ struct SearchView: View {
 
         if contentMode == .comment {
             let candidateIDs = Set(colorFiltered.map(\.id))
-            let entriesByID = Dictionary(uniqueKeysWithValues: colorFiltered.map { ($0.id, $0) })
+            let entriesByID = Dictionary(colorFiltered.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
             let allComments = viewModel.allComments()
             let commentMatched: [(MangaComment, MangaEntry)] = allComments.compactMap { comment in
                 guard candidateIDs.contains(comment.mangaEntryID),
@@ -82,7 +82,7 @@ struct SearchView: View {
                 && $0.memo.localizedCaseInsensitiveContains(trimmed)
         }
         let filteredIDs = Set(candidates.map(\.id))
-        let entriesByID = Dictionary(uniqueKeysWithValues: candidates.map { ($0.id, $0) })
+        let entriesByID = Dictionary(candidates.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let allComments = viewModel.allComments()
         let commentMatched: [(MangaComment, MangaEntry)] = allComments.compactMap { comment in
             guard filteredIDs.contains(comment.mangaEntryID),
