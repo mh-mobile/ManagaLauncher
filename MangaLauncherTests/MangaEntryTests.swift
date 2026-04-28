@@ -207,6 +207,58 @@ struct MangaEntryMigrationTests {
     }
 }
 
+@Suite("MangaViewModel.findEntries – duplicate ID regression")
+struct MangaViewModelFindEntriesTests {
+
+    private func makeContainer() throws -> ModelContainer {
+        try ModelContainer(
+            for: MangaEntry.self, ReadingActivity.self, MangaComment.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+    }
+
+    @Test("同一 UUID のエントリが複数存在してもクラッシュしない")
+    @MainActor
+    func findEntriesWithDuplicateIDsDoesNotCrash() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        let sharedID = UUID()
+        let entry1 = MangaEntry(id: sharedID, name: "Entry A")
+        let entry2 = MangaEntry(id: sharedID, name: "Entry B")
+        context.insert(entry1)
+        context.insert(entry2)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        let result = vm.findEntries(by: [sharedID])
+
+        // クラッシュせず辞書が返り、重複は先勝ちで 1 件に集約される
+        #expect(result.count == 1)
+        #expect(result[sharedID] != nil)
+    }
+
+    @Test("重複なしの場合は全件返る")
+    @MainActor
+    func findEntriesWithUniqueIDs() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        let id1 = UUID()
+        let id2 = UUID()
+        context.insert(MangaEntry(id: id1, name: "A"))
+        context.insert(MangaEntry(id: id2, name: "B"))
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        let result = vm.findEntries(by: [id1, id2])
+
+        #expect(result.count == 2)
+        #expect(result[id1]?.name == "A")
+        #expect(result[id2]?.name == "B")
+    }
+}
+
 @Suite("MangaViewModel.runStartupMigrationsIfNeeded")
 struct MangaViewModelStartupTests {
 

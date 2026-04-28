@@ -111,6 +111,27 @@ struct TimelineBuilderTests {
         #expect(days.count == 2)
     }
 
+    // MARK: - duplicate entry IDs
+
+    @Test("同一 UUID のエントリが複数渡ってもクラッシュしない")
+    func itemsWithDuplicateEntryIDs() {
+        let today = calendar.startOfDay(for: Date())
+        let sharedID = UUID()
+        let entry1 = makeEntry(id: sharedID, name: "A")
+        let entry2 = makeEntry(id: sharedID, name: "B")
+        let comment = makeComment(entryID: sharedID, createdAt: today.addingTimeInterval(3600))
+
+        let items = TimelineBuilder.items(
+            for: today,
+            entries: [entry1, entry2],
+            comments: [comment],
+            activities: []
+        )
+
+        // クラッシュせずにコメントが正常に紐付く
+        #expect(items.contains { $0.id == "c-\(comment.id.uuidString)" })
+    }
+
     // MARK: - dailyCounts
 
     @Test("dailyCounts は日×種別で 0 件も含む")
