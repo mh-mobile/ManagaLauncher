@@ -52,10 +52,8 @@ struct MangaLauncherApp: App {
     /// 各タブが独自インスタンスを持つと ModelContext が分散して
     /// CloudKit sync 時に複数 refresh が走るので、ここで 1 つだけ作る。
     @State private var viewModel: MangaViewModel
-    /// CloudKit 接続失敗時に local-only にフォールバックしたとき、
-    /// ユーザーに通知するための Error を一時保持する。次回 onAppear で
-    /// viewModel.lastError に渡して alert 表示する。
-    @State private var pendingContainerFallbackError: Error?
+    /// CloudKit 接続失敗時に local-only にフォールバックしたことを示すフラグ。
+    /// アラートは表示せず、同期状態は設定画面の iCloud 同期セクションで確認できる。
     /// startup migration の待機 Task が既に起動しているか。
     /// onAppear と scenePhase=.active が近接して発火した場合に Task を 2 つ
     /// 立ち上げないためのガード。後発 Task が「sync 開始前に return」して
@@ -67,15 +65,13 @@ struct MangaLauncherApp: App {
         DataMigration.migrateToAppGroupIfNeeded()
         UNUserNotificationCenter.current().delegate = notificationDelegate
         let container: ModelContainer
-        var fallbackError: Error?
         do {
             container = try SharedModelContainer.create()
         } catch {
             // CloudKit 設定不整合などで初期化に失敗するケースを fatalError で
             // 落とすと TestFlight でクラッシュ報告に直結する。ローカル only に
-            // 切り替えてアプリは起動させ、後続でユーザーに alert で通知する。
+            // 切り替えてアプリは起動させる。同期状態は設定画面で確認可能。
             print("[MangaLauncherApp] CloudKit container failed: \(error). Falling back to local-only.")
-            fallbackError = error
             do {
                 container = try SharedModelContainer.createLocalOnly()
             } catch {
@@ -84,7 +80,6 @@ struct MangaLauncherApp: App {
         }
         self.container = container
         self._viewModel = State(initialValue: MangaViewModel(modelContext: container.mainContext))
-        self._pendingContainerFallbackError = State(initialValue: fallbackError)
     }
 
     var body: some Scene {
@@ -115,11 +110,6 @@ struct MangaLauncherApp: App {
                     )
                 }
                 .onAppear {
-                    // local-only fallback で起動した場合、ユーザーに警告
-                    if let error = pendingContainerFallbackError {
-                        viewModel.lastError = .cloudKitDisabled(error)
-                        pendingContainerFallbackError = nil
-                    }
                     startMigrationWaitIfNeeded()
                     checkPendingIntent()
                     checkPendingOpenDay()
