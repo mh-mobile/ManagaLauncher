@@ -66,12 +66,13 @@ struct MangaLauncherApp: App {
         UNUserNotificationCenter.current().delegate = notificationDelegate
         let container: ModelContainer
         do {
+            // 最大3回リトライしてCloudKit付きコンテナの生成を試みる。
+            // アプリ更新直後など一時的な失敗で同期が止まるのを防ぐ。
             container = try SharedModelContainer.create()
         } catch {
-            // CloudKit 設定不整合などで初期化に失敗するケースを fatalError で
-            // 落とすと TestFlight でクラッシュ報告に直結する。ローカル only に
-            // 切り替えてアプリは起動させる。同期状態は設定画面で確認可能。
-            print("[MangaLauncherApp] CloudKit container failed: \(error). Falling back to local-only.")
+            // 全リトライ失敗時のみ local-only にフォールバック。
+            // 同期状態は設定画面の「iCloud同期」セクションで確認可能。
+            print("[MangaLauncherApp] CloudKit container failed after retries: \(error). Falling back to local-only.")
             do {
                 container = try SharedModelContainer.createLocalOnly()
             } catch {
