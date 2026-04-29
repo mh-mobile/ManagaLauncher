@@ -411,9 +411,7 @@ struct LifetimeDetailSheet: View {
 
             // Right: content card
             VStack(alignment: .leading, spacing: 2) {
-                Text(eventText(for: item))
-                    .font(theme.captionFont)
-                    .foregroundStyle(theme.onSurface)
+                eventContent(for: item)
                 Text(Self.timeFormatter.string(from: item.timestamp))
                     .font(theme.caption2Font)
                     .foregroundStyle(theme.onSurfaceVariant)
@@ -478,6 +476,34 @@ struct LifetimeDetailSheet: View {
             } else {
                 "読みました"
             }
+        }
+    }
+
+    @ViewBuilder
+    private func eventContent(for item: TimelineItem) -> some View {
+        switch item {
+        case .comment(let comment, _):
+            LinkedText(
+                comment.content,
+                font: theme.captionFont,
+                foregroundColor: theme.onSurface
+            )
+        case .memo(let entry):
+            if entry.memo.isEmpty {
+                Text("(空)")
+                    .font(theme.captionFont)
+                    .foregroundStyle(theme.onSurface)
+            } else {
+                LinkedText(
+                    entry.memo,
+                    font: theme.captionFont,
+                    foregroundColor: theme.onSurface
+                )
+            }
+        case .read:
+            Text(eventText(for: item))
+                .font(theme.captionFont)
+                .foregroundStyle(theme.onSurface)
         }
     }
 
