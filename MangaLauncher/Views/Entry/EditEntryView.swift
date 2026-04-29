@@ -36,6 +36,8 @@ struct EditEntryView: View {
     @State private var episodeText: String = ""
     @State private var episodeLabel: String = ""
     @State private var markAsReadOnSave: Bool = false
+    @State private var editingLink: MangaLink?
+    @State private var showingAddLink = false
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
@@ -148,6 +150,11 @@ struct EditEntryView: View {
 
                 episodeSection
                 memoSection
+
+                if isEditing {
+                    linksSection
+                }
+
                 colorSection
 
                 if isEditing && showsDeleteButton {
@@ -197,6 +204,16 @@ struct EditEntryView: View {
                 }
             }
             #endif
+            .sheet(isPresented: $showingAddLink) {
+                if let entry {
+                    EditLinkView(viewModel: viewModel, entry: entry)
+                }
+            }
+            .sheet(item: $editingLink) { link in
+                if let entry {
+                    EditLinkView(viewModel: viewModel, entry: entry, link: link)
+                }
+            }
         }
     }
 
@@ -429,6 +446,55 @@ struct EditEntryView: View {
             Text("メモ")
         } footer: {
             Text("作品ごとに 1 つの長文メモを保存できます。コメントとは別物です。")
+        }
+    }
+
+    @ViewBuilder
+    private var linksSection: some View {
+        Section {
+            if let entry {
+                let links = viewModel.fetchLinks(for: entry)
+                ForEach(links) { link in
+                    Button {
+                        editingLink = link
+                    } label: {
+                        HStack {
+                            Image(systemName: link.linkType.iconName)
+                                .foregroundStyle(theme.primary)
+                                .frame(width: 24)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(link.title.isEmpty ? link.linkType.displayName : link.title)
+                                    .foregroundStyle(theme.onSurface)
+                                Text(link.url)
+                                    .font(theme.captionFont)
+                                    .foregroundStyle(theme.onSurfaceVariant)
+                                    .lineLimit(1)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundStyle(theme.onSurfaceVariant.opacity(0.5))
+                        }
+                    }
+                }
+                .onDelete { indexSet in
+                    for index in indexSet {
+                        viewModel.deleteLink(links[index])
+                    }
+                }
+                .onMove { source, destination in
+                    viewModel.moveLinks(for: entry, from: source, to: destination)
+                }
+            }
+            Button {
+                showingAddLink = true
+            } label: {
+                Label("リンクを追加", systemImage: "plus.circle")
+            }
+        } header: {
+            Text("関連リンク")
+        } footer: {
+            Text("作品の公式サイトやSNSアカウントなどのリンクを追加できます。")
         }
     }
 

@@ -295,3 +295,249 @@ struct MangaViewModelStartupTests {
         #expect(legacy.readingState == .following) // migration が再走しないので戻されない
     }
 }
+
+// MARK: - MangaLink Tests
+
+@Suite("MangaLink CRUD")
+struct MangaLinkTests {
+
+    private func makeContainer() throws -> ModelContainer {
+        try ModelContainer(
+            for: MangaEntry.self, ReadingActivity.self, MangaComment.self, MangaLink.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+    }
+
+    @Test("リンクの追加と取得")
+    @MainActor
+    func addAndFetchLink() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let entry = MangaEntry(name: "Test Manga")
+        context.insert(entry)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.addLink(entry, linkType: .twitter, title: "公式X", url: "https://x.com/test")
+
+        let links = vm.fetchLinks(for: entry)
+        #expect(links.count == 1)
+        #expect(links[0].linkType == .twitter)
+        #expect(links[0].title == "公式X")
+        #expect(links[0].url == "https://x.com/test")
+    }
+
+    @Test("リンクの更新")
+    @MainActor
+    func updateLink() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let entry = MangaEntry(name: "Test Manga")
+        context.insert(entry)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.addLink(entry, linkType: .twitter, title: "旧タイトル", url: "https://x.com/old")
+
+        let link = vm.fetchLinks(for: entry)[0]
+        vm.updateLink(link, linkType: .website, title: "新タイトル", url: "https://example.com")
+
+        let updated = vm.fetchLinks(for: entry)[0]
+        #expect(updated.linkType == .website)
+        #expect(updated.title == "新タイトル")
+        #expect(updated.url == "https://example.com")
+        #expect(updated.updatedAt != nil)
+    }
+
+    @Test("リンクの削除")
+    @MainActor
+    func deleteLink() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let entry = MangaEntry(name: "Test Manga")
+        context.insert(entry)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.addLink(entry, linkType: .twitter, title: "", url: "https://x.com/test")
+        vm.addLink(entry, linkType: .pixiv, title: "", url: "https://pixiv.net/test")
+
+        let links = vm.fetchLinks(for: entry)
+        #expect(links.count == 2)
+
+        vm.deleteLink(links[0])
+        let remaining = vm.fetchLinks(for: entry)
+        #expect(remaining.count == 1)
+    }
+
+    @Test("sortOrder による並び順")
+    @MainActor
+    func sortOrderIsRespected() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let entry = MangaEntry(name: "Test Manga")
+        context.insert(entry)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.addLink(entry, linkType: .twitter, title: "First", url: "https://x.com/1")
+        vm.addLink(entry, linkType: .pixiv, title: "Second", url: "https://pixiv.net/2")
+        vm.addLink(entry, linkType: .youtube, title: "Third", url: "https://youtube.com/3")
+
+        let links = vm.fetchLinks(for: entry)
+        #expect(links[0].title == "First")
+        #expect(links[1].title == "Second")
+        #expect(links[2].title == "Third")
+    }
+
+    @Test("moveLinks で並べ替え")
+    @MainActor
+    func moveLinkReordersSortOrder() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let entry = MangaEntry(name: "Test Manga")
+        context.insert(entry)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.addLink(entry, linkType: .twitter, title: "A", url: "https://x.com/a")
+        vm.addLink(entry, linkType: .pixiv, title: "B", url: "https://pixiv.net/b")
+        vm.addLink(entry, linkType: .youtube, title: "C", url: "https://youtube.com/c")
+
+        // Move last item (C) to first position
+        vm.moveLinks(for: entry, from: IndexSet(integer: 2), to: 0)
+
+        let links = vm.fetchLinks(for: entry)
+        #expect(links[0].title == "C")
+        #expect(links[1].title == "A")
+        #expect(links[2].title == "B")
+    }
+
+    @Test("空URLはリンク追加されない")
+    @MainActor
+    func emptyURLDoesNotAddLink() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let entry = MangaEntry(name: "Test Manga")
+        context.insert(entry)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.addLink(entry, linkType: .twitter, title: "test", url: "")
+        vm.addLink(entry, linkType: .twitter, title: "test", url: "   ")
+
+        let links = vm.fetchLinks(for: entry)
+        #expect(links.isEmpty)
+    }
+}
+
+@Suite("LinkType.detect")
+struct LinkTypeDetectTests {
+
+    @Test("Twitter URL を検出")
+    func detectsTwitter() {
+        #expect(LinkType.detect(from: "https://twitter.com/user") == .twitter)
+        #expect(LinkType.detect(from: "https://x.com/user") == .twitter)
+    }
+
+    @Test("pixiv URL を検出")
+    func detectsPixiv() {
+        #expect(LinkType.detect(from: "https://www.pixiv.net/users/123") == .pixiv)
+    }
+
+    @Test("YouTube URL を検出")
+    func detectsYouTube() {
+        #expect(LinkType.detect(from: "https://www.youtube.com/watch?v=abc") == .youtube)
+        #expect(LinkType.detect(from: "https://youtu.be/abc") == .youtube)
+    }
+
+    @Test("Instagram URL を検出")
+    func detectsInstagram() {
+        #expect(LinkType.detect(from: "https://www.instagram.com/user") == .instagram)
+    }
+
+    @Test("TikTok URL を検出")
+    func detectsTikTok() {
+        #expect(LinkType.detect(from: "https://www.tiktok.com/@user") == .tiktok)
+    }
+
+    @Test("不明な URL は other")
+    func unknownIsOther() {
+        #expect(LinkType.detect(from: "https://example.com") == .other)
+    }
+
+    @Test("サブドメインマッチで誤検出しない")
+    func noFalsePositiveOnSubstring() {
+        #expect(LinkType.detect(from: "https://notx.com/user") == .other)
+        #expect(LinkType.detect(from: "https://faketiktok.com/user") == .other)
+    }
+}
+
+@Suite("MangaLink Backup")
+struct MangaLinkBackupTests {
+
+    private func makeContainer() throws -> ModelContainer {
+        try ModelContainer(
+            for: MangaEntry.self, ReadingActivity.self, MangaComment.self, MangaLink.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+    }
+
+    @Test("export → import ラウンドトリップ")
+    @MainActor
+    func exportImportRoundTrip() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let entry = MangaEntry(name: "Roundtrip Manga")
+        context.insert(entry)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.addLink(entry, linkType: .twitter, title: "Official", url: "https://x.com/manga")
+        vm.addLink(entry, linkType: .website, title: "Site", url: "https://manga.example.com")
+
+        guard let exportData = vm.exportBackupData() else {
+            Issue.record("Export returned nil")
+            return
+        }
+
+        // 新しいコンテナでインポート
+        let container2 = try makeContainer()
+        let context2 = container2.mainContext
+        let vm2 = MangaViewModel(modelContext: context2)
+        let importedCount = vm2.importBackupData(exportData)
+
+        // entry(1) + links(2) = 3
+        #expect(importedCount == 3)
+
+        let importedEntries = vm2.allEntries()
+        #expect(importedEntries.count == 1)
+
+        let importedLinks = vm2.fetchLinks(for: importedEntries[0])
+        #expect(importedLinks.count == 2)
+        #expect(importedLinks[0].title == "Official")
+        #expect(importedLinks[1].title == "Site")
+    }
+
+    @Test("import 時に重複 ID はスキップされる")
+    @MainActor
+    func importSkipsDuplicateIDs() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let entry = MangaEntry(name: "Dup Test")
+        context.insert(entry)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.addLink(entry, linkType: .twitter, title: "First", url: "https://x.com/first")
+
+        guard let exportData = vm.exportBackupData() else {
+            Issue.record("Export returned nil")
+            return
+        }
+
+        // 同じコンテナに再インポート → 既存と重複するのでスキップ
+        let importedCount = vm.importBackupData(exportData)
+        #expect(importedCount == 0)
+    }
+}

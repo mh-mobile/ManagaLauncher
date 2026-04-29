@@ -5,9 +5,11 @@ struct MangaContextMenu: View {
     var viewModel: MangaViewModel
     @Binding var editingEntry: MangaEntry?
     @Binding var commentingEntry: MangaEntry?
+    var links: [MangaLink] = []
     var onShowLifetime: (() -> Void)? = nil
     var onRecordSpecialEpisode: (() -> Void)? = nil
     var onReorder: (() -> Void)? = nil
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         // MARK: 既読/未読トグル
@@ -63,6 +65,26 @@ struct MangaContextMenu: View {
             commentingEntry = entry
         } label: {
             Label("コメント", systemImage: "bubble.left.and.bubble.right")
+        }
+
+        // MARK: 関連リンク
+        if !links.isEmpty {
+            Menu {
+                ForEach(links) { link in
+                    Button {
+                        if let url = URL(string: link.url) {
+                            openURL(url)
+                        }
+                    } label: {
+                        Label(
+                            link.title.isEmpty ? link.linkType.displayName : link.title,
+                            systemImage: link.linkType.iconName
+                        )
+                    }
+                }
+            } label: {
+                Label("関連リンク", systemImage: "link")
+            }
         }
 
         if let onShowLifetime {

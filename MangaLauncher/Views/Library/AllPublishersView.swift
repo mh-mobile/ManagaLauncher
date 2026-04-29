@@ -111,7 +111,7 @@ struct PublisherEntriesView: View {
                     .buttonStyle(.plain)
                     .listRowBackground(Color.clear)
                     .contextMenu {
-                        MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, onShowLifetime: { lifetimeEntry = entry }, onRecordSpecialEpisode: {
+                        MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, links: viewModel.fetchLinks(for: entry), onShowLifetime: { lifetimeEntry = entry }, onRecordSpecialEpisode: {
                             specialEpisodeEntry = entry
                             showSpecialEpisodeAlert = true
                         })

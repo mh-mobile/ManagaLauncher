@@ -57,6 +57,10 @@
 		BC000001 /* MangaComment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000010 /* MangaComment.swift */; };
 		BC000002 /* MangaComment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000010 /* MangaComment.swift */; };
 		BC000003 /* MangaComment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000010 /* MangaComment.swift */; };
+		CD000001 /* MangaLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD000010 /* MangaLink.swift */; };
+		CD000002 /* MangaLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD000010 /* MangaLink.swift */; };
+		CD000003 /* MangaLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD000010 /* MangaLink.swift */; };
+		CD000101 /* EditLinkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD000110 /* EditLinkView.swift */; };
 		BC000101 /* CommentListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000110 /* CommentListView.swift */; };
 		BC000301 /* ActivityItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000310 /* ActivityItem.swift */; };
 		AB2001FF00112233AA000001 /* TimelineItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2001FF00112233AA000002 /* TimelineItem.swift */; };
@@ -222,6 +226,8 @@
 		A576F9BEFBD3B37AA9275FAB /* MangaWidget.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MangaWidget.entitlements; sourceTree = "<group>"; };
 		AA000010 /* ReadingActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingActivity.swift; sourceTree = "<group>"; };
 		BC000010 /* MangaComment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaComment.swift; sourceTree = "<group>"; };
+		CD000010 /* MangaLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaLink.swift; sourceTree = "<group>"; };
+		CD000110 /* EditLinkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditLinkView.swift; sourceTree = "<group>"; };
 		BC000110 /* CommentListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentListView.swift; sourceTree = "<group>"; };
 		BC000310 /* ActivityItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityItem.swift; sourceTree = "<group>"; };
 		AB2001FF00112233AA000002 /* TimelineItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineItem.swift; sourceTree = "<group>"; };
@@ -418,6 +424,7 @@
 				3AFF912AECB7C6B219DD1600 /* BackupData.swift */,
 				AA000010 /* ReadingActivity.swift */,
 				BC000010 /* MangaComment.swift */,
+				CD000010 /* MangaLink.swift */,
 				BC000310 /* ActivityItem.swift */,
 				AB2001FF00112233AA000002 /* TimelineItem.swift */,
 				AB4001FF00112233AA000006 /* AppError.swift */,
@@ -578,6 +585,7 @@
 				EEC07D90615785B81C2E71C8 /* ImageCropView.swift */,
 				A2000005 /* EditEntryView.swift */,
 				AB4001FF00112233AA000004 /* EditEntryStatusSection.swift */,
+				CD000110 /* EditLinkView.swift */,
 			);
 			path = Entry;
 			sourceTree = "<group>";
@@ -792,6 +800,7 @@
 				EC440D83EFDF1B4B6F95E82D /* ModelContextExtensions.swift in Sources */,
 				AA000001 /* ReadingActivity.swift in Sources */,
 				BC000001 /* MangaComment.swift in Sources */,
+				CD000001 /* MangaLink.swift in Sources */,
 				ECFEA84A2F7F6E5700CE4DC0 /* MangaURLOpener.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -810,6 +819,7 @@
 				ECFEA8962F7F93AF00CE4DC0 /* ModelContextExtensions.swift in Sources */,
 				AA000002 /* ReadingActivity.swift in Sources */,
 				BC000002 /* MangaComment.swift in Sources */,
+				CD000002 /* MangaLink.swift in Sources */,
 				ECFEA8492F7F6E5700CE4DC0 /* MangaURLOpener.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -907,6 +917,8 @@
 				ECFEA82E2F7E91BD00CE4DC0 /* EntryIcon.swift in Sources */,
 				AA000003 /* ReadingActivity.swift in Sources */,
 				BC000003 /* MangaComment.swift in Sources */,
+				CD000003 /* MangaLink.swift in Sources */,
+				CD000101 /* EditLinkView.swift in Sources */,
 				ECFEA8602F7F7E2000CE4DC0 /* DayPageView.swift in Sources */,
 				AA000004 /* ReadingHeatmapView.swift in Sources */,
 			);
