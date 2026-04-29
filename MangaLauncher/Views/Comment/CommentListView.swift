@@ -80,10 +80,12 @@ struct CommentListView: View {
     @ViewBuilder
     private func commentRow(_ comment: MangaComment) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(comment.content)
-                .font(theme.bodyFont)
-                .foregroundStyle(theme.onSurface)
-                .textSelection(.enabled)
+            LinkedText(
+                comment.content,
+                font: theme.bodyFont,
+                foregroundColor: theme.onSurface
+            )
+            .textSelection(.enabled)
             HStack(spacing: 6) {
                 Text(comment.createdAt.formatted(.dateTime.year().month().day().hour().minute()))
                 if comment.updatedAt != nil {

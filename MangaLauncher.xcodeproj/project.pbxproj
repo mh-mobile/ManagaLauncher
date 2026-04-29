@@ -57,6 +57,7 @@
 		BC000001 /* MangaComment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000010 /* MangaComment.swift */; };
 		BC000002 /* MangaComment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000010 /* MangaComment.swift */; };
 		BC000003 /* MangaComment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000010 /* MangaComment.swift */; };
+		CE000001 /* LinkedText.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE000010 /* LinkedText.swift */; };
 		CD000001 /* MangaLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD000010 /* MangaLink.swift */; };
 		CD000002 /* MangaLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD000010 /* MangaLink.swift */; };
 		CD000003 /* MangaLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD000010 /* MangaLink.swift */; };
@@ -227,6 +228,7 @@
 		AA000010 /* ReadingActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingActivity.swift; sourceTree = "<group>"; };
 		BC000010 /* MangaComment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaComment.swift; sourceTree = "<group>"; };
 		CD000010 /* MangaLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaLink.swift; sourceTree = "<group>"; };
+		CE000010 /* LinkedText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkedText.swift; sourceTree = "<group>"; };
 		CD000110 /* EditLinkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditLinkView.swift; sourceTree = "<group>"; };
 		BC000110 /* CommentListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentListView.swift; sourceTree = "<group>"; };
 		BC000310 /* ActivityItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityItem.swift; sourceTree = "<group>"; };
@@ -623,6 +625,7 @@
 			isa = PBXGroup;
 			children = (
 				ECFEA8252F7E918E00CE4DC0 /* DeleteToastView.swift */,
+				CE000010 /* LinkedText.swift */,
 				EC04B7DB2F75301D00AEE45F /* OnboardingView.swift */,
 				EC04B7D72F74202400AEE45F /* SafariView.swift */,
 			);
@@ -914,6 +917,7 @@
 				ECFEA8762F7F8C4000CE4DC0 /* CatchUpCompletedView.swift in Sources */,
 				ECFEA82C2F7E91B500CE4DC0 /* MangaRowCell.swift in Sources */,
 				ECFEA8262F7E918E00CE4DC0 /* DeleteToastView.swift in Sources */,
+				CE000001 /* LinkedText.swift in Sources */,
 				ECFEA82E2F7E91BD00CE4DC0 /* EntryIcon.swift in Sources */,
 				AA000003 /* ReadingActivity.swift in Sources */,
 				BC000003 /* MangaComment.swift in Sources */,

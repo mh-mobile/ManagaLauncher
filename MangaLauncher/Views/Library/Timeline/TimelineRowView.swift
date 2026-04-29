@@ -117,12 +117,20 @@ struct TimelineRowView: View {
     private var content: some View {
         switch item {
         case .comment(let comment, _):
-            Text(comment.content)
+            LinkedText(
+                comment.content,
+                font: theme.captionFont,
+                foregroundColor: theme.onSurfaceVariant
+            )
         case .memo(let entry):
             if entry.memo.isEmpty {
                 Text("(空)")
             } else {
-                Text(entry.memo)
+                LinkedText(
+                    entry.memo,
+                    font: theme.captionFont,
+                    foregroundColor: theme.onSurfaceVariant
+                )
             }
         case .read(let activity, _):
             if let label = activity.episodeLabel, !label.isEmpty {
