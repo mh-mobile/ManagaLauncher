@@ -7,63 +7,71 @@ struct LinkedText: View {
     let font: Font
     let foregroundColor: Color
     let linkColor: Color
+    let onOpenURL: ((URL) -> OpenURLAction.Result)?
+
+    /// URL 検出用の NSDataDetector。生成コストを避けるためインスタンスを共有する。
+    private static let linkDetector: NSDataDetector? = {
+        try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+    }()
 
     init(
         _ text: String,
         font: Font = .body,
         foregroundColor: Color = .primary,
-        linkColor: Color? = nil
+        linkColor: Color? = nil,
+        onOpenURL: ((URL) -> OpenURLAction.Result)? = nil
     ) {
         self.text = text
         self.font = font
         self.foregroundColor = foregroundColor
         self.linkColor = linkColor ?? ThemeManager.shared.style.primary
+        self.onOpenURL = onOpenURL
     }
 
     var body: some View {
-        Text(buildAttributedString())
+        Text(Self.buildAttributedString(from: text, foregroundColor: foregroundColor, linkColor: linkColor))
             .font(font)
             .tint(linkColor)
+            .environment(\.openURL, OpenURLAction { url in
+                if let onOpenURL {
+                    return onOpenURL(url)
+                }
+                return .systemAction(url)
+            })
     }
 
-    private func buildAttributedString() -> AttributedString {
+    // MARK: - AttributedString 構築（テスト可能な static メソッド）
+
+    /// テキスト中の URL を検出してリンク属性を付与した AttributedString を返す。
+    static func buildAttributedString(
+        from text: String,
+        foregroundColor: Color,
+        linkColor: Color
+    ) -> AttributedString {
         var result = AttributedString(text)
         result.foregroundColor = foregroundColor
 
-        guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
-            return result
-        }
-
+        // URL を含まないテキストは早期リターン
+        guard let detector = linkDetector else { return result }
         let nsString = text as NSString
         let fullRange = NSRange(location: 0, length: nsString.length)
         let matches = detector.matches(in: text, options: [], range: fullRange)
+        guard !matches.isEmpty else { return result }
 
         for match in matches {
             guard let url = match.url,
-                  let range = Range(match.range, in: text),
-                  let attrRange = result.range(of: text[range]) else { continue }
+                  let swiftRange = Range(match.range, in: text) else { continue }
+            // String.Index のオフセットを使って AttributedString の範囲を算出
+            let startOffset = text.distance(from: text.startIndex, to: swiftRange.lowerBound)
+            let endOffset = text.distance(from: text.startIndex, to: swiftRange.upperBound)
+            let attrStart = result.index(result.startIndex, offsetByCharacters: startOffset)
+            let attrEnd = result.index(result.startIndex, offsetByCharacters: endOffset)
+            let attrRange = attrStart..<attrEnd
             result[attrRange].link = url
             result[attrRange].foregroundColor = linkColor
             result[attrRange].underlineStyle = .single
         }
 
         return result
-    }
-}
-
-// MARK: - AttributedString range helper
-
-private extension AttributedString {
-    /// String の Range を AttributedString 内で検索して対応する範囲を返す。
-    /// 同じ部分文字列が複数回出現する場合に正しい位置を返すため、
-    /// 先頭からのオフセットを利用する。
-    func range(of substring: Substring) -> Range<AttributedString.Index>? {
-        let text = String(self.characters)
-        guard let stringRange = text.range(of: substring) else { return nil }
-        let startOffset = text.distance(from: text.startIndex, to: stringRange.lowerBound)
-        let endOffset = text.distance(from: text.startIndex, to: stringRange.upperBound)
-        let attrStart = self.index(self.startIndex, offsetByCharacters: startOffset)
-        let attrEnd = self.index(self.startIndex, offsetByCharacters: endOffset)
-        return attrStart..<attrEnd
     }
 }

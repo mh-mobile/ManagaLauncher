@@ -541,3 +541,89 @@ struct MangaLinkBackupTests {
         #expect(importedCount == 0)
     }
 }
+
+// MARK: - LinkedText Tests
+
+@Suite("LinkedText URL検出")
+struct LinkedTextTests {
+
+    @Test("単一URLを検出してリンク属性が付く")
+    func singleURL() {
+        let text = "詳細は https://example.com を参照"
+        let result = LinkedText.buildAttributedString(from: text, foregroundColor: .black, linkColor: .blue)
+
+        // リンクが1箇所含まれる
+        var linkCount = 0
+        for run in result.runs {
+            if run.link != nil { linkCount += 1 }
+        }
+        #expect(linkCount == 1)
+    }
+
+    @Test("同一URLが複数回登場しても全箇所にリンクが付く")
+    func duplicateURLs() {
+        let text = "https://example.com と https://example.com の2つ"
+        let result = LinkedText.buildAttributedString(from: text, foregroundColor: .black, linkColor: .blue)
+
+        var linkCount = 0
+        for run in result.runs {
+            if run.link != nil { linkCount += 1 }
+        }
+        #expect(linkCount == 2)
+    }
+
+    @Test("URLを含まないテキストはリンクなし")
+    func noURL() {
+        let text = "これはただのテキストです"
+        let result = LinkedText.buildAttributedString(from: text, foregroundColor: .black, linkColor: .blue)
+
+        var linkCount = 0
+        for run in result.runs {
+            if run.link != nil { linkCount += 1 }
+        }
+        #expect(linkCount == 0)
+    }
+
+    @Test("日本語混在テキストでURLが正しく検出される")
+    func japaneseWithURL() {
+        let text = "公式サイト: https://manga.example.com/漫画 をチェック"
+        let result = LinkedText.buildAttributedString(from: text, foregroundColor: .black, linkColor: .blue)
+
+        var foundURL: URL?
+        for run in result.runs {
+            if let link = run.link { foundURL = link }
+        }
+        #expect(foundURL != nil)
+        #expect(foundURL?.host == "manga.example.com")
+    }
+
+    @Test("絵文字混在テキストでURL検出が壊れない")
+    func emojiWithURL() {
+        let text = "🎉 https://x.com/manga 🎉"
+        let result = LinkedText.buildAttributedString(from: text, foregroundColor: .black, linkColor: .blue)
+
+        var linkCount = 0
+        for run in result.runs {
+            if run.link != nil { linkCount += 1 }
+        }
+        #expect(linkCount == 1)
+    }
+
+    @Test("複数の異なるURLが正しく検出される")
+    func multipleDistinctURLs() {
+        let text = "Twitter: https://x.com/user サイト: https://example.com"
+        let result = LinkedText.buildAttributedString(from: text, foregroundColor: .black, linkColor: .blue)
+
+        var urls: [URL] = []
+        for run in result.runs {
+            if let link = run.link { urls.append(link) }
+        }
+        #expect(urls.count == 2)
+    }
+
+    @Test("空文字列でクラッシュしない")
+    func emptyString() {
+        let result = LinkedText.buildAttributedString(from: "", foregroundColor: .black, linkColor: .blue)
+        #expect(String(result.characters).isEmpty)
+    }
+}

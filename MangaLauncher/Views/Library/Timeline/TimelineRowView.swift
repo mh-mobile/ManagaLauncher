@@ -71,8 +71,6 @@ struct TimelineRowView: View {
                     .foregroundStyle(theme.onSurface)
                     .lineLimit(1)
                 content
-                    .font(theme.captionFont)
-                    .foregroundStyle(theme.onSurfaceVariant)
                     .lineLimit(2)
             }
             Spacer(minLength: 0)
@@ -125,6 +123,8 @@ struct TimelineRowView: View {
         case .memo(let entry):
             if entry.memo.isEmpty {
                 Text("(空)")
+                    .font(theme.captionFont)
+                    .foregroundStyle(theme.onSurfaceVariant)
             } else {
                 LinkedText(
                     entry.memo,
@@ -135,10 +135,16 @@ struct TimelineRowView: View {
         case .read(let activity, _):
             if let label = activity.episodeLabel, !label.isEmpty {
                 Text("既読 \(label)に更新")
+                    .font(theme.captionFont)
+                    .foregroundStyle(theme.onSurfaceVariant)
             } else if let ep = activity.episodeNumber {
                 Text("既読 \(ep)話に更新")
+                    .font(theme.captionFont)
+                    .foregroundStyle(theme.onSurfaceVariant)
             } else {
                 Text("読みました")
+                    .font(theme.captionFont)
+                    .foregroundStyle(theme.onSurfaceVariant)
             }
         }
     }
