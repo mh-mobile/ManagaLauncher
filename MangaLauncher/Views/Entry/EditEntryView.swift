@@ -478,10 +478,12 @@ struct EditEntryView: View {
                     }
                 }
                 .onDelete { indexSet in
-                    let links = viewModel.fetchLinks(for: entry)
                     for index in indexSet {
                         viewModel.deleteLink(links[index])
                     }
+                }
+                .onMove { source, destination in
+                    viewModel.moveLinks(for: entry, from: source, to: destination)
                 }
             }
             Button {

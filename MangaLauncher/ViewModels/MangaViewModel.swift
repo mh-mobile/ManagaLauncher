@@ -708,7 +708,7 @@ final class MangaViewModel {
             }
         }
         if let backupLinks = backup.links {
-            let existingLinkIDs = Set(modelContext.fetchLogged(FetchDescriptor<MangaLink>()).map(\.id))
+            var existingLinkIDs = Set(modelContext.fetchLogged(FetchDescriptor<MangaLink>()).map(\.id))
             for backupLink in backupLinks {
                 guard !existingLinkIDs.contains(backupLink.id) else { continue }
                 let link = MangaLink(
@@ -722,6 +722,7 @@ final class MangaViewModel {
                 link.createdAt = backupLink.createdAt
                 link.updatedAt = backupLink.updatedAt
                 modelContext.insert(link)
+                existingLinkIDs.insert(backupLink.id)
                 importedCount += 1
             }
         }
@@ -933,6 +934,15 @@ final class MangaViewModel {
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
         return modelContext.fetchLogged(descriptor)
+    }
+
+    func moveLinks(for entry: MangaEntry, from source: IndexSet, to destination: Int) {
+        var links = fetchLinks(for: entry)
+        links.move(fromOffsets: source, toOffset: destination)
+        for (index, link) in links.enumerated() {
+            link.sortOrder = index
+        }
+        save()
     }
 
     /// タイムラインのアクティビティドットや日別集計に使う全 ReadingActivity。

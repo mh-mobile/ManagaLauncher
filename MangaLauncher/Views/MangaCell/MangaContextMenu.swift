@@ -5,9 +5,11 @@ struct MangaContextMenu: View {
     var viewModel: MangaViewModel
     @Binding var editingEntry: MangaEntry?
     @Binding var commentingEntry: MangaEntry?
+    var links: [MangaLink] = []
     var onShowLifetime: (() -> Void)? = nil
     var onRecordSpecialEpisode: (() -> Void)? = nil
     var onReorder: (() -> Void)? = nil
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         // MARK: 既読/未読トグル
@@ -66,17 +68,12 @@ struct MangaContextMenu: View {
         }
 
         // MARK: 関連リンク
-        let links = viewModel.fetchLinks(for: entry)
         if !links.isEmpty {
             Menu {
                 ForEach(links) { link in
                     Button {
                         if let url = URL(string: link.url) {
-                            #if canImport(UIKit)
-                            UIApplication.shared.open(url)
-                            #elseif canImport(AppKit)
-                            NSWorkspace.shared.open(url)
-                            #endif
+                            openURL(url)
                         }
                     } label: {
                         Label(
