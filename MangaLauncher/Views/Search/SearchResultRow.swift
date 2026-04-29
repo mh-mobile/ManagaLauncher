@@ -57,7 +57,7 @@ struct SearchResultRow: View {
         .listRowBackground(Color.clear)
         .listRowSeparator(.hidden)
         .contextMenu {
-            MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, onShowLifetime: { lifetimeEntry = entry }, onRecordSpecialEpisode: { showSpecialEpisodeAlert = true })
+            MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, links: viewModel.fetchLinks(for: entry), onShowLifetime: { lifetimeEntry = entry }, onRecordSpecialEpisode: { showSpecialEpisodeAlert = true })
         }
         .specialEpisodeAlert(entry: entry, viewModel: viewModel, isPresented: $showSpecialEpisodeAlert)
         .sheet(item: $lifetimeEntry) { entry in

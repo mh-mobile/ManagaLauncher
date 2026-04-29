@@ -103,7 +103,7 @@ struct MangaGridCell: View {
                 }
             }
             .contextMenu {
-                MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, onShowLifetime: { lifetimeEntry = entry }, onRecordSpecialEpisode: { showSpecialEpisodeAlert = true }) {
+                MangaContextMenu(entry: entry, viewModel: viewModel, editingEntry: $editingEntry, commentingEntry: $commentingEntry, links: viewModel.fetchLinks(for: entry), onShowLifetime: { lifetimeEntry = entry }, onRecordSpecialEpisode: { showSpecialEpisodeAlert = true }) {
                     withAnimation(.easeInOut(duration: 0.2)) {
                         isGridEditMode = true
                     }

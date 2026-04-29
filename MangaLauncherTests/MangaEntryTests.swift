@@ -465,6 +465,12 @@ struct LinkTypeDetectTests {
     func unknownIsOther() {
         #expect(LinkType.detect(from: "https://example.com") == .other)
     }
+
+    @Test("サブドメインマッチで誤検出しない")
+    func noFalsePositiveOnSubstring() {
+        #expect(LinkType.detect(from: "https://notx.com/user") == .other)
+        #expect(LinkType.detect(from: "https://faketiktok.com/user") == .other)
+    }
 }
 
 @Suite("MangaLink Backup")

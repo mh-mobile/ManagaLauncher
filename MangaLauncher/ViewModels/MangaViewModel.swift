@@ -470,6 +470,10 @@ final class MangaViewModel {
         if let comments = try? modelContext.fetch(commentDescriptor) {
             for comment in comments { modelContext.delete(comment) }
         }
+        let linkDescriptor = FetchDescriptor<MangaLink>(predicate: #Predicate { $0.mangaEntryID == entryID })
+        if let links = try? modelContext.fetch(linkDescriptor) {
+            for link in links { modelContext.delete(link) }
+        }
         modelContext.delete(entry)
     }
 
@@ -917,6 +921,7 @@ final class MangaViewModel {
     func deleteLink(_ link: MangaLink) {
         modelContext.delete(link)
         save()
+        refreshCounter += 1
     }
 
     func fetchLinks(for entry: MangaEntry) -> [MangaLink] {
@@ -943,6 +948,7 @@ final class MangaViewModel {
             link.sortOrder = index
         }
         save()
+        refreshCounter += 1
     }
 
     /// タイムラインのアクティビティドットや日別集計に使う全 ReadingActivity。

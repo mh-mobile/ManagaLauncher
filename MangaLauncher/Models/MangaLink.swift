@@ -27,7 +27,7 @@ enum LinkType: Int, Codable, CaseIterable, Identifiable {
 
     var iconName: String {
         switch self {
-        case .twitter: "bird"
+        case .twitter: "at"
         case .website: "globe"
         case .pixiv: "paintbrush"
         case .youtube: "play.rectangle"
@@ -40,12 +40,13 @@ enum LinkType: Int, Codable, CaseIterable, Identifiable {
     /// URL 文字列からリンク種別を自動判定する。
     /// 判定できない場合は `.other` を返す。
     static func detect(from urlString: String) -> LinkType {
-        let lower = urlString.lowercased()
-        if lower.contains("twitter.com") || lower.contains("x.com") { return .twitter }
-        if lower.contains("pixiv.net") { return .pixiv }
-        if lower.contains("youtube.com") || lower.contains("youtu.be") { return .youtube }
-        if lower.contains("instagram.com") { return .instagram }
-        if lower.contains("tiktok.com") { return .tiktok }
+        guard let url = URL(string: urlString),
+              let host = url.host?.lowercased() else { return .other }
+        if host.hasSuffix("twitter.com") || host.hasSuffix("x.com") { return .twitter }
+        if host.hasSuffix("pixiv.net") { return .pixiv }
+        if host.hasSuffix("youtube.com") || host.hasSuffix("youtu.be") { return .youtube }
+        if host.hasSuffix("instagram.com") { return .instagram }
+        if host.hasSuffix("tiktok.com") { return .tiktok }
         return .other
     }
 }
