@@ -8,6 +8,7 @@ struct BackupData: Codable {
     let entries: [BackupEntry]
     let activities: [BackupActivity]?
     let comments: [BackupComment]?
+    let links: [BackupLink]?
 
     struct BackupActivity: Codable {
         let id: UUID
@@ -45,6 +46,17 @@ struct BackupData: Codable {
         let id: UUID
         let mangaEntryID: UUID
         let content: String
+        let createdAt: Date
+        let updatedAt: Date?
+    }
+
+    struct BackupLink: Codable {
+        let id: UUID
+        let mangaEntryID: UUID
+        let linkTypeRawValue: Int
+        let title: String
+        let url: String
+        let sortOrder: Int
         let createdAt: Date
         let updatedAt: Date?
     }
@@ -136,9 +148,9 @@ struct BackupData: Codable {
         }
     }
 
-    static func from(_ entries: [MangaEntry], activities: [ReadingActivity] = [], comments: [MangaComment] = []) -> BackupData {
+    static func from(_ entries: [MangaEntry], activities: [ReadingActivity] = [], comments: [MangaComment] = [], links: [MangaLink] = []) -> BackupData {
         BackupData(
-            version: 13,
+            version: 14,
             exportDate: Date(),
             entries: entries.map {
                 BackupEntry(
@@ -179,6 +191,18 @@ struct BackupData: Codable {
                     id: $0.id,
                     mangaEntryID: $0.mangaEntryID,
                     content: $0.content,
+                    createdAt: $0.createdAt,
+                    updatedAt: $0.updatedAt
+                )
+            },
+            links: links.map {
+                BackupLink(
+                    id: $0.id,
+                    mangaEntryID: $0.mangaEntryID,
+                    linkTypeRawValue: $0.linkTypeRawValue,
+                    title: $0.title,
+                    url: $0.url,
+                    sortOrder: $0.sortOrder,
                     createdAt: $0.createdAt,
                     updatedAt: $0.updatedAt
                 )

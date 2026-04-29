@@ -65,6 +65,31 @@ struct MangaContextMenu: View {
             Label("コメント", systemImage: "bubble.left.and.bubble.right")
         }
 
+        // MARK: 関連リンク
+        let links = viewModel.fetchLinks(for: entry)
+        if !links.isEmpty {
+            Menu {
+                ForEach(links) { link in
+                    Button {
+                        if let url = URL(string: link.url) {
+                            #if canImport(UIKit)
+                            UIApplication.shared.open(url)
+                            #elseif canImport(AppKit)
+                            NSWorkspace.shared.open(url)
+                            #endif
+                        }
+                    } label: {
+                        Label(
+                            link.title.isEmpty ? link.linkType.displayName : link.title,
+                            systemImage: link.linkType.iconName
+                        )
+                    }
+                }
+            } label: {
+                Label("関連リンク", systemImage: "link")
+            }
+        }
+
         if let onShowLifetime {
             Button {
                 onShowLifetime()

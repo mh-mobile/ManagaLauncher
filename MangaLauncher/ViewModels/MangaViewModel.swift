@@ -618,7 +618,9 @@ final class MangaViewModel {
         let activities = modelContext.fetchLogged(activityDescriptor).filter { activeEntryIDs.contains($0.mangaEntryID) }
         let commentDescriptor = FetchDescriptor<MangaComment>(sortBy: [SortDescriptor(\.createdAt)])
         let comments = modelContext.fetchLogged(commentDescriptor).filter { activeEntryIDs.contains($0.mangaEntryID) }
-        let backup = BackupData.from(entries, activities: activities, comments: comments)
+        let linkDescriptor = FetchDescriptor<MangaLink>(sortBy: [SortDescriptor(\.sortOrder)])
+        let links = modelContext.fetchLogged(linkDescriptor).filter { activeEntryIDs.contains($0.mangaEntryID) }
+        let backup = BackupData.from(entries, activities: activities, comments: comments, links: links)
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         return try? encoder.encode(backup)
@@ -702,6 +704,24 @@ final class MangaViewModel {
                 activity.id = backupActivity.id
                 activity.timestamp = backupActivity.timestamp
                 modelContext.insert(activity)
+                importedCount += 1
+            }
+        }
+        if let backupLinks = backup.links {
+            let existingLinkIDs = Set(modelContext.fetchLogged(FetchDescriptor<MangaLink>()).map(\.id))
+            for backupLink in backupLinks {
+                guard !existingLinkIDs.contains(backupLink.id) else { continue }
+                let link = MangaLink(
+                    mangaEntryID: backupLink.mangaEntryID,
+                    linkType: LinkType(rawValue: backupLink.linkTypeRawValue) ?? .other,
+                    title: backupLink.title,
+                    url: backupLink.url,
+                    sortOrder: backupLink.sortOrder
+                )
+                link.id = backupLink.id
+                link.createdAt = backupLink.createdAt
+                link.updatedAt = backupLink.updatedAt
+                modelContext.insert(link)
                 importedCount += 1
             }
         }
@@ -862,6 +882,57 @@ final class MangaViewModel {
         let result = modelContext.fetchLogged(descriptor).filter { !pendingIDs.contains($0.id) }
         cachedComments = result
         return result
+    }
+
+    // MARK: - Links
+
+    func addLink(_ entry: MangaEntry, linkType: LinkType, title: String, url: String) {
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedURL = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedURL.isEmpty else { return }
+        let existingLinks = fetchLinks(for: entry)
+        let nextOrder = (existingLinks.map(\.sortOrder).max() ?? -1) + 1
+        let link = MangaLink(
+            mangaEntryID: entry.id,
+            linkType: linkType,
+            title: trimmedTitle,
+            url: trimmedURL,
+            sortOrder: nextOrder
+        )
+        modelContext.insert(link)
+        save()
+    }
+
+    func updateLink(_ link: MangaLink, linkType: LinkType, title: String, url: String) {
+        let trimmedURL = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedURL.isEmpty else { return }
+        link.linkType = linkType
+        link.title = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        link.url = trimmedURL
+        link.updatedAt = Date()
+        save()
+    }
+
+    func deleteLink(_ link: MangaLink) {
+        modelContext.delete(link)
+        save()
+    }
+
+    func fetchLinks(for entry: MangaEntry) -> [MangaLink] {
+        let _ = refreshCounter
+        let entryID = entry.id
+        let descriptor = FetchDescriptor<MangaLink>(
+            predicate: #Predicate { $0.mangaEntryID == entryID },
+            sortBy: [SortDescriptor(\.sortOrder)]
+        )
+        return modelContext.fetchLogged(descriptor)
+    }
+
+    func allLinks() -> [MangaLink] {
+        let descriptor = FetchDescriptor<MangaLink>(
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+        )
+        return modelContext.fetchLogged(descriptor)
     }
 
     /// タイムラインのアクティビティドットや日別集計に使う全 ReadingActivity。
