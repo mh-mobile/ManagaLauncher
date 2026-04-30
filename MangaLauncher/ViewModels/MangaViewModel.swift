@@ -804,6 +804,44 @@ final class MangaViewModel {
         fetchEntries(for: day).filter { !$0.isRead }
     }
 
+    /// 曜日横断の未読エントリ。Library から起動する全未読キャッチアップ用。
+    /// fetchEntries(for:) と同じ可視性条件（追っかけ中・連載中・未削除・未非表示・未保留削除）
+    /// に未読フィルタを加えた上で、期日が古い順（nil は末尾、同順は曜日順）で並べる。
+    func allUnreadEntries() -> [MangaEntry] {
+        let _ = refreshCounter
+        let followingRaw = ReadingState.following.rawValue
+        let activeRaw = PublicationStatus.active.rawValue
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate {
+                $0.readingStateRawValue == followingRaw
+                    && $0.publicationStatusRawValue == activeRaw
+                    && $0.deletedAt == nil
+            }
+        )
+        let results = modelContext.fetchLogged(descriptor)
+        let pendingIDs = Set(pendingDeleteEntries.map(\.id))
+        let currentHiddenIDs = hiddenIDs
+        let currentDeletedIDs = deletedIDs
+        var seenIDs = Set<UUID>()
+        let visible = results.filter { entry in
+            guard !currentHiddenIDs.contains(entry.id),
+                  !pendingIDs.contains(entry.id),
+                  !currentDeletedIDs.contains(entry.id),
+                  !entry.isRead else { return false }
+            return seenIDs.insert(entry.id).inserted
+        }
+        return visible.sorted { lhs, rhs in
+            switch (lhs.nextExpectedUpdate, rhs.nextExpectedUpdate) {
+            case let (l?, r?):
+                if l != r { return l < r }
+                return lhs.dayOfWeekRawValue < rhs.dayOfWeekRawValue
+            case (nil, _?): return false
+            case (_?, nil): return true
+            case (nil, nil): return lhs.dayOfWeekRawValue < rhs.dayOfWeekRawValue
+            }
+        }
+    }
+
     // 注意: アクティビティ・メモ集約は ActivityBuilder に移譲。
     // ここに recentActivity / allActivity / memoEntryCount などを置かないこと（N+1 fetch の温床になる）。
     // メモの更新は updateEntry() に統合済み。
