@@ -7,7 +7,8 @@ struct CatchUpView: View {
     @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
 
     var viewModel: MangaViewModel
-    let day: DayOfWeek
+    /// 対象曜日。nil の場合は全曜日横断の未読をまとめてキャッチアップする（Library 経由の起動）。
+    let day: DayOfWeek?
     var publisher: String? = nil
 
     @State private var unreadItems: [MangaEntry] = []
@@ -64,7 +65,7 @@ struct CatchUpView: View {
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     VStack(spacing: 2) {
-                        Text("\(day.displayName)のキャッチアップ")
+                        Text(day.map { "\($0.displayName)のキャッチアップ" } ?? "未読のキャッチアップ")
                             .font(theme.headlineFont)
                             .foregroundStyle(hasGradient ? .white : theme.onSurface)
                         if let publisher {
@@ -284,7 +285,7 @@ struct CatchUpView: View {
     }
 
     private func filteredUnreadEntries() -> [MangaEntry] {
-        let entries = viewModel.unreadEntries(for: day)
+        let entries = day.map { viewModel.unreadEntries(for: $0) } ?? viewModel.allUnreadEntries()
         if let publisher {
             return entries.filter { $0.publisher == publisher }
         }
