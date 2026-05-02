@@ -259,6 +259,146 @@ struct MangaViewModelFindEntriesTests {
     }
 }
 
+@Suite("MangaViewModel.allUnreadEntries / allUnreadCount")
+struct MangaViewModelAllUnreadTests {
+
+    private func makeContainer() throws -> ModelContainer {
+        try ModelContainer(
+            for: MangaEntry.self, ReadingActivity.self, MangaComment.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+    }
+
+    /// 期日が古い順で並び、nil は末尾、同期日は曜日順 (Mon→Sun) で並ぶことを確認。
+    @Test("並び順: 期日 → 曜日 (Mon→Sun) → sortOrder")
+    @MainActor
+    func sortOrdering() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        let now = Date()
+        let cal = Calendar.current
+        let plus1day = cal.date(byAdding: .day, value: 1, to: now)!
+        let plus2day = cal.date(byAdding: .day, value: 2, to: now)!
+
+        // すべて未読で取得対象になるよう、過去の lastReadDate を持たせず
+        // 次回更新を未来に設定 (isRead は false になる)
+        // 期日 nil (末尾)
+        let nilDue = MangaEntry(name: "no-date", dayOfWeek: .wednesday, sortOrder: 0)
+
+        // 期日が早い順に: A(plus1) < B(plus2 + Mon) < C(plus2 + Tue, sortOrder 0) < D(plus2 + Tue, sortOrder 1)
+        let a = MangaEntry(name: "A", dayOfWeek: .friday, sortOrder: 0)
+        a.nextExpectedUpdate = plus1day
+        let b = MangaEntry(name: "B", dayOfWeek: .monday, sortOrder: 0)
+        b.nextExpectedUpdate = plus2day
+        let c = MangaEntry(name: "C", dayOfWeek: .tuesday, sortOrder: 0)
+        c.nextExpectedUpdate = plus2day
+        let d = MangaEntry(name: "D", dayOfWeek: .tuesday, sortOrder: 1)
+        d.nextExpectedUpdate = plus2day
+
+        // わざと逆順に挿入して、内部のソートに依存することを確認
+        for entry in [nilDue, d, c, b, a] {
+            context.insert(entry)
+        }
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        let result = vm.allUnreadEntries()
+
+        #expect(result.map(\.name) == ["A", "B", "C", "D", "no-date"])
+    }
+
+    /// 日曜は Mon→Sun の最後尾になることを確認 (raw 値だと先頭になる落とし穴)。
+    @Test("曜日順: 日曜は最後尾 (Mon→Sun 規則)")
+    @MainActor
+    func sundayGoesLast() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        let same = Date(timeIntervalSince1970: 2_000_000_000)
+        let sun = MangaEntry(name: "sun", dayOfWeek: .sunday, sortOrder: 0)
+        sun.nextExpectedUpdate = same
+        let mon = MangaEntry(name: "mon", dayOfWeek: .monday, sortOrder: 0)
+        mon.nextExpectedUpdate = same
+
+        context.insert(sun)
+        context.insert(mon)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        let result = vm.allUnreadEntries()
+
+        #expect(result.map(\.name) == ["mon", "sun"])
+    }
+
+    /// 削除予定 (soft-delete) と非表示 (isHidden) が結果から除外されることを確認。
+    @Test("hidden / deleted は集計から除外")
+    @MainActor
+    func excludesHiddenAndDeleted() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        let visible = MangaEntry(name: "visible", dayOfWeek: .monday)
+        let hidden = MangaEntry(name: "hidden", dayOfWeek: .monday)
+        hidden.isHidden = true
+        let deleted = MangaEntry(name: "deleted", dayOfWeek: .monday)
+        deleted.deletedAt = Date()
+
+        for entry in [visible, hidden, deleted] {
+            context.insert(entry)
+        }
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.reloadHiddenIDs()
+        vm.reloadDeletedIDs()
+
+        let result = vm.allUnreadEntries()
+        #expect(result.map(\.name) == ["visible"])
+        #expect(vm.allUnreadCount() == 1)
+    }
+
+    /// 積読 (.backlog) や読了 (.archived) は対象外。
+    @Test("backlog / archived は対象外")
+    @MainActor
+    func excludesBacklogAndArchived() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        let following = MangaEntry(name: "following", dayOfWeek: .monday)
+        let backlog = MangaEntry(name: "backlog", dayOfWeek: .monday)
+        backlog.readingState = .backlog
+        let archived = MangaEntry(name: "archived", dayOfWeek: .monday)
+        archived.readingState = .archived
+
+        for entry in [following, backlog, archived] {
+            context.insert(entry)
+        }
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        let result = vm.allUnreadEntries()
+        #expect(result.map(\.name) == ["following"])
+    }
+
+    /// allUnreadCount() と allUnreadEntries().count は常に一致する。
+    @Test("allUnreadCount と allUnreadEntries().count は一致")
+    @MainActor
+    func countAgreesWithEntriesCount() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        for i in 0..<5 {
+            let entry = MangaEntry(name: "entry\(i)", dayOfWeek: .monday, sortOrder: i)
+            context.insert(entry)
+        }
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        #expect(vm.allUnreadCount() == vm.allUnreadEntries().count)
+    }
+}
+
 @Suite("MangaViewModel.runStartupMigrationsIfNeeded")
 struct MangaViewModelStartupTests {
 
