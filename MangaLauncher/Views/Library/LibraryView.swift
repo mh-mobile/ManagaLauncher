@@ -9,6 +9,7 @@ struct LibraryView: View {
     @State private var commentingEntry: MangaEntry?
     @State private var safariURL: URL?
     @State private var showingAddSheet = false
+    @State private var showingCatchUp = false
     @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
     @AppStorage(UserDefaultsKeys.showHiddenSection) private var showHiddenSection: Bool = true
     @AppStorage(UserDefaultsKeys.recentActivityExpanded) private var recentActivityExpandedStorage: Bool = false
@@ -53,6 +54,11 @@ struct LibraryView: View {
                 SafariView(url: url).ignoresSafeArea()
             }
             #endif
+            .fullScreenCover(isPresented: $showingCatchUp, onDismiss: {
+                viewModel.notifyChange()
+            }) {
+                CatchUpView(viewModel: viewModel, day: nil)
+            }
             .onAppear {
                 recentActivityExpanded = recentActivityExpandedStorage
             }
@@ -85,6 +91,7 @@ struct LibraryView: View {
         } else {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 24) {
+                    catchUpAllUnreadLink
                     timelineLink
                     hiddenSectionLink
                     recentlyDeletedLink
@@ -125,6 +132,42 @@ struct LibraryView: View {
             HiddenEntriesView(viewModel: viewModel)
         case .recentlyDeleted:
             RecentlyDeletedView(viewModel: viewModel)
+        }
+    }
+
+    @ViewBuilder
+    private var catchUpAllUnreadLink: some View {
+        let count = viewModel.allUnreadCount()
+        if count > 0 {
+            Button {
+                showingCatchUp = true
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "bolt.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 28, height: 28)
+                        .background(Color.orange, in: RoundedRectangle(cornerRadius: 6))
+                    Text("未読をキャッチアップ")
+                        .font(theme.subheadlineFont.weight(.semibold))
+                        .foregroundStyle(theme.onSurface)
+                    Spacer()
+                    Text("\(count)")
+                        .font(theme.captionFont)
+                        .foregroundStyle(theme.onSurfaceVariant)
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(theme.onSurfaceVariant)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(theme.surfaceContainerHigh)
+                )
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal)
         }
     }
 

@@ -804,6 +804,53 @@ final class MangaViewModel {
         fetchEntries(for: day).filter { !$0.isRead }
     }
 
+    /// 曜日横断の未読エントリ。Library から起動する全未読キャッチアップ用。
+    /// 集計のソースは `allEntries()` と揃えて Library 「未読」セクションと件数が必ず一致するようにする
+    /// （独立フェッチにすると `isHidden` 述語と in-memory `hiddenIDs` のズレで件数が食い違う）。
+    ///
+    /// 並び順の優先度:
+    ///   1. 期日が古い順 (`nextExpectedUpdate` が nil のものは末尾)
+    ///   2. UI 共通の曜日順 (`DayOfWeek.orderedDays` = Mon→Sun)
+    ///   3. 同曜日内は `sortOrder` で安定化 (曜日タブと一致)
+    func allUnreadEntries() -> [MangaEntry] {
+        let _ = refreshCounter
+        let unread = allEntries().filter {
+            !$0.isRead
+                && $0.readingState == .following
+                && $0.publicationStatus == .active
+        }
+        return unread.sorted { lhs, rhs in
+            switch (lhs.nextExpectedUpdate, rhs.nextExpectedUpdate) {
+            case let (l?, r?) where l != r: return l < r
+            case (nil, _?): return false
+            case (_?, nil): return true
+            default: break
+            }
+            let lWeekday = Self.weekdayOrderIndex(rawValue: lhs.dayOfWeekRawValue)
+            let rWeekday = Self.weekdayOrderIndex(rawValue: rhs.dayOfWeekRawValue)
+            if lWeekday != rWeekday { return lWeekday < rWeekday }
+            return lhs.sortOrder < rhs.sortOrder
+        }
+    }
+
+    /// `allUnreadEntries()` と同じ集計ソースを使った件数のみの軽量版。
+    /// Library のバッジ表示など毎レンダリング呼ばれる箇所では sort のコストを避けるためこちらを使う。
+    func allUnreadCount() -> Int {
+        let _ = refreshCounter
+        return allEntries().lazy.filter {
+            !$0.isRead
+                && $0.readingState == .following
+                && $0.publicationStatus == .active
+        }.count
+    }
+
+    /// `DayOfWeek.orderedDays` (Mon→Sun) における順序 index を返す。
+    /// `dayOfWeekRawValue` (Sun=0..Sat=6) のまま比較すると Sun が先頭になり、UI と並びがズレる。
+    private static func weekdayOrderIndex(rawValue: Int) -> Int {
+        // Sun(0) → 6, Mon(1) → 0, Tue(2) → 1, ..., Sat(6) → 5
+        (rawValue + 6) % 7
+    }
+
     // 注意: アクティビティ・メモ集約は ActivityBuilder に移譲。
     // ここに recentActivity / allActivity / memoEntryCount などを置かないこと（N+1 fetch の温床になる）。
     // メモの更新は updateEntry() に統合済み。
