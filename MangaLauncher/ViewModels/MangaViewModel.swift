@@ -805,32 +805,17 @@ final class MangaViewModel {
     }
 
     /// 曜日横断の未読エントリ。Library から起動する全未読キャッチアップ用。
-    /// fetchEntries(for:) と同じ可視性条件（追っかけ中・連載中・未削除・未非表示・未保留削除）
-    /// に未読フィルタを加えた上で、期日が古い順（nil は末尾、同順は曜日順）で並べる。
+    /// 集計のソースは `allEntries()` と揃えて Library 「未読」セクションと件数が必ず一致するようにする
+    /// （独立フェッチにすると `isHidden` 述語と in-memory `hiddenIDs` のズレで件数が食い違う）。
+    /// 並びは期日が古い順、nil は末尾、同期日や nil 同士は曜日順で安定化。
     func allUnreadEntries() -> [MangaEntry] {
         let _ = refreshCounter
-        let followingRaw = ReadingState.following.rawValue
-        let activeRaw = PublicationStatus.active.rawValue
-        let descriptor = FetchDescriptor<MangaEntry>(
-            predicate: #Predicate {
-                $0.readingStateRawValue == followingRaw
-                    && $0.publicationStatusRawValue == activeRaw
-                    && $0.deletedAt == nil
-            }
-        )
-        let results = modelContext.fetchLogged(descriptor)
-        let pendingIDs = Set(pendingDeleteEntries.map(\.id))
-        let currentHiddenIDs = hiddenIDs
-        let currentDeletedIDs = deletedIDs
-        var seenIDs = Set<UUID>()
-        let visible = results.filter { entry in
-            guard !currentHiddenIDs.contains(entry.id),
-                  !pendingIDs.contains(entry.id),
-                  !currentDeletedIDs.contains(entry.id),
-                  !entry.isRead else { return false }
-            return seenIDs.insert(entry.id).inserted
+        let unread = allEntries().filter {
+            !$0.isRead
+                && $0.readingState == .following
+                && $0.publicationStatus == .active
         }
-        return visible.sorted { lhs, rhs in
+        return unread.sorted { lhs, rhs in
             switch (lhs.nextExpectedUpdate, rhs.nextExpectedUpdate) {
             case let (l?, r?):
                 if l != r { return l < r }
