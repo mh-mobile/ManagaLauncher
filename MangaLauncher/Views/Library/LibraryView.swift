@@ -137,7 +137,7 @@ struct LibraryView: View {
 
     @ViewBuilder
     private var catchUpAllUnreadLink: some View {
-        let count = viewModel.allUnreadEntries().count
+        let count = viewModel.allUnreadCount()
         if count > 0 {
             Button {
                 showingCatchUp = true
