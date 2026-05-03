@@ -54,11 +54,14 @@ struct LibraryCard: View {
                     .frame(width: cardWidth, alignment: .leading)
 
                 if !entry.publisher.isEmpty {
-                    Text(entry.publisher)
-                        .font(theme.caption2Font)
-                        .foregroundStyle(theme.onSurfaceVariant)
-                        .lineLimit(1)
-                        .frame(width: cardWidth, alignment: .leading)
+                    HStack(spacing: 4) {
+                        PublisherIconView(iconData: viewModel.publisherIcon(for: entry.publisher), size: 12)
+                        Text(entry.publisher)
+                            .font(theme.caption2Font)
+                            .foregroundStyle(theme.onSurfaceVariant)
+                            .lineLimit(1)
+                    }
+                    .frame(width: cardWidth, alignment: .leading)
                 }
             }
         }

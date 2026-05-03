@@ -167,14 +167,14 @@ struct CatchUpView: View {
 
             ZStack {
                 if currentIndex + 1 < totalCount {
-                    CatchUpCardView(entry: unreadItems[currentIndex + 1], editingEntry: $editingEntry, onOpenURL: openMangaURL, hasGradientBackground: hasGradient)
+                    CatchUpCardView(entry: unreadItems[currentIndex + 1], viewModel: viewModel, editingEntry: $editingEntry, onOpenURL: openMangaURL, hasGradientBackground: hasGradient)
                         .id("\(unreadItems[currentIndex + 1].id)-\(reloadCount)")
                         .scaleEffect(0.95)
                         .opacity(0.5)
                         .allowsHitTesting(false)
                 }
 
-                CatchUpCardView(entry: unreadItems[currentIndex], editingEntry: $editingEntry, onOpenURL: openMangaURL, hasGradientBackground: hasGradient)
+                CatchUpCardView(entry: unreadItems[currentIndex], viewModel: viewModel, editingEntry: $editingEntry, onOpenURL: openMangaURL, hasGradientBackground: hasGradient)
                     .id("\(unreadItems[currentIndex].id)-\(reloadCount)")
                     .offset(offset)
                     .rotationEffect(.degrees(Double(offset.width) / 20))

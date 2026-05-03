@@ -69,9 +69,12 @@ struct MangaGridCell: View {
                             .foregroundStyle(theme.onSurface)
                             .lineLimit(2)
                         if !entry.publisher.isEmpty {
-                            Text(entry.publisher)
-                                .font(.caption2)
-                                .foregroundStyle(theme.onSurfaceVariant)
+                            HStack(spacing: 3) {
+                                PublisherIconView(iconData: viewModel.publisherIcon(for: entry.publisher), size: 10)
+                                Text(entry.publisher)
+                                    .font(.caption2)
+                                    .foregroundStyle(theme.onSurfaceVariant)
+                            }
                         }
                     }
                     Spacer(minLength: 0)

@@ -3,6 +3,7 @@ import PlatformKit
 
 struct CatchUpCardView: View {
     let entry: MangaEntry
+    var viewModel: MangaViewModel
     @Binding var editingEntry: MangaEntry?
     let onOpenURL: (String) -> Void
     var hasGradientBackground: Bool = false
@@ -61,9 +62,12 @@ struct CatchUpCardView: View {
                         .multilineTextAlignment(.center)
 
                     if !entry.publisher.isEmpty {
-                        Text(entry.publisher)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(theme.onSurfaceVariant)
+                        HStack(spacing: 4) {
+                            PublisherIconView(iconData: viewModel.publisherIcon(for: entry.publisher), size: 14)
+                            Text(entry.publisher)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(theme.onSurfaceVariant)
+                        }
                     }
                 }
                 .padding(.horizontal, theme.spacingMD)
@@ -85,9 +89,12 @@ struct CatchUpCardView: View {
                     .multilineTextAlignment(.center)
 
                 if !entry.publisher.isEmpty {
-                    Text(entry.publisher)
-                        .font(theme.subheadlineFont)
-                        .foregroundStyle(hasGradientBackground ? .white.opacity(0.7) : theme.onSurfaceVariant)
+                    HStack(spacing: 4) {
+                        PublisherIconView(iconData: viewModel.publisherIcon(for: entry.publisher), size: 14)
+                        Text(entry.publisher)
+                            .font(theme.subheadlineFont)
+                            .foregroundStyle(hasGradientBackground ? .white.opacity(0.7) : theme.onSurfaceVariant)
+                    }
                 }
             }
             .padding()
@@ -110,9 +117,12 @@ struct CatchUpCardView: View {
                         .multilineTextAlignment(.center)
 
                     if !entry.publisher.isEmpty {
-                        Text(entry.publisher)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(theme.onSurfaceVariant)
+                        HStack(spacing: 4) {
+                            PublisherIconView(iconData: viewModel.publisherIcon(for: entry.publisher), size: 14)
+                            Text(entry.publisher)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(theme.onSurfaceVariant)
+                        }
                     }
                 }
                 .padding(.horizontal, theme.spacingMD)
