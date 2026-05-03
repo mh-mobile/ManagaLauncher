@@ -92,6 +92,7 @@
 		BC000605 /* LibrarySectionBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000650 /* LibrarySectionBuilder.swift */; };
 		BC000606 /* PublisherMergePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000660 /* PublisherMergePickerView.swift */; };
 		FC000001 /* PublisherIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC000010 /* PublisherIconView.swift */; };
+		FD000001 /* PublisherIconEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD000010 /* PublisherIconEditorView.swift */; };
 		BC000701 /* SearchResultRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000710 /* SearchResultRow.swift */; };
 		BC000702 /* MemoMatchRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000720 /* MemoMatchRow.swift */; };
 		BC000703 /* CommentMatchRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000730 /* CommentMatchRow.swift */; };
@@ -264,6 +265,7 @@
 		BC000650 /* LibrarySectionBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibrarySectionBuilder.swift; sourceTree = "<group>"; };
 		BC000660 /* PublisherMergePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherMergePickerView.swift; sourceTree = "<group>"; };
 		FC000010 /* PublisherIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherIconView.swift; sourceTree = "<group>"; };
+		FD000010 /* PublisherIconEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherIconEditorView.swift; sourceTree = "<group>"; };
 		BC000710 /* SearchResultRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultRow.swift; sourceTree = "<group>"; };
 		BC000720 /* MemoMatchRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoMatchRow.swift; sourceTree = "<group>"; };
 		BC000730 /* CommentMatchRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentMatchRow.swift; sourceTree = "<group>"; };
@@ -498,6 +500,7 @@
 				BC000650 /* LibrarySectionBuilder.swift */,
 				BC000660 /* PublisherMergePickerView.swift */,
 				FC000010 /* PublisherIconView.swift */,
+				FD000010 /* PublisherIconEditorView.swift */,
 				AB2001FF00112233AA000007 /* Timeline */,
 			);
 			path = Library;
@@ -890,6 +893,7 @@
 				BC000605 /* LibrarySectionBuilder.swift in Sources */,
 				BC000606 /* PublisherMergePickerView.swift in Sources */,
 				FC000001 /* PublisherIconView.swift in Sources */,
+				FD000001 /* PublisherIconEditorView.swift in Sources */,
 				BC000101 /* CommentListView.swift in Sources */,
 				BC000301 /* ActivityItem.swift in Sources */,
 				AB2001FF00112233AA000001 /* TimelineItem.swift in Sources */,
