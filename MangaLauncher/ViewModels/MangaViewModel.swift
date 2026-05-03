@@ -472,20 +472,23 @@ final class MangaViewModel {
 
     /// publisher 名 → iconData の辞書を返す（キャッシュ済みならそれを返す）。
     /// `refreshCounter` が変わるとキャッシュは破棄される。
+    /// 同名重複時の優先順位は `publisherMetadata(for:)` と統一:
+    ///   1. iconData あり優先
+    ///   2. 同条件なら updatedAt の新しい方
+    /// 事前ソート + 先勝ち insert で実現する。
     private func loadAllPublisherIcons() -> [String: Data?] {
         invalidateCacheIfStale()
         if let cached = cachedPublisherIcons { return cached }
         let descriptor = FetchDescriptor<PublisherMetadata>()
         let records = modelContext.fetchLogged(descriptor)
-        // 同名重複時は iconData あり / 新しい updatedAt を優先 (publisherMetadata(for:) と同じロジック)
+        let sorted = records.sorted { lhs, rhs in
+            let lhsHas = lhs.iconData != nil
+            let rhsHas = rhs.iconData != nil
+            if lhsHas != rhsHas { return lhsHas }
+            return (lhs.updatedAt ?? .distantPast) > (rhs.updatedAt ?? .distantPast)
+        }
         var result: [String: Data?] = [:]
-        for record in records {
-            if let existing = result[record.name] {
-                let existingHas = existing != nil
-                let newHas = record.iconData != nil
-                if existingHas && !newHas { continue }
-                // どちらも同条件なら、updatedAt の新しい方を優先
-            }
+        for record in sorted where result[record.name] == nil {
             result[record.name] = record.iconData
         }
         cachedPublisherIcons = result
