@@ -1,6 +1,5 @@
 import SwiftUI
 import PhotosUI
-import PlatformKit
 
 /// 掲載誌アイコンの設定シート。
 /// カメラロール / URL ファビコン取得 の 2 経路を提供し、プレビューを確認してから保存する。
@@ -19,8 +18,6 @@ struct PublisherIconEditorView: View {
     @State private var errorMessage: String?
     /// 未保存のプレビュー画像。nil の場合は既存設定（または fallback）を表示。
     @State private var previewData: Data?
-
-    private var theme: ThemeStyle { ThemeManager.shared.style }
 
     private var displayedIconData: Data? {
         previewData ?? viewModel.publisherIcon(for: publisherName)

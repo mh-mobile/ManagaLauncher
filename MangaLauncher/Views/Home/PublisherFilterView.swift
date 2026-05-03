@@ -6,8 +6,6 @@ struct PublisherFilterView: View {
     var viewModel: MangaViewModel
     @Binding var selectedPublisher: String?
 
-    private var theme: ThemeStyle { ThemeManager.shared.style }
-
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {

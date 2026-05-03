@@ -25,6 +25,10 @@ final class MangaViewModel {
     @ObservationIgnored private var cachedEntries: [MangaEntry]?
     @ObservationIgnored private var cachedComments: [MangaComment]?
     @ObservationIgnored private var cachedActivities: [ReadingActivity]?
+    /// publisher 名 → アイコン Data の辞書キャッシュ。一覧/chip でセル毎に
+    /// `publisherIcon(for:)` が呼ばれて N+1 fetch になるのを防ぐ。
+    /// nil 値は「設定無し」を表す（fetch 結果が nil でも 2 回目を走らせない）。
+    @ObservationIgnored private var cachedPublisherIcons: [String: Data?]?
 
     /// 直近の重大エラー（移行/インポート/同期）。View 側で alert 表示する用。
     var lastError: AppError?
@@ -453,17 +457,39 @@ final class MangaViewModel {
     // MARK: - Publisher Metadata
 
     /// 指定 publisher のアイコン Data を取得（表示パスから毎回呼ばれる前提、軽量）。
+    /// 初回呼び出しで全 PublisherMetadata を一括 fetch して `cachedPublisherIcons`
+    /// に辞書化する。同 render 内の複数 publisher 表示で N 回 fetch を避ける。
     func publisherIcon(for name: String) -> Data? {
-        let _ = refreshCounter
         guard !name.isEmpty else { return nil }
-        return publisherMetadata(for: name)?.iconData
+        return loadAllPublisherIcons()[name] ?? nil
     }
 
     /// 指定 publisher にアイコンが設定されているか。merge 確認文言の分岐などで使う。
     func publisherHasIcon(name: String) -> Bool {
-        let _ = refreshCounter
         guard !name.isEmpty else { return false }
-        return publisherMetadata(for: name)?.iconData != nil
+        return (loadAllPublisherIcons()[name] ?? nil) != nil
+    }
+
+    /// publisher 名 → iconData の辞書を返す（キャッシュ済みならそれを返す）。
+    /// `refreshCounter` が変わるとキャッシュは破棄される。
+    private func loadAllPublisherIcons() -> [String: Data?] {
+        invalidateCacheIfStale()
+        if let cached = cachedPublisherIcons { return cached }
+        let descriptor = FetchDescriptor<PublisherMetadata>()
+        let records = modelContext.fetchLogged(descriptor)
+        // 同名重複時は iconData あり / 新しい updatedAt を優先 (publisherMetadata(for:) と同じロジック)
+        var result: [String: Data?] = [:]
+        for record in records {
+            if let existing = result[record.name] {
+                let existingHas = existing != nil
+                let newHas = record.iconData != nil
+                if existingHas && !newHas { continue }
+                // どちらも同条件なら、updatedAt の新しい方を優先
+            }
+            result[record.name] = record.iconData
+        }
+        cachedPublisherIcons = result
+        return result
     }
 
     /// 指定 publisher のメタデータレコード。重複時は iconData 持ち + 新しい updatedAt を優先。
@@ -843,8 +869,10 @@ final class MangaViewModel {
             }
         }
         // v15+ 掲載誌アイコン等のメタデータ。同名既存があればスキップ (in-place update はしない)。
+        // backup 内に同名重複があるケース (CloudKit race 由来の重複を export したもの等) でも
+        // 二重 insert にならないよう、insert 後に existingNames へ追加する。
         if let backupMetas = backup.publisherMetadata {
-            let existingNames = Set(modelContext.fetchLogged(FetchDescriptor<PublisherMetadata>()).map(\.name))
+            var existingNames = Set(modelContext.fetchLogged(FetchDescriptor<PublisherMetadata>()).map(\.name))
             for backupMeta in backupMetas {
                 guard !existingNames.contains(backupMeta.name) else { continue }
                 let meta = PublisherMetadata(
@@ -855,6 +883,7 @@ final class MangaViewModel {
                 meta.id = backupMeta.id
                 meta.updatedAt = backupMeta.updatedAt
                 modelContext.insert(meta)
+                existingNames.insert(backupMeta.name)
                 importedCount += 1
             }
         }
@@ -1209,6 +1238,7 @@ final class MangaViewModel {
             cachedEntries = nil
             cachedComments = nil
             cachedActivities = nil
+            cachedPublisherIcons = nil
         }
     }
 
