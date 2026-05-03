@@ -173,7 +173,7 @@ struct ContentView: View {
             )
             let publishers = viewModel.publishers(for: viewModel.selectedDay)
             if !publishers.isEmpty {
-                PublisherFilterView(publishers: publishers, selectedPublisher: $homeState.selectedPublisher)
+                PublisherFilterView(publishers: publishers, viewModel: viewModel, selectedPublisher: $homeState.selectedPublisher)
             }
         }
         .background {
@@ -209,7 +209,7 @@ struct ContentView: View {
 }
 
 #Preview {
-    let container = try! ModelContainer(for: MangaEntry.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    let container = try! ModelContainer(for: MangaEntry.self, PublisherMetadata.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
     ContentView(viewModel: MangaViewModel(modelContext: container.mainContext))
         .modelContainer(container)
 }

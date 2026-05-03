@@ -13,6 +13,7 @@ struct AllPublishersView: View {
     @State private var publisherCounts: [(publisher: String, count: Int)] = []
     @State private var mergeSource: String = ""
     @State private var showingMergeSheet = false
+    @State private var iconEditTarget: String?
 
     var body: some View {
         ZStack {
@@ -23,8 +24,11 @@ struct AllPublishersView: View {
                 ForEach(publisherCounts, id: \.publisher) { item in
                     NavigationLink(value: PublisherSelection(name: item.publisher)) {
                         HStack {
-                            Image(systemName: "magazine")
-                                .foregroundStyle(theme.primary)
+                            PublisherIconView(
+                                iconData: viewModel.publisherIcon(for: item.publisher),
+                                size: 28,
+                                showsFallback: true
+                            )
                             Text(item.publisher)
                                 .font(theme.bodyFont)
                                 .foregroundStyle(theme.onSurface)
@@ -40,6 +44,11 @@ struct AllPublishersView: View {
                     }
                     .listRowBackground(Color.clear)
                     .contextMenu {
+                        Button {
+                            iconEditTarget = item.publisher
+                        } label: {
+                            Label("掲載誌アイコンを設定", systemImage: "photo.badge.plus")
+                        }
                         Button {
                             mergeSource = item.publisher
                             showingMergeSheet = true
@@ -74,6 +83,12 @@ struct AllPublishersView: View {
                 viewModel: viewModel
             )
         }
+        .sheet(item: Binding(
+            get: { iconEditTarget.map { PublisherSelection(name: $0) } },
+            set: { iconEditTarget = $0?.name }
+        )) { selection in
+            PublisherIconEditorView(publisherName: selection.name, viewModel: viewModel)
+        }
     }
 
     private func refreshPublisherCounts() {
@@ -81,8 +96,9 @@ struct AllPublishersView: View {
     }
 }
 
-struct PublisherSelection: Hashable {
+struct PublisherSelection: Hashable, Identifiable {
     let name: String
+    var id: String { name }
 }
 
 /// 個別の掲載誌に紐付くマンガ一覧画面

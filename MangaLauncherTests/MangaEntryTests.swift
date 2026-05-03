@@ -770,6 +770,217 @@ struct MangaViewModelMergePublisherTests {
     }
 }
 
+@Suite("MangaViewModel.publisherIcon CRUD")
+struct PublisherMetadataTests {
+
+    private func makeContainer() throws -> ModelContainer {
+        try ModelContainer(
+            for: MangaEntry.self, ReadingActivity.self, MangaComment.self,
+                 MangaLink.self, PublisherMetadata.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+    }
+
+    private let sampleData = Data([0xff, 0xd8, 0xff, 0xe0]) // dummy JPEG-ish bytes
+
+    @Test("set → get で同じ Data が返る")
+    @MainActor
+    func setAndGet() throws {
+        let container = try makeContainer()
+        let vm = MangaViewModel(modelContext: container.mainContext)
+
+        vm.setPublisherIcon(name: "ジャンプ＋", imageData: sampleData, sourceURL: "https://example.com")
+        #expect(vm.publisherIcon(for: "ジャンプ＋") == sampleData)
+        #expect(vm.publisherHasIcon(name: "ジャンプ＋") == true)
+    }
+
+    @Test("clear で nil に戻る (record は残る)")
+    @MainActor
+    func clearKeepsRecord() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let vm = MangaViewModel(modelContext: context)
+
+        vm.setPublisherIcon(name: "ジャンプ＋", imageData: sampleData)
+        vm.clearPublisherIcon(name: "ジャンプ＋")
+        #expect(vm.publisherIcon(for: "ジャンプ＋") == nil)
+        #expect(vm.publisherHasIcon(name: "ジャンプ＋") == false)
+        // record は残る (sourceURL の保持などに使うため)
+        let descriptor = FetchDescriptor<PublisherMetadata>()
+        #expect(context.fetchLogged(descriptor).count == 1)
+    }
+
+    @Test("set 2 回で update される (重複 record は作らない)")
+    @MainActor
+    func upsertSemantics() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let vm = MangaViewModel(modelContext: context)
+
+        vm.setPublisherIcon(name: "ジャンプ＋", imageData: Data([0x01]))
+        vm.setPublisherIcon(name: "ジャンプ＋", imageData: Data([0x02]))
+
+        let descriptor = FetchDescriptor<PublisherMetadata>()
+        let records = context.fetchLogged(descriptor)
+        #expect(records.count == 1)
+        #expect(records[0].iconData == Data([0x02]))
+    }
+
+    @Test("空 name は no-op")
+    @MainActor
+    func emptyNameNoOp() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let vm = MangaViewModel(modelContext: context)
+
+        vm.setPublisherIcon(name: "", imageData: sampleData)
+        #expect(vm.publisherIcon(for: "") == nil)
+        #expect(vm.publisherHasIcon(name: "") == false)
+        let descriptor = FetchDescriptor<PublisherMetadata>()
+        #expect(context.fetchLogged(descriptor).isEmpty)
+    }
+
+    @Test("mergePublisher で source の icon は消える / dest は維持")
+    @MainActor
+    func mergeDeletesSourceIcon() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        // entry を 1 つ作って publisher を src にしておく (mergePublisher は entry がないと no-op)
+        let entry = MangaEntry(name: "A", publisher: "src")
+        context.insert(entry)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.setPublisherIcon(name: "src", imageData: Data([0xAA]))
+        vm.setPublisherIcon(name: "dest", imageData: Data([0xBB]))
+
+        vm.mergePublisher(from: "src", to: "dest")
+
+        #expect(vm.publisherIcon(for: "src") == nil)
+        #expect(vm.publisherIcon(for: "dest") == Data([0xBB]))
+        // entry の publisher も移動している
+        #expect(entry.publisher == "dest")
+    }
+
+    @Test("deleteAllEntries で全 metadata 削除")
+    @MainActor
+    func deleteAllPurgesMetadata() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let vm = MangaViewModel(modelContext: context)
+
+        vm.setPublisherIcon(name: "A", imageData: Data([0x01]))
+        vm.setPublisherIcon(name: "B", imageData: Data([0x02]))
+        #expect(context.fetchLogged(FetchDescriptor<PublisherMetadata>()).count == 2)
+
+        vm.deleteAllEntries()
+        #expect(context.fetchLogged(FetchDescriptor<PublisherMetadata>()).isEmpty)
+    }
+
+    @Test("name 重複時は iconData ありを優先取得")
+    @MainActor
+    func duplicatePrefersIcon() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        // 直接 insert して race を再現 (ViewModel API 経由では重複しない)
+        let withIcon = PublisherMetadata(name: "X", iconData: Data([0x01]))
+        let withoutIcon = PublisherMetadata(name: "X", iconData: nil)
+        context.insert(withIcon)
+        context.insert(withoutIcon)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        // iconData あり優先
+        #expect(vm.publisherIcon(for: "X") == Data([0x01]))
+        #expect(vm.publisherHasIcon(name: "X") == true)
+    }
+
+    /// CloudKit race で同名 record が複数できているケースで clearPublisherIcon が
+    /// 全 record の iconData を nil にすることを確認。1 件だけ clear する旧実装では、
+    /// 残った record の iconData が cache に拾われて「削除したのに残る」現象が起きていた。
+    @Test("clearPublisherIcon は重複 record すべてをクリアする")
+    @MainActor
+    func clearAllDuplicates() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let dup1 = PublisherMetadata(name: "X", iconData: Data([0x01]))
+        let dup2 = PublisherMetadata(name: "X", iconData: Data([0x02]))
+        context.insert(dup1)
+        context.insert(dup2)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.clearPublisherIcon(name: "X")
+
+        #expect(vm.publisherIcon(for: "X") == nil)
+        #expect(vm.publisherHasIcon(name: "X") == false)
+        // record 自体は残る (sourceURL の保持目的)
+        let descriptor = FetchDescriptor<PublisherMetadata>()
+        let remaining = context.fetchLogged(descriptor)
+        #expect(remaining.count == 2)
+        #expect(remaining.allSatisfy { $0.iconData == nil })
+    }
+}
+
+@Suite("BackupData with publisherMetadata (v15)")
+struct PublisherMetadataBackupTests {
+
+    private func makeContainer() throws -> ModelContainer {
+        try ModelContainer(
+            for: MangaEntry.self, ReadingActivity.self, MangaComment.self,
+                 MangaLink.self, PublisherMetadata.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+    }
+
+    @Test("export → import ラウンドトリップ")
+    @MainActor
+    func roundTrip() throws {
+        let container1 = try makeContainer()
+        let context1 = container1.mainContext
+        let entry = MangaEntry(name: "A", publisher: "ジャンプ＋")
+        context1.insert(entry)
+        try context1.save()
+
+        let vm1 = MangaViewModel(modelContext: context1)
+        vm1.setPublisherIcon(name: "ジャンプ＋", imageData: Data([0xAB, 0xCD]),
+                             sourceURL: "https://shonenjumpplus.com")
+
+        guard let data = vm1.exportBackupData() else {
+            Issue.record("export returned nil")
+            return
+        }
+
+        let container2 = try makeContainer()
+        let context2 = container2.mainContext
+        let vm2 = MangaViewModel(modelContext: context2)
+        let imported = vm2.importBackupData(data)
+
+        // entry(1) + publisherMetadata(1) = 2
+        #expect(imported >= 2)
+        #expect(vm2.publisherIcon(for: "ジャンプ＋") == Data([0xAB, 0xCD]))
+    }
+
+    @Test("publisherMetadata なしの古い backup でも import できる (decodeIfPresent)")
+    @MainActor
+    func backwardCompatible() throws {
+        // publisherMetadata フィールドを持たない JSON を構築
+        let json = """
+        {
+            "version": 14,
+            "exportDate": "2026-01-01T00:00:00Z",
+            "entries": []
+        }
+        """.data(using: .utf8)!
+
+        let container = try makeContainer()
+        let vm = MangaViewModel(modelContext: container.mainContext)
+        let imported = vm.importBackupData(json)
+        #expect(imported == 0)
+        // クラッシュせず何も import されないことを確認できれば OK
+    }
+}
+
 @Suite("MangaViewModel.runStartupMigrationsIfNeeded")
 struct MangaViewModelStartupTests {
 

@@ -10,6 +10,7 @@
 		AB50040000112233AA000003 /* HiddenEntriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50040000112233AA000004 /* HiddenEntriesView.swift */; };
 		AB50040000112233AA000005 /* RecentlyDeletedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50040000112233AA000006 /* RecentlyDeletedView.swift */; };
 		AB50040000112233AA000001 /* BiometricAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50040000112233AA000002 /* BiometricAuthService.swift */; };
+		FB000001 /* PublisherIconService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB000010 /* PublisherIconService.swift */; };
 		AB50050000112233AA000001 /* SpecialEpisodeAlertModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50050000112233AA000002 /* SpecialEpisodeAlertModifier.swift */; };
 		AB50030000112233AA000003 /* MangaLifetimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50030000112233AA000004 /* MangaLifetimeView.swift */; };
 		AB50030000112233AA000001 /* MangaLifetime.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50030000112233AA000002 /* MangaLifetime.swift */; };
@@ -61,6 +62,9 @@
 		CD000001 /* MangaLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD000010 /* MangaLink.swift */; };
 		CD000002 /* MangaLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD000010 /* MangaLink.swift */; };
 		CD000003 /* MangaLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD000010 /* MangaLink.swift */; };
+		FA000001 /* PublisherMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA000010 /* PublisherMetadata.swift */; };
+		FA000002 /* PublisherMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA000010 /* PublisherMetadata.swift */; };
+		FA000003 /* PublisherMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA000010 /* PublisherMetadata.swift */; };
 		CD000101 /* EditLinkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD000110 /* EditLinkView.swift */; };
 		BC000101 /* CommentListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000110 /* CommentListView.swift */; };
 		BC000301 /* ActivityItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000310 /* ActivityItem.swift */; };
@@ -87,6 +91,8 @@
 		BC000604 /* LibrarySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000640 /* LibrarySection.swift */; };
 		BC000605 /* LibrarySectionBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000650 /* LibrarySectionBuilder.swift */; };
 		BC000606 /* PublisherMergePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000660 /* PublisherMergePickerView.swift */; };
+		FC000001 /* PublisherIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC000010 /* PublisherIconView.swift */; };
+		FD000001 /* PublisherIconEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD000010 /* PublisherIconEditorView.swift */; };
 		BC000701 /* SearchResultRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000710 /* SearchResultRow.swift */; };
 		BC000702 /* MemoMatchRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000720 /* MemoMatchRow.swift */; };
 		BC000703 /* CommentMatchRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000730 /* CommentMatchRow.swift */; };
@@ -186,6 +192,7 @@
 		AB50040000112233AA000004 /* HiddenEntriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HiddenEntriesView.swift; sourceTree = "<group>"; };
 		AB50040000112233AA000006 /* RecentlyDeletedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentlyDeletedView.swift; sourceTree = "<group>"; };
 		AB50040000112233AA000002 /* BiometricAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuthService.swift; sourceTree = "<group>"; };
+		FB000010 /* PublisherIconService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherIconService.swift; sourceTree = "<group>"; };
 		AB50050000112233AA000002 /* SpecialEpisodeAlertModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecialEpisodeAlertModifier.swift; sourceTree = "<group>"; };
 		AB50030000112233AA000004 /* MangaLifetimeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaLifetimeView.swift; sourceTree = "<group>"; };
 		AB50030000112233AA000002 /* MangaLifetime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaLifetime.swift; sourceTree = "<group>"; };
@@ -229,6 +236,7 @@
 		AA000010 /* ReadingActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingActivity.swift; sourceTree = "<group>"; };
 		BC000010 /* MangaComment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaComment.swift; sourceTree = "<group>"; };
 		CD000010 /* MangaLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaLink.swift; sourceTree = "<group>"; };
+		FA000010 /* PublisherMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherMetadata.swift; sourceTree = "<group>"; };
 		CE000010 /* LinkedText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkedText.swift; sourceTree = "<group>"; };
 		CD000110 /* EditLinkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditLinkView.swift; sourceTree = "<group>"; };
 		BC000110 /* CommentListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentListView.swift; sourceTree = "<group>"; };
@@ -256,6 +264,8 @@
 		BC000640 /* LibrarySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibrarySection.swift; sourceTree = "<group>"; };
 		BC000650 /* LibrarySectionBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibrarySectionBuilder.swift; sourceTree = "<group>"; };
 		BC000660 /* PublisherMergePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherMergePickerView.swift; sourceTree = "<group>"; };
+		FC000010 /* PublisherIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherIconView.swift; sourceTree = "<group>"; };
+		FD000010 /* PublisherIconEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherIconEditorView.swift; sourceTree = "<group>"; };
 		BC000710 /* SearchResultRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultRow.swift; sourceTree = "<group>"; };
 		BC000720 /* MemoMatchRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoMatchRow.swift; sourceTree = "<group>"; };
 		BC000730 /* CommentMatchRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentMatchRow.swift; sourceTree = "<group>"; };
@@ -429,6 +439,7 @@
 				AA000010 /* ReadingActivity.swift */,
 				BC000010 /* MangaComment.swift */,
 				CD000010 /* MangaLink.swift */,
+				FA000010 /* PublisherMetadata.swift */,
 				BC000310 /* ActivityItem.swift */,
 				AB2001FF00112233AA000002 /* TimelineItem.swift */,
 				AB4001FF00112233AA000006 /* AppError.swift */,
@@ -488,6 +499,8 @@
 				BC000640 /* LibrarySection.swift */,
 				BC000650 /* LibrarySectionBuilder.swift */,
 				BC000660 /* PublisherMergePickerView.swift */,
+				FC000010 /* PublisherIconView.swift */,
+				FD000010 /* PublisherIconEditorView.swift */,
 				AB2001FF00112233AA000007 /* Timeline */,
 			);
 			path = Library;
@@ -653,6 +666,7 @@
 				AB5001FF00112233AA000002 /* NextUpdateFormatter.swift */,
 				AB50020000112233AA000001 /* MangaEntryAccessibility.swift */,
 				AB50040000112233AA000002 /* BiometricAuthService.swift */,
+				FB000010 /* PublisherIconService.swift */,
 				AB50050000112233AA000002 /* SpecialEpisodeAlertModifier.swift */,
 				AB5001FF00112233AA000004 /* NextUpdateBadgeView.swift */,
 			);
@@ -807,6 +821,7 @@
 				AA000001 /* ReadingActivity.swift in Sources */,
 				BC000001 /* MangaComment.swift in Sources */,
 				CD000001 /* MangaLink.swift in Sources */,
+				FA000001 /* PublisherMetadata.swift in Sources */,
 				ECFEA84A2F7F6E5700CE4DC0 /* MangaURLOpener.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -826,6 +841,7 @@
 				AA000002 /* ReadingActivity.swift in Sources */,
 				BC000002 /* MangaComment.swift in Sources */,
 				CD000002 /* MangaLink.swift in Sources */,
+				FA000002 /* PublisherMetadata.swift in Sources */,
 				ECFEA8492F7F6E5700CE4DC0 /* MangaURLOpener.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -843,6 +859,7 @@
 				ECCD2FCE2F65596900BF3309 /* PublisherPickerView.swift in Sources */,
 				A1000002 /* MangaEntry.swift in Sources */,
 				AB50040000112233AA000001 /* BiometricAuthService.swift in Sources */,
+				FB000001 /* PublisherIconService.swift in Sources */,
 				AB50040000112233AA000003 /* HiddenEntriesView.swift in Sources */,
 				AB50040000112233AA000005 /* RecentlyDeletedView.swift in Sources */,
 				AB50050000112233AA000001 /* SpecialEpisodeAlertModifier.swift in Sources */,
@@ -875,6 +892,8 @@
 				BC000604 /* LibrarySection.swift in Sources */,
 				BC000605 /* LibrarySectionBuilder.swift in Sources */,
 				BC000606 /* PublisherMergePickerView.swift in Sources */,
+				FC000001 /* PublisherIconView.swift in Sources */,
+				FD000001 /* PublisherIconEditorView.swift in Sources */,
 				BC000101 /* CommentListView.swift in Sources */,
 				BC000301 /* ActivityItem.swift in Sources */,
 				AB2001FF00112233AA000001 /* TimelineItem.swift in Sources */,
@@ -926,6 +945,7 @@
 				AA000003 /* ReadingActivity.swift in Sources */,
 				BC000003 /* MangaComment.swift in Sources */,
 				CD000003 /* MangaLink.swift in Sources */,
+				FA000003 /* PublisherMetadata.swift in Sources */,
 				CD000101 /* EditLinkView.swift in Sources */,
 				ECFEA8602F7F7E2000CE4DC0 /* DayPageView.swift in Sources */,
 				AA000004 /* ReadingHeatmapView.swift in Sources */,

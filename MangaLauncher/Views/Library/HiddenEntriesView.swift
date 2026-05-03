@@ -124,9 +124,12 @@ struct HiddenEntriesView: View {
                             .font(theme.bodyFont)
                             .foregroundStyle(theme.onSurface)
                         if !entry.publisher.isEmpty {
-                            Text(entry.publisher)
-                                .font(theme.captionFont)
-                                .foregroundStyle(theme.onSurfaceVariant)
+                            HStack(spacing: 4) {
+                                PublisherIconView(iconData: viewModel.publisherIcon(for: entry.publisher), size: 12)
+                                Text(entry.publisher)
+                                    .font(theme.captionFont)
+                                    .foregroundStyle(theme.onSurfaceVariant)
+                            }
                         }
                     }
                     Spacer()
@@ -178,9 +181,12 @@ struct HiddenEntriesView: View {
                                 .foregroundStyle(theme.onSurface)
                                 .lineLimit(2)
                             if !entry.publisher.isEmpty {
-                                Text(entry.publisher)
-                                    .font(.caption2)
-                                    .foregroundStyle(theme.onSurfaceVariant)
+                                HStack(spacing: 3) {
+                                    PublisherIconView(iconData: viewModel.publisherIcon(for: entry.publisher), size: 10)
+                                    Text(entry.publisher)
+                                        .font(.caption2)
+                                        .foregroundStyle(theme.onSurfaceVariant)
+                                }
                             }
                         }
                     }

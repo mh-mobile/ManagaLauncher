@@ -649,13 +649,13 @@ struct EditEntryView: View {
 }
 
 #Preview("New Entry") {
-    let container = try! ModelContainer(for: MangaEntry.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    let container = try! ModelContainer(for: MangaEntry.self, PublisherMetadata.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
     let viewModel = MangaViewModel(modelContext: container.mainContext)
     EditEntryView(viewModel: viewModel, day: .monday)
 }
 
 #Preview("Edit Entry") {
-    let container = try! ModelContainer(for: MangaEntry.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    let container = try! ModelContainer(for: MangaEntry.self, PublisherMetadata.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
     let viewModel = MangaViewModel(modelContext: container.mainContext)
     let entry = MangaEntry(name: "ジャンプ+", url: "https://shonenjumpplus.com", dayOfWeek: .monday, iconColor: "red")
     EditEntryView(viewModel: viewModel, entry: entry)

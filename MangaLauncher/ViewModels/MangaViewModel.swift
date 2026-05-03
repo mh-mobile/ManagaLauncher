@@ -25,6 +25,10 @@ final class MangaViewModel {
     @ObservationIgnored private var cachedEntries: [MangaEntry]?
     @ObservationIgnored private var cachedComments: [MangaComment]?
     @ObservationIgnored private var cachedActivities: [ReadingActivity]?
+    /// publisher 名 → アイコン Data の辞書キャッシュ。一覧/chip でセル毎に
+    /// `publisherIcon(for:)` が呼ばれて N+1 fetch になるのを防ぐ。
+    /// nil 値は「設定無し」を表す（fetch 結果が nil でも 2 回目を走らせない）。
+    @ObservationIgnored private var cachedPublisherIcons: [String: Data?]?
 
     /// 直近の重大エラー（移行/インポート/同期）。View 側で alert 表示する用。
     var lastError: AppError?
@@ -424,6 +428,7 @@ final class MangaViewModel {
     /// 掲載誌を統合する。`from` の名前を持つ全エントリの publisher を `to` に一括変更する。
     /// soft-delete されたエントリも含めて変更するのは、restore したときに「古い publisher 名で蘇る」
     /// ゴーストを作らないため（統合は user の所有データ全体に対する操作と捉える）。
+    /// 統合元の `PublisherMetadata`（アイコン情報）も削除する。統合先の metadata はそのまま維持。
     func mergePublisher(from oldName: String, to newName: String) {
         guard !oldName.isEmpty, !newName.isEmpty, oldName != newName else { return }
         let descriptor = FetchDescriptor<MangaEntry>(
@@ -434,6 +439,8 @@ final class MangaViewModel {
         for entry in entries {
             entry.publisher = newName
         }
+        // 統合元の metadata を削除（統合先のアイコンを維持）
+        deletePublisherMetadata(name: oldName)
         save()
     }
 
@@ -445,6 +452,108 @@ final class MangaViewModel {
             predicate: #Predicate { $0.publisher == oldName }
         )
         return modelContext.fetchLogged(descriptor).count
+    }
+
+    // MARK: - Publisher Metadata
+
+    /// 指定 publisher のアイコン Data を取得（表示パスから毎回呼ばれる前提、軽量）。
+    /// 初回呼び出しで全 PublisherMetadata を一括 fetch して `cachedPublisherIcons`
+    /// に辞書化する。同 render 内の複数 publisher 表示で N 回 fetch を避ける。
+    func publisherIcon(for name: String) -> Data? {
+        guard !name.isEmpty else { return nil }
+        return loadAllPublisherIcons()[name] ?? nil
+    }
+
+    /// 指定 publisher にアイコンが設定されているか。merge 確認文言の分岐などで使う。
+    func publisherHasIcon(name: String) -> Bool {
+        guard !name.isEmpty else { return false }
+        return (loadAllPublisherIcons()[name] ?? nil) != nil
+    }
+
+    /// publisher 名 → iconData の辞書を返す（キャッシュ済みならそれを返す）。
+    /// `refreshCounter` が変わるとキャッシュは破棄される。
+    /// 同名重複時の優先順位は `publisherMetadata(for:)` と統一:
+    ///   1. iconData あり優先
+    ///   2. 同条件なら updatedAt の新しい方
+    /// 事前ソート + 先勝ち insert で実現する。
+    private func loadAllPublisherIcons() -> [String: Data?] {
+        invalidateCacheIfStale()
+        if let cached = cachedPublisherIcons { return cached }
+        let descriptor = FetchDescriptor<PublisherMetadata>()
+        let records = modelContext.fetchLogged(descriptor)
+        let sorted = records.sorted { lhs, rhs in
+            let lhsHas = lhs.iconData != nil
+            let rhsHas = rhs.iconData != nil
+            if lhsHas != rhsHas { return lhsHas }
+            return (lhs.updatedAt ?? .distantPast) > (rhs.updatedAt ?? .distantPast)
+        }
+        var result: [String: Data?] = [:]
+        for record in sorted where result[record.name] == nil {
+            result[record.name] = record.iconData
+        }
+        cachedPublisherIcons = result
+        return result
+    }
+
+    /// 指定 publisher のメタデータレコード。重複時は iconData 持ち + 新しい updatedAt を優先。
+    /// CloudKit race で複数できる可能性に備えた soft de-dup。
+    private func publisherMetadata(for name: String) -> PublisherMetadata? {
+        let descriptor = FetchDescriptor<PublisherMetadata>(
+            predicate: #Predicate { $0.name == name }
+        )
+        let results = modelContext.fetchLogged(descriptor)
+        if results.count <= 1 { return results.first }
+        return results.sorted { lhs, rhs in
+            let lhsHas = lhs.iconData != nil
+            let rhsHas = rhs.iconData != nil
+            if lhsHas != rhsHas { return lhsHas }
+            return (lhs.updatedAt ?? .distantPast) > (rhs.updatedAt ?? .distantPast)
+        }.first
+    }
+
+    /// アイコンを保存。imageData は整形済み (PublisherIconService 経由) を期待。
+    /// 既存 record があれば update、なければ insert。
+    func setPublisherIcon(name: String, imageData: Data, sourceURL: String? = nil) {
+        guard !name.isEmpty else { return }
+        if let existing = publisherMetadata(for: name) {
+            existing.iconData = imageData
+            if let sourceURL { existing.sourceURL = sourceURL }
+            existing.updatedAt = Date()
+        } else {
+            let meta = PublisherMetadata(name: name, iconData: imageData, sourceURL: sourceURL)
+            modelContext.insert(meta)
+        }
+        save()
+    }
+
+    /// アイコンのみクリア（record 自体は残す: sourceURL を保持して再取得しやすくするため）。
+    /// CloudKit race で同名 record が複数できているケースでも確実に clear するため、
+    /// `publisherMetadata(for:)` で 1 件取るのではなく該当する全 record の iconData を nil にする。
+    /// （1 件だけ clear すると、cache の sort ロジックが残った record の iconData を拾って
+    /// 「削除したのに残る」現象になる）
+    func clearPublisherIcon(name: String) {
+        guard !name.isEmpty else { return }
+        let descriptor = FetchDescriptor<PublisherMetadata>(
+            predicate: #Predicate { $0.name == name }
+        )
+        let records = modelContext.fetchLogged(descriptor)
+        guard !records.isEmpty else { return }
+        let now = Date()
+        for meta in records {
+            meta.iconData = nil
+            meta.updatedAt = now
+        }
+        save()
+    }
+
+    /// メタデータレコードを完全削除（mergePublisher / deleteAllEntries 用、private）。
+    private func deletePublisherMetadata(name: String) {
+        let descriptor = FetchDescriptor<PublisherMetadata>(
+            predicate: #Predicate { $0.name == name }
+        )
+        for meta in modelContext.fetchLogged(descriptor) {
+            modelContext.delete(meta)
+        }
     }
 
     func deleteEntry(_ entry: MangaEntry) {
@@ -612,6 +721,10 @@ final class MangaViewModel {
         for comment in modelContext.fetchLogged(commentDescriptor) {
             modelContext.delete(comment)
         }
+        let metaDescriptor = FetchDescriptor<PublisherMetadata>()
+        for meta in modelContext.fetchLogged(metaDescriptor) {
+            modelContext.delete(meta)
+        }
         UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.lastStreakShownDate)
         UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.shownMilestones)
         deletedIDs.removeAll()
@@ -661,7 +774,10 @@ final class MangaViewModel {
         let comments = modelContext.fetchLogged(commentDescriptor).filter { activeEntryIDs.contains($0.mangaEntryID) }
         let linkDescriptor = FetchDescriptor<MangaLink>(sortBy: [SortDescriptor(\.sortOrder)])
         let links = modelContext.fetchLogged(linkDescriptor).filter { activeEntryIDs.contains($0.mangaEntryID) }
-        let backup = BackupData.from(entries, activities: activities, comments: comments, links: links)
+        // Publisher metadata は entry に紐付かない (name で join) ので、すべて含める
+        let metaDescriptor = FetchDescriptor<PublisherMetadata>(sortBy: [SortDescriptor(\.name)])
+        let publisherMetadata = modelContext.fetchLogged(metaDescriptor)
+        let backup = BackupData.from(entries, activities: activities, comments: comments, links: links, publisherMetadata: publisherMetadata)
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         return try? encoder.encode(backup)
@@ -764,6 +880,25 @@ final class MangaViewModel {
                 link.updatedAt = backupLink.updatedAt
                 modelContext.insert(link)
                 existingLinkIDs.insert(backupLink.id)
+                importedCount += 1
+            }
+        }
+        // v15+ 掲載誌アイコン等のメタデータ。同名既存があればスキップ (in-place update はしない)。
+        // backup 内に同名重複があるケース (CloudKit race 由来の重複を export したもの等) でも
+        // 二重 insert にならないよう、insert 後に existingNames へ追加する。
+        if let backupMetas = backup.publisherMetadata {
+            var existingNames = Set(modelContext.fetchLogged(FetchDescriptor<PublisherMetadata>()).map(\.name))
+            for backupMeta in backupMetas {
+                guard !existingNames.contains(backupMeta.name) else { continue }
+                let meta = PublisherMetadata(
+                    name: backupMeta.name,
+                    iconData: backupMeta.iconData,
+                    sourceURL: backupMeta.sourceURL
+                )
+                meta.id = backupMeta.id
+                meta.updatedAt = backupMeta.updatedAt
+                modelContext.insert(meta)
+                existingNames.insert(backupMeta.name)
                 importedCount += 1
             }
         }
@@ -1118,6 +1253,7 @@ final class MangaViewModel {
             cachedEntries = nil
             cachedComments = nil
             cachedActivities = nil
+            cachedPublisherIcons = nil
         }
     }
 

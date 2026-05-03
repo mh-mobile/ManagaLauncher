@@ -157,9 +157,12 @@ struct RecentlyDeletedView: View {
                     }
                 }
                 if !entry.publisher.isEmpty {
-                    Text(entry.publisher)
-                        .font(theme.captionFont)
-                        .foregroundStyle(theme.onSurfaceVariant)
+                    HStack(spacing: 4) {
+                        PublisherIconView(iconData: viewModel.publisherIcon(for: entry.publisher), size: 12)
+                        Text(entry.publisher)
+                            .font(theme.captionFont)
+                            .foregroundStyle(theme.onSurfaceVariant)
+                    }
                 }
             }
             Spacer()
