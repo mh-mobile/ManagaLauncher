@@ -11,6 +11,8 @@ struct AllPublishersView: View {
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
     @State private var publisherCounts: [(publisher: String, count: Int)] = []
+    @State private var mergeSource: String = ""
+    @State private var showingMergeSheet = false
 
     var body: some View {
         ZStack {
@@ -37,6 +39,14 @@ struct AllPublishersView: View {
                         }
                     }
                     .listRowBackground(Color.clear)
+                    .contextMenu {
+                        Button {
+                            mergeSource = item.publisher
+                            showingMergeSheet = true
+                        } label: {
+                            Label("他の掲載誌に統合", systemImage: "arrow.triangle.merge")
+                        }
+                    }
                 }
             }
             .listStyle(.plain)
@@ -55,6 +65,13 @@ struct AllPublishersView: View {
                 editingEntry: $editingEntry,
                 commentingEntry: $commentingEntry,
                 onOpenURL: onOpenURL
+            )
+        }
+        .sheet(isPresented: $showingMergeSheet) {
+            PublisherMergePickerView(
+                source: mergeSource,
+                publishers: publisherCounts.map(\.publisher),
+                viewModel: viewModel
             )
         }
     }

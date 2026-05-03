@@ -421,6 +421,32 @@ final class MangaViewModel {
         return publishers.sorted()
     }
 
+    /// 掲載誌を統合する。`from` の名前を持つ全エントリの publisher を `to` に一括変更する。
+    /// soft-delete されたエントリも含めて変更するのは、restore したときに「古い publisher 名で蘇る」
+    /// ゴーストを作らないため（統合は user の所有データ全体に対する操作と捉える）。
+    func mergePublisher(from oldName: String, to newName: String) {
+        guard !oldName.isEmpty, !newName.isEmpty, oldName != newName else { return }
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.publisher == oldName }
+        )
+        let entries = modelContext.fetchLogged(descriptor)
+        guard !entries.isEmpty else { return }
+        for entry in entries {
+            entry.publisher = newName
+        }
+        save()
+    }
+
+    /// `mergePublisher` の前置確認用。統合される件数（soft-delete 込み）を返す。
+    /// View 側の確認アラートで「○件を統合します」を表示するために使う。
+    func mergePublisherPreviewCount(for oldName: String) -> Int {
+        guard !oldName.isEmpty else { return 0 }
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.publisher == oldName }
+        )
+        return modelContext.fetchLogged(descriptor).count
+    }
+
     func deleteEntry(_ entry: MangaEntry) {
         entry.deletedAt = Date()
         deletedIDs.insert(entry.id)
