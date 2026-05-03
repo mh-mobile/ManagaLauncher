@@ -14,7 +14,7 @@ enum SharedModelContainer {
     /// アプリ更新直後など CloudKit の準備が間に合わない一時的な失敗を吸収する。
     /// 全試行失敗時は最後のエラーを throw する。
     static func create(maxAttempts: Int = 3) throws -> ModelContainer {
-        let schema = Schema([MangaEntry.self, ReadingActivity.self, MangaComment.self, MangaLink.self])
+        let schema = Schema([MangaEntry.self, ReadingActivity.self, MangaComment.self, MangaLink.self, PublisherMetadata.self])
         let config = ModelConfiguration(
             "MangaLauncher",
             schema: schema,
@@ -48,7 +48,7 @@ enum SharedModelContainer {
     /// データ連続性は保たれる。次回起動で CloudKit が回復していれば create() に
     /// 戻り、ローカル更新分も sync される (SwiftData が変更を検出して push)。
     static func createLocalOnly() throws -> ModelContainer {
-        let schema = Schema([MangaEntry.self, ReadingActivity.self, MangaComment.self, MangaLink.self])
+        let schema = Schema([MangaEntry.self, ReadingActivity.self, MangaComment.self, MangaLink.self, PublisherMetadata.self])
         let config = ModelConfiguration(
             "MangaLauncher",
             schema: schema,

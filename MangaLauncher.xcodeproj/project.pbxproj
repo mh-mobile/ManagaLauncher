@@ -61,6 +61,9 @@
 		CD000001 /* MangaLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD000010 /* MangaLink.swift */; };
 		CD000002 /* MangaLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD000010 /* MangaLink.swift */; };
 		CD000003 /* MangaLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD000010 /* MangaLink.swift */; };
+		FA000001 /* PublisherMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA000010 /* PublisherMetadata.swift */; };
+		FA000002 /* PublisherMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA000010 /* PublisherMetadata.swift */; };
+		FA000003 /* PublisherMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA000010 /* PublisherMetadata.swift */; };
 		CD000101 /* EditLinkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD000110 /* EditLinkView.swift */; };
 		BC000101 /* CommentListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000110 /* CommentListView.swift */; };
 		BC000301 /* ActivityItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC000310 /* ActivityItem.swift */; };
@@ -229,6 +232,7 @@
 		AA000010 /* ReadingActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingActivity.swift; sourceTree = "<group>"; };
 		BC000010 /* MangaComment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaComment.swift; sourceTree = "<group>"; };
 		CD000010 /* MangaLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaLink.swift; sourceTree = "<group>"; };
+		FA000010 /* PublisherMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherMetadata.swift; sourceTree = "<group>"; };
 		CE000010 /* LinkedText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkedText.swift; sourceTree = "<group>"; };
 		CD000110 /* EditLinkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditLinkView.swift; sourceTree = "<group>"; };
 		BC000110 /* CommentListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentListView.swift; sourceTree = "<group>"; };
@@ -429,6 +433,7 @@
 				AA000010 /* ReadingActivity.swift */,
 				BC000010 /* MangaComment.swift */,
 				CD000010 /* MangaLink.swift */,
+				FA000010 /* PublisherMetadata.swift */,
 				BC000310 /* ActivityItem.swift */,
 				AB2001FF00112233AA000002 /* TimelineItem.swift */,
 				AB4001FF00112233AA000006 /* AppError.swift */,
@@ -807,6 +812,7 @@
 				AA000001 /* ReadingActivity.swift in Sources */,
 				BC000001 /* MangaComment.swift in Sources */,
 				CD000001 /* MangaLink.swift in Sources */,
+				FA000001 /* PublisherMetadata.swift in Sources */,
 				ECFEA84A2F7F6E5700CE4DC0 /* MangaURLOpener.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -826,6 +832,7 @@
 				AA000002 /* ReadingActivity.swift in Sources */,
 				BC000002 /* MangaComment.swift in Sources */,
 				CD000002 /* MangaLink.swift in Sources */,
+				FA000002 /* PublisherMetadata.swift in Sources */,
 				ECFEA8492F7F6E5700CE4DC0 /* MangaURLOpener.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -926,6 +933,7 @@
 				AA000003 /* ReadingActivity.swift in Sources */,
 				BC000003 /* MangaComment.swift in Sources */,
 				CD000003 /* MangaLink.swift in Sources */,
+				FA000003 /* PublisherMetadata.swift in Sources */,
 				CD000101 /* EditLinkView.swift in Sources */,
 				ECFEA8602F7F7E2000CE4DC0 /* DayPageView.swift in Sources */,
 				AA000004 /* ReadingHeatmapView.swift in Sources */,
