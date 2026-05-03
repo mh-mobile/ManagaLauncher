@@ -172,8 +172,8 @@ struct LibraryView: View {
         }
     }
 
-    /// フォーカス中の積読セクション。最大 3 本のピン留め積読を最上部で常時表示する。
-    /// 0 本のときはセクションごと非表示。積読セクションには重複表示する仕様 (A 案)。
+    /// フォーカス中の積読セクション。最大 3 本のフォーカス指定された積読を最上部で常時表示する。
+    /// 0 本のときはセクションごと非表示。通常の積読セクションには重複表示する仕様 (A 案)。
     @ViewBuilder
     private var focusedBacklogSection: some View {
         let entries = viewModel.focusedBacklogEntries()

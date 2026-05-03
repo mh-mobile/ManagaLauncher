@@ -894,7 +894,7 @@ final class MangaViewModel {
         guard canFocus() else { return }
         entry.isFocused = true
         entry.focusedAt = Date()
-        save()
+        saveFocusChange(for: entry)
     }
 
     /// フォーカス指定を解除する。
@@ -902,6 +902,23 @@ final class MangaViewModel {
         guard entry.isFocused else { return }
         entry.isFocused = false
         entry.focusedAt = nil
+        saveFocusChange(for: entry)
+    }
+
+    /// フォーカス変更をエントリの所属する ModelContext で確実に保存する。
+    /// `refresh()` で `viewModel.modelContext` が差し替わった後でも、UI が保持している
+    /// `entry` は元のコンテキストに残っているケースがあるため、両方を save する
+    /// （`updateEntry` と同じパターン）。
+    private func saveFocusChange(for entry: MangaEntry) {
+        if let entryCtx = entry.modelContext, entryCtx !== modelContext {
+            do {
+                try entryCtx.save()
+            } catch {
+                print("[MangaViewModel] saveFocusChange entryCtx save failed: \(error)")
+                lastError = .save(error)
+                return
+            }
+        }
         save()
     }
 
