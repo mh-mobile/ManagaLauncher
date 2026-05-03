@@ -92,6 +92,7 @@ struct LibraryView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 24) {
                     catchUpAllUnreadLink
+                    focusedBacklogSection
                     timelineLink
                     hiddenSectionLink
                     recentlyDeletedLink
@@ -168,6 +169,40 @@ struct LibraryView: View {
             }
             .buttonStyle(.plain)
             .padding(.horizontal)
+        }
+    }
+
+    /// フォーカス中の積読セクション。最大 3 本のピン留め積読を最上部で常時表示する。
+    /// 0 本のときはセクションごと非表示。積読セクションには重複表示する仕様 (A 案)。
+    @ViewBuilder
+    private var focusedBacklogSection: some View {
+        let entries = viewModel.focusedBacklogEntries()
+        if !entries.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                SectionHeaderView(
+                    title: "フォーカス中の積読",
+                    icon: "pin.fill",
+                    iconColor: .pink,
+                    count: entries.count,
+                    badgeColor: .pink
+                )
+                .padding(.horizontal)
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(alignment: .top, spacing: 12) {
+                        ForEach(entries, id: \.id) { entry in
+                            LibraryCard(
+                                entry: entry,
+                                viewModel: viewModel,
+                                editingEntry: $editingEntry,
+                                commentingEntry: $commentingEntry,
+                                onOpenURL: { openMangaURL($0) }
+                            )
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+            }
         }
     }
 

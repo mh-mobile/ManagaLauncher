@@ -399,6 +399,171 @@ struct MangaViewModelAllUnreadTests {
     }
 }
 
+@Suite("MangaViewModel.focusedBacklog")
+struct MangaViewModelFocusedBacklogTests {
+
+    private func makeContainer() throws -> ModelContainer {
+        try ModelContainer(
+            for: MangaEntry.self, ReadingActivity.self, MangaComment.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+    }
+
+    private func makeBacklog(name: String, context: ModelContext) -> MangaEntry {
+        let e = MangaEntry(name: name, dayOfWeek: .monday)
+        e.readingState = .backlog
+        context.insert(e)
+        return e
+    }
+
+    @Test("focus / unfocus の基本動作")
+    @MainActor
+    func basicFocusUnfocus() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let a = makeBacklog(name: "A", context: context)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.focus(a)
+        #expect(a.isFocused == true)
+        #expect(a.focusedAt != nil)
+        #expect(vm.focusedBacklogCount() == 1)
+
+        vm.unfocus(a)
+        #expect(a.isFocused == false)
+        #expect(a.focusedAt == nil)
+        #expect(vm.focusedBacklogCount() == 0)
+    }
+
+    @Test("上限 3 本: 4 本目は拒否される")
+    @MainActor
+    func enforcesMaxThree() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let entries = (0..<4).map { makeBacklog(name: "e\($0)", context: context) }
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        for entry in entries.prefix(3) {
+            vm.focus(entry)
+        }
+        #expect(vm.focusedBacklogCount() == 3)
+        #expect(vm.canFocus() == false)
+
+        // 4 本目は no-op
+        vm.focus(entries[3])
+        #expect(entries[3].isFocused == false)
+        #expect(vm.focusedBacklogCount() == 3)
+
+        // 1 本外したら再び枠が空く
+        vm.unfocus(entries[0])
+        #expect(vm.canFocus() == true)
+        vm.focus(entries[3])
+        #expect(entries[3].isFocused == true)
+        #expect(vm.focusedBacklogCount() == 3)
+    }
+
+    @Test("積読でないエントリーには focus() できない")
+    @MainActor
+    func rejectsNonBacklog() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let following = MangaEntry(name: "f", dayOfWeek: .monday)
+        following.readingState = .following
+        context.insert(following)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.focus(following)
+        #expect(following.isFocused == false)
+        #expect(vm.focusedBacklogCount() == 0)
+    }
+
+    @Test("setReadingState(.archived) でフォーカス自動解除")
+    @MainActor
+    func archivingClearsFocus() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let a = makeBacklog(name: "A", context: context)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.focus(a)
+        #expect(a.isFocused == true)
+
+        vm.setReadingState(a, to: .archived)
+        #expect(a.isFocused == false)
+        #expect(a.focusedAt == nil)
+        #expect(vm.focusedBacklogCount() == 0)
+    }
+
+    @Test("setReadingState(.following) でフォーカス自動解除")
+    @MainActor
+    func promotingToFollowingClearsFocus() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let a = makeBacklog(name: "A", context: context)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.focus(a)
+        #expect(a.isFocused == true)
+
+        vm.setReadingState(a, to: .following)
+        #expect(a.isFocused == false)
+        #expect(vm.focusedBacklogCount() == 0)
+    }
+
+    @Test("並び順: focusedAt 降順 (新しいフォーカスが先頭)")
+    @MainActor
+    func sortedByFocusedAtDesc() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let a = makeBacklog(name: "A", context: context)
+        let b = makeBacklog(name: "B", context: context)
+        let c = makeBacklog(name: "C", context: context)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.focus(a)
+        // focusedAt の差を出すため微小に待機（実機では Date() の解像度で十分だが、
+        // テストでは明示的に焼き付ける）
+        a.focusedAt = Date(timeIntervalSince1970: 1_000)
+        vm.focus(b)
+        b.focusedAt = Date(timeIntervalSince1970: 2_000)
+        vm.focus(c)
+        c.focusedAt = Date(timeIntervalSince1970: 3_000)
+
+        #expect(vm.focusedBacklogEntries().map(\.name) == ["C", "B", "A"])
+    }
+
+    @Test("hidden / deleted は集計から除外")
+    @MainActor
+    func excludesHiddenAndDeleted() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let visible = makeBacklog(name: "visible", context: context)
+        let hidden = makeBacklog(name: "hidden", context: context)
+        hidden.isHidden = true
+        let deleted = makeBacklog(name: "deleted", context: context)
+        // 直接 isFocused を立てて in-memory のソフトデリート/hidden が効くか確認
+        for entry in [visible, hidden, deleted] {
+            entry.isFocused = true
+            entry.focusedAt = Date()
+        }
+        deleted.deletedAt = Date()
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.reloadHiddenIDs()
+        vm.reloadDeletedIDs()
+
+        #expect(vm.focusedBacklogEntries().map(\.name) == ["visible"])
+        #expect(vm.focusedBacklogCount() == 1)
+    }
+}
+
 @Suite("MangaViewModel.runStartupMigrationsIfNeeded")
 struct MangaViewModelStartupTests {
 
