@@ -10,6 +10,7 @@
 		AB50040000112233AA000003 /* HiddenEntriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50040000112233AA000004 /* HiddenEntriesView.swift */; };
 		AB50040000112233AA000005 /* RecentlyDeletedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50040000112233AA000006 /* RecentlyDeletedView.swift */; };
 		AB50040000112233AA000001 /* BiometricAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50040000112233AA000002 /* BiometricAuthService.swift */; };
+		FB000001 /* PublisherIconService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB000010 /* PublisherIconService.swift */; };
 		AB50050000112233AA000001 /* SpecialEpisodeAlertModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50050000112233AA000002 /* SpecialEpisodeAlertModifier.swift */; };
 		AB50030000112233AA000003 /* MangaLifetimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50030000112233AA000004 /* MangaLifetimeView.swift */; };
 		AB50030000112233AA000001 /* MangaLifetime.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50030000112233AA000002 /* MangaLifetime.swift */; };
@@ -189,6 +190,7 @@
 		AB50040000112233AA000004 /* HiddenEntriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HiddenEntriesView.swift; sourceTree = "<group>"; };
 		AB50040000112233AA000006 /* RecentlyDeletedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentlyDeletedView.swift; sourceTree = "<group>"; };
 		AB50040000112233AA000002 /* BiometricAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuthService.swift; sourceTree = "<group>"; };
+		FB000010 /* PublisherIconService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherIconService.swift; sourceTree = "<group>"; };
 		AB50050000112233AA000002 /* SpecialEpisodeAlertModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecialEpisodeAlertModifier.swift; sourceTree = "<group>"; };
 		AB50030000112233AA000004 /* MangaLifetimeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaLifetimeView.swift; sourceTree = "<group>"; };
 		AB50030000112233AA000002 /* MangaLifetime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaLifetime.swift; sourceTree = "<group>"; };
@@ -658,6 +660,7 @@
 				AB5001FF00112233AA000002 /* NextUpdateFormatter.swift */,
 				AB50020000112233AA000001 /* MangaEntryAccessibility.swift */,
 				AB50040000112233AA000002 /* BiometricAuthService.swift */,
+				FB000010 /* PublisherIconService.swift */,
 				AB50050000112233AA000002 /* SpecialEpisodeAlertModifier.swift */,
 				AB5001FF00112233AA000004 /* NextUpdateBadgeView.swift */,
 			);
@@ -850,6 +853,7 @@
 				ECCD2FCE2F65596900BF3309 /* PublisherPickerView.swift in Sources */,
 				A1000002 /* MangaEntry.swift in Sources */,
 				AB50040000112233AA000001 /* BiometricAuthService.swift in Sources */,
+				FB000001 /* PublisherIconService.swift in Sources */,
 				AB50040000112233AA000003 /* HiddenEntriesView.swift in Sources */,
 				AB50040000112233AA000005 /* RecentlyDeletedView.swift in Sources */,
 				AB50050000112233AA000001 /* SpecialEpisodeAlertModifier.swift in Sources */,
