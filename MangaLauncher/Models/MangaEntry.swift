@@ -119,6 +119,10 @@ final class MangaEntry {
     var isHidden: Bool = false
     /// ソフトデリート日時（nil = 未削除）
     var deletedAt: Date?
+    /// フォーカス積読フラグ。最大3本まで同時にフォーカス可能。
+    var isFocused: Bool = false
+    /// フォーカス指定日時。フォーカス中積読セクションの並び順（降順 = 新しいフォーカスが先頭）に使う。
+    var focusedAt: Date?
 
     /// 掲載状況の Int 値（PublicationStatus.rawValue）
     var publicationStatusRawValue: Int = 0

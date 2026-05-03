@@ -52,6 +52,26 @@ struct MangaContextMenu: View {
             }
         }
 
+        // MARK: フォーカス積読
+        // 積読 (backlog) の中から最大 3 本だけ「今集中して消化する」と宣言する。
+        // ライブラリ最上部に常時表示されるので選択疲労が軽減される。
+        if entry.readingState == .backlog {
+            Button {
+                if entry.isFocused {
+                    viewModel.unfocus(entry)
+                } else {
+                    viewModel.focus(entry)
+                }
+            } label: {
+                if entry.isFocused {
+                    Label("フォーカスを外す", systemImage: "pin.slash")
+                } else {
+                    Label("フォーカスする", systemImage: "pin")
+                }
+            }
+            .disabled(!entry.isFocused && !viewModel.canFocus())
+        }
+
         Divider()
 
         // MARK: 日常操作

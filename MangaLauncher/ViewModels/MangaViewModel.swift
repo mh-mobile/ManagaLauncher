@@ -148,6 +148,12 @@ final class MangaViewModel {
     /// 読書状況の付け替え
     func setReadingState(_ entry: MangaEntry, to state: ReadingState) {
         entry.readingState = state
+        // フォーカス積読は readingState == .backlog 前提なので、
+        // 積読から外れた瞬間に自動でフォーカス解除する
+        if state != .backlog {
+            entry.isFocused = false
+            entry.focusedAt = nil
+        }
         save()
     }
 
@@ -323,6 +329,11 @@ final class MangaViewModel {
         entry.readingState = readingState
         // 読み切りの invariants (publicationStatus=.active, readingState != .backlog) を強制
         entry.normalizeOneShotInvariants()
+        // フォーカスは積読限定のフラグなので、積読から外れたら解除する
+        if entry.readingState != .backlog {
+            entry.isFocused = false
+            entry.focusedAt = nil
+        }
         entry.memo = memo
         if memoChanged {
             entry.memoUpdatedAt = memo.isEmpty ? nil : Date()
@@ -849,6 +860,66 @@ final class MangaViewModel {
     private static func weekdayOrderIndex(rawValue: Int) -> Int {
         // Sun(0) → 6, Mon(1) → 0, Tue(2) → 1, ..., Sat(6) → 5
         (rawValue + 6) % 7
+    }
+
+    // MARK: - Focused Backlog
+
+    /// 同時にフォーカス指定できる積読の上限本数。
+    static let maxFocusedBacklogCount = 3
+
+    /// フォーカス中の積読エントリ。`focusedAt` 降順（新しくフォーカスしたものが先頭）。
+    /// 集計ソースを `allEntries()` に揃えることで、ソフトデリート/hidden の整合性を担保する。
+    func focusedBacklogEntries() -> [MangaEntry] {
+        let _ = refreshCounter
+        return allEntries()
+            .filter { $0.isFocused && $0.readingState == .backlog }
+            .sorted { ($0.focusedAt ?? .distantPast) > ($1.focusedAt ?? .distantPast) }
+    }
+
+    func focusedBacklogCount() -> Int {
+        let _ = refreshCounter
+        return allEntries().lazy.filter { $0.isFocused && $0.readingState == .backlog }.count
+    }
+
+    /// 上限まで枠が空いているか。View 側で「フォーカスする」項目を出すか判定するのに使う。
+    func canFocus() -> Bool {
+        focusedBacklogCount() < Self.maxFocusedBacklogCount
+    }
+
+    /// 積読エントリーをフォーカス指定する。上限超過時は何もしない。
+    /// 積読でないエントリーには適用しない（呼び出し側で readingState をチェックする想定）。
+    func focus(_ entry: MangaEntry) {
+        guard entry.readingState == .backlog else { return }
+        guard !entry.isFocused else { return }
+        guard canFocus() else { return }
+        entry.isFocused = true
+        entry.focusedAt = Date()
+        saveFocusChange(for: entry)
+    }
+
+    /// フォーカス指定を解除する。
+    func unfocus(_ entry: MangaEntry) {
+        guard entry.isFocused else { return }
+        entry.isFocused = false
+        entry.focusedAt = nil
+        saveFocusChange(for: entry)
+    }
+
+    /// フォーカス変更をエントリの所属する ModelContext で確実に保存する。
+    /// `refresh()` で `viewModel.modelContext` が差し替わった後でも、UI が保持している
+    /// `entry` は元のコンテキストに残っているケースがあるため、両方を save する
+    /// （`updateEntry` と同じパターン）。
+    private func saveFocusChange(for entry: MangaEntry) {
+        if let entryCtx = entry.modelContext, entryCtx !== modelContext {
+            do {
+                try entryCtx.save()
+            } catch {
+                print("[MangaViewModel] saveFocusChange entryCtx save failed: \(error)")
+                lastError = .save(error)
+                return
+            }
+        }
+        save()
     }
 
     // 注意: アクティビティ・メモ集約は ActivityBuilder に移譲。
