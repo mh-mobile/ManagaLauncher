@@ -173,7 +173,7 @@ struct ContentView: View {
             )
             let publishers = viewModel.publishers(for: viewModel.selectedDay)
             if !publishers.isEmpty {
-                PublisherFilterView(publishers: publishers, selectedPublisher: $homeState.selectedPublisher)
+                PublisherFilterView(publishers: publishers, viewModel: viewModel, selectedPublisher: $homeState.selectedPublisher)
             }
         }
         .background {
