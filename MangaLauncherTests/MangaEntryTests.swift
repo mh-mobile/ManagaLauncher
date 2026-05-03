@@ -562,6 +562,91 @@ struct MangaViewModelFocusedBacklogTests {
         #expect(vm.focusedBacklogEntries().map(\.name) == ["visible"])
         #expect(vm.focusedBacklogCount() == 1)
     }
+
+    /// 編集画面 (updateEntry) で readingState が積読から外れたら、フォーカスも自動解除される。
+    /// setReadingState だけでなく updateEntry 経由の遷移でも回帰しないことを担保。
+    @Test("updateEntry で .following に変えるとフォーカス自動解除")
+    @MainActor
+    func updateEntryToFollowingClearsFocus() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let a = makeBacklog(name: "A", context: context)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.focus(a)
+        #expect(a.isFocused == true)
+
+        vm.updateEntry(
+            a,
+            name: a.name,
+            url: a.url,
+            dayOfWeek: a.dayOfWeek,
+            iconColor: a.iconColor,
+            isOneShot: false,
+            publicationStatus: .active,
+            readingState: .following,
+            memo: a.memo
+        )
+        #expect(a.isFocused == false)
+        #expect(a.focusedAt == nil)
+        #expect(vm.focusedBacklogCount() == 0)
+    }
+
+    @Test("updateEntry で .archived に変えるとフォーカス自動解除")
+    @MainActor
+    func updateEntryToArchivedClearsFocus() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let a = makeBacklog(name: "A", context: context)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.focus(a)
+        #expect(a.isFocused == true)
+
+        vm.updateEntry(
+            a,
+            name: a.name,
+            url: a.url,
+            dayOfWeek: a.dayOfWeek,
+            iconColor: a.iconColor,
+            isOneShot: false,
+            publicationStatus: .active,
+            readingState: .archived,
+            memo: a.memo
+        )
+        #expect(a.isFocused == false)
+        #expect(a.focusedAt == nil)
+    }
+
+    @Test("updateEntry で .backlog のままならフォーカス維持")
+    @MainActor
+    func updateEntryStaysBacklogKeepsFocus() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let a = makeBacklog(name: "A", context: context)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.focus(a)
+        let originalFocusedAt = a.focusedAt
+
+        // メモだけ変更、readingState は .backlog のまま
+        vm.updateEntry(
+            a,
+            name: a.name,
+            url: a.url,
+            dayOfWeek: a.dayOfWeek,
+            iconColor: a.iconColor,
+            isOneShot: false,
+            publicationStatus: .active,
+            readingState: .backlog,
+            memo: "新しいメモ"
+        )
+        #expect(a.isFocused == true)
+        #expect(a.focusedAt == originalFocusedAt)
+    }
 }
 
 @Suite("MangaViewModel.runStartupMigrationsIfNeeded")
