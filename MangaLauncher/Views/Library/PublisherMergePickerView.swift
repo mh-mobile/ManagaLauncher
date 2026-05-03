@@ -27,8 +27,11 @@ struct PublisherMergePickerView: View {
                 List {
                     Section {
                         HStack(spacing: 8) {
-                            Image(systemName: "magazine")
-                                .foregroundStyle(theme.primary)
+                            PublisherIconView(
+                                iconData: viewModel.publisherIcon(for: source),
+                                size: 22,
+                                showsFallback: true
+                            )
                             Text(source)
                                 .font(theme.bodyFont.weight(.semibold))
                                 .foregroundStyle(theme.onSurface)
@@ -47,8 +50,11 @@ struct PublisherMergePickerView: View {
                                     pendingDestination = dest
                                 } label: {
                                     HStack(spacing: 8) {
-                                        Image(systemName: "magazine")
-                                            .foregroundStyle(theme.primary)
+                                        PublisherIconView(
+                                            iconData: viewModel.publisherIcon(for: dest),
+                                            size: 22,
+                                            showsFallback: true
+                                        )
                                         Text(dest)
                                             .font(theme.bodyFont)
                                             .foregroundStyle(theme.onSurface)
@@ -97,7 +103,10 @@ struct PublisherMergePickerView: View {
                 }
             } message: { destination in
                 let count = viewModel.mergePublisherPreviewCount(for: source)
-                Text("「\(source)」の \(count) 件を「\(destination)」に統合します。\n\nこの操作は元に戻せません。")
+                let iconNote = viewModel.publisherHasIcon(name: source)
+                    ? "\n\n「\(source)」のアイコンも削除されます。"
+                    : ""
+                Text("「\(source)」の \(count) 件を「\(destination)」に統合します。\n\nこの操作は元に戻せません。\(iconNote)")
             }
         }
         .themedNavigationStyle()
