@@ -527,10 +527,22 @@ final class MangaViewModel {
     }
 
     /// アイコンのみクリア（record 自体は残す: sourceURL を保持して再取得しやすくするため）。
+    /// CloudKit race で同名 record が複数できているケースでも確実に clear するため、
+    /// `publisherMetadata(for:)` で 1 件取るのではなく該当する全 record の iconData を nil にする。
+    /// （1 件だけ clear すると、cache の sort ロジックが残った record の iconData を拾って
+    /// 「削除したのに残る」現象になる）
     func clearPublisherIcon(name: String) {
-        guard let meta = publisherMetadata(for: name) else { return }
-        meta.iconData = nil
-        meta.updatedAt = Date()
+        guard !name.isEmpty else { return }
+        let descriptor = FetchDescriptor<PublisherMetadata>(
+            predicate: #Predicate { $0.name == name }
+        )
+        let records = modelContext.fetchLogged(descriptor)
+        guard !records.isEmpty else { return }
+        let now = Date()
+        for meta in records {
+            meta.iconData = nil
+            meta.updatedAt = now
+        }
         save()
     }
 

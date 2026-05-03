@@ -894,6 +894,32 @@ struct PublisherMetadataTests {
         #expect(vm.publisherIcon(for: "X") == Data([0x01]))
         #expect(vm.publisherHasIcon(name: "X") == true)
     }
+
+    /// CloudKit race で同名 record が複数できているケースで clearPublisherIcon が
+    /// 全 record の iconData を nil にすることを確認。1 件だけ clear する旧実装では、
+    /// 残った record の iconData が cache に拾われて「削除したのに残る」現象が起きていた。
+    @Test("clearPublisherIcon は重複 record すべてをクリアする")
+    @MainActor
+    func clearAllDuplicates() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let dup1 = PublisherMetadata(name: "X", iconData: Data([0x01]))
+        let dup2 = PublisherMetadata(name: "X", iconData: Data([0x02]))
+        context.insert(dup1)
+        context.insert(dup2)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.clearPublisherIcon(name: "X")
+
+        #expect(vm.publisherIcon(for: "X") == nil)
+        #expect(vm.publisherHasIcon(name: "X") == false)
+        // record 自体は残る (sourceURL の保持目的)
+        let descriptor = FetchDescriptor<PublisherMetadata>()
+        let remaining = context.fetchLogged(descriptor)
+        #expect(remaining.count == 2)
+        #expect(remaining.allSatisfy { $0.iconData == nil })
+    }
 }
 
 @Suite("BackupData with publisherMetadata (v15)")
