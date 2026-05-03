@@ -9,6 +9,8 @@ struct PublisherMergePickerView: View {
     let publishers: [String]
     var viewModel: MangaViewModel
 
+    @State private var pendingDestination: String?
+
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
     /// source 以外の掲載誌リスト
@@ -42,8 +44,7 @@ struct PublisherMergePickerView: View {
                         } else {
                             ForEach(destinations, id: \.self) { dest in
                                 Button {
-                                    viewModel.mergePublisher(from: source, to: dest)
-                                    dismiss()
+                                    pendingDestination = dest
                                 } label: {
                                     HStack(spacing: 8) {
                                         Image(systemName: "magazine")
@@ -78,6 +79,25 @@ struct PublisherMergePickerView: View {
                         dismiss()
                     }
                 }
+            }
+            .alert(
+                "掲載誌を統合しますか？",
+                isPresented: Binding(
+                    get: { pendingDestination != nil },
+                    set: { if !$0 { pendingDestination = nil } }
+                ),
+                presenting: pendingDestination
+            ) { destination in
+                Button("統合する", role: .destructive) {
+                    viewModel.mergePublisher(from: source, to: destination)
+                    dismiss()
+                }
+                Button("キャンセル", role: .cancel) {
+                    pendingDestination = nil
+                }
+            } message: { destination in
+                let count = viewModel.mergePublisherPreviewCount(for: source)
+                Text("「\(source)」の \(count) 件を「\(destination)」に統合します。\n\nこの操作は元に戻せません。")
             }
         }
         .themedNavigationStyle()
