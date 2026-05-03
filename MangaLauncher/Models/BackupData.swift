@@ -9,6 +9,16 @@ struct BackupData: Codable {
     let activities: [BackupActivity]?
     let comments: [BackupComment]?
     let links: [BackupLink]?
+    /// v15+ 掲載誌アイコン等のメタデータ
+    let publisherMetadata: [BackupPublisherMetadata]?
+
+    struct BackupPublisherMetadata: Codable {
+        let id: UUID
+        let name: String
+        let iconData: Data?
+        let sourceURL: String?
+        let updatedAt: Date?
+    }
 
     struct BackupActivity: Codable {
         let id: UUID
@@ -148,9 +158,9 @@ struct BackupData: Codable {
         }
     }
 
-    static func from(_ entries: [MangaEntry], activities: [ReadingActivity] = [], comments: [MangaComment] = [], links: [MangaLink] = []) -> BackupData {
+    static func from(_ entries: [MangaEntry], activities: [ReadingActivity] = [], comments: [MangaComment] = [], links: [MangaLink] = [], publisherMetadata: [PublisherMetadata] = []) -> BackupData {
         BackupData(
-            version: 14,
+            version: 15,
             exportDate: Date(),
             entries: entries.map {
                 BackupEntry(
@@ -204,6 +214,15 @@ struct BackupData: Codable {
                     url: $0.url,
                     sortOrder: $0.sortOrder,
                     createdAt: $0.createdAt,
+                    updatedAt: $0.updatedAt
+                )
+            },
+            publisherMetadata: publisherMetadata.map {
+                BackupPublisherMetadata(
+                    id: $0.id,
+                    name: $0.name,
+                    iconData: $0.iconData,
+                    sourceURL: $0.sourceURL,
                     updatedAt: $0.updatedAt
                 )
             }

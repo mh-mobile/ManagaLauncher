@@ -733,7 +733,10 @@ final class MangaViewModel {
         let comments = modelContext.fetchLogged(commentDescriptor).filter { activeEntryIDs.contains($0.mangaEntryID) }
         let linkDescriptor = FetchDescriptor<MangaLink>(sortBy: [SortDescriptor(\.sortOrder)])
         let links = modelContext.fetchLogged(linkDescriptor).filter { activeEntryIDs.contains($0.mangaEntryID) }
-        let backup = BackupData.from(entries, activities: activities, comments: comments, links: links)
+        // Publisher metadata は entry に紐付かない (name で join) ので、すべて含める
+        let metaDescriptor = FetchDescriptor<PublisherMetadata>(sortBy: [SortDescriptor(\.name)])
+        let publisherMetadata = modelContext.fetchLogged(metaDescriptor)
+        let backup = BackupData.from(entries, activities: activities, comments: comments, links: links, publisherMetadata: publisherMetadata)
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         return try? encoder.encode(backup)
@@ -836,6 +839,22 @@ final class MangaViewModel {
                 link.updatedAt = backupLink.updatedAt
                 modelContext.insert(link)
                 existingLinkIDs.insert(backupLink.id)
+                importedCount += 1
+            }
+        }
+        // v15+ 掲載誌アイコン等のメタデータ。同名既存があればスキップ (in-place update はしない)。
+        if let backupMetas = backup.publisherMetadata {
+            let existingNames = Set(modelContext.fetchLogged(FetchDescriptor<PublisherMetadata>()).map(\.name))
+            for backupMeta in backupMetas {
+                guard !existingNames.contains(backupMeta.name) else { continue }
+                let meta = PublisherMetadata(
+                    name: backupMeta.name,
+                    iconData: backupMeta.iconData,
+                    sourceURL: backupMeta.sourceURL
+                )
+                meta.id = backupMeta.id
+                meta.updatedAt = backupMeta.updatedAt
+                modelContext.insert(meta)
                 importedCount += 1
             }
         }
