@@ -133,7 +133,12 @@ struct SearchView: View {
 
     private func availablePublishers() -> [String] {
         let entries = applyDayFilter(to: viewModel.allEntries())
-        return Set(entries.map(\.publisher)).filter { !$0.isEmpty }.sorted()
+        let counts = Dictionary(grouping: entries.filter { !$0.publisher.isEmpty }, by: \.publisher)
+            .mapValues(\.count)
+        return counts.sorted { lhs, rhs in
+            if lhs.value != rhs.value { return lhs.value > rhs.value }
+            return lhs.key.localizedStandardCompare(rhs.key) == .orderedAscending
+        }.map(\.key)
     }
 
     // MARK: - Body
