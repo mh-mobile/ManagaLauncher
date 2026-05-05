@@ -15,6 +15,7 @@ struct SearchView: View {
     @State private var contentMode: SearchContentMode = .entries
 
     @State private var selectedDay: DayOfWeek? = nil
+    @State private var selectedPublisher: String? = nil
     @State private var selectedColors: Set<String> = []
     @State private var safariURL: URL?
     @State private var editingEntry: MangaEntry?
@@ -23,6 +24,7 @@ struct SearchView: View {
 
     @State private var searchTask: Task<Void, Never>?
     @State private var cachedResults = SearchResults()
+    @State private var cachedPublishers: [String] = []
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
@@ -39,7 +41,8 @@ struct SearchView: View {
     private func computeSearchResults() -> SearchResults {
         let allEntries = viewModel.allEntries()
         let dayFiltered = applyDayFilter(to: allEntries)
-        let colorFiltered = applyColorFilter(to: dayFiltered)
+        let publisherFiltered = applyPublisherFilter(to: dayFiltered)
+        let colorFiltered = applyColorFilter(to: publisherFiltered)
 
         let trimmed = searchText.trimmingCharacters(in: .whitespaces)
 
@@ -124,6 +127,22 @@ struct SearchView: View {
         return entries.filter { $0.dayOfWeek == day }
     }
 
+    private func applyPublisherFilter(to entries: [MangaEntry]) -> [MangaEntry] {
+        guard let publisher = selectedPublisher else { return entries }
+        return entries.filter { $0.publisher == publisher }
+    }
+
+    private func computePublishers() -> [String] {
+        PublisherIndex.counts(from: applyDayFilter(to: viewModel.allEntries())).map(\.publisher)
+    }
+
+    private func refreshPublishers() {
+        cachedPublishers = computePublishers()
+        if let pub = selectedPublisher, !cachedPublishers.contains(pub) {
+            selectedPublisher = nil
+        }
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -142,6 +161,13 @@ struct SearchView: View {
                         contentMode: $contentMode,
                         selectedColors: $selectedColors
                     )
+                    if !cachedPublishers.isEmpty {
+                        PublisherFilterView(
+                            publishers: cachedPublishers,
+                            viewModel: viewModel,
+                            selectedPublisher: $selectedPublisher
+                        )
+                    }
                     content
                 }
             }
@@ -193,7 +219,10 @@ struct SearchView: View {
             }
             #endif
         }
-        .onAppear { refreshResults() }
+        .onAppear {
+            refreshPublishers()
+            refreshResults()
+        }
         .onDisappear { searchTask?.cancel() }
         .onChange(of: searchText) { _, _ in
             searchTask?.cancel()
@@ -207,9 +236,16 @@ struct SearchView: View {
         .onChange(of: publicationFilter) { _, _ in refreshResults() }
         .onChange(of: readingFilter) { _, _ in refreshResults() }
         .onChange(of: showOneShotOnly) { _, _ in refreshResults() }
-        .onChange(of: selectedDay) { _, _ in refreshResults() }
+        .onChange(of: selectedDay) { _, _ in
+            refreshPublishers()
+            refreshResults()
+        }
+        .onChange(of: selectedPublisher) { _, _ in refreshResults() }
         .onChange(of: selectedColors) { _, _ in refreshResults() }
-        .onChange(of: viewModel.refreshCounter) { _, _ in refreshResults() }
+        .onChange(of: viewModel.refreshCounter) { _, _ in
+            refreshPublishers()
+            refreshResults()
+        }
         .onMangaDataChange {
             viewModel.refresh()
         }
@@ -230,7 +266,8 @@ struct SearchView: View {
     private var emptyState: some View {
         let trimmed = searchText.trimmingCharacters(in: .whitespaces)
         let hasAnyFilter = publicationFilter != nil || readingFilter != nil
-            || showOneShotOnly || selectedDay != nil || !selectedColors.isEmpty
+            || showOneShotOnly || selectedDay != nil || selectedPublisher != nil
+            || !selectedColors.isEmpty
 
         if trimmed.isEmpty && !hasAnyFilter && contentMode == .entries {
             ContentUnavailableView {

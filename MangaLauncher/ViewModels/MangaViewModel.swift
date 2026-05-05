@@ -389,8 +389,7 @@ final class MangaViewModel {
     }
 
     func publishers(for day: DayOfWeek) -> [String] {
-        let entries = fetchEntries(for: day)
-        return Set(entries.map(\.publisher)).filter { !$0.isEmpty }.sorted()
+        PublisherIndex.counts(from: fetchEntries(for: day)).map(\.publisher)
     }
 
     func allEntries() -> [MangaEntry] {
