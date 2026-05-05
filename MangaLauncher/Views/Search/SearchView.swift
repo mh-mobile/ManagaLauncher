@@ -15,6 +15,7 @@ struct SearchView: View {
     @State private var contentMode: SearchContentMode = .entries
 
     @State private var selectedDay: DayOfWeek? = nil
+    @State private var selectedPublisher: String? = nil
     @State private var selectedColors: Set<String> = []
     @State private var safariURL: URL?
     @State private var editingEntry: MangaEntry?
@@ -39,7 +40,8 @@ struct SearchView: View {
     private func computeSearchResults() -> SearchResults {
         let allEntries = viewModel.allEntries()
         let dayFiltered = applyDayFilter(to: allEntries)
-        let colorFiltered = applyColorFilter(to: dayFiltered)
+        let publisherFiltered = applyPublisherFilter(to: dayFiltered)
+        let colorFiltered = applyColorFilter(to: publisherFiltered)
 
         let trimmed = searchText.trimmingCharacters(in: .whitespaces)
 
@@ -124,6 +126,16 @@ struct SearchView: View {
         return entries.filter { $0.dayOfWeek == day }
     }
 
+    private func applyPublisherFilter(to entries: [MangaEntry]) -> [MangaEntry] {
+        guard let publisher = selectedPublisher else { return entries }
+        return entries.filter { $0.publisher == publisher }
+    }
+
+    private func availablePublishers() -> [String] {
+        let entries = applyDayFilter(to: viewModel.allEntries())
+        return Set(entries.map(\.publisher)).filter { !$0.isEmpty }.sorted()
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -142,6 +154,14 @@ struct SearchView: View {
                         contentMode: $contentMode,
                         selectedColors: $selectedColors
                     )
+                    let publishers = availablePublishers()
+                    if !publishers.isEmpty {
+                        PublisherFilterView(
+                            publishers: publishers,
+                            viewModel: viewModel,
+                            selectedPublisher: $selectedPublisher
+                        )
+                    }
                     content
                 }
             }
@@ -207,7 +227,14 @@ struct SearchView: View {
         .onChange(of: publicationFilter) { _, _ in refreshResults() }
         .onChange(of: readingFilter) { _, _ in refreshResults() }
         .onChange(of: showOneShotOnly) { _, _ in refreshResults() }
-        .onChange(of: selectedDay) { _, _ in refreshResults() }
+        .onChange(of: selectedDay) { _, _ in
+            // 曜日変更で publisher リストが変わるため、選択中の publisher が消える可能性がある
+            if let pub = selectedPublisher, !availablePublishers().contains(pub) {
+                selectedPublisher = nil
+            }
+            refreshResults()
+        }
+        .onChange(of: selectedPublisher) { _, _ in refreshResults() }
         .onChange(of: selectedColors) { _, _ in refreshResults() }
         .onChange(of: viewModel.refreshCounter) { _, _ in refreshResults() }
         .onMangaDataChange {
@@ -230,7 +257,8 @@ struct SearchView: View {
     private var emptyState: some View {
         let trimmed = searchText.trimmingCharacters(in: .whitespaces)
         let hasAnyFilter = publicationFilter != nil || readingFilter != nil
-            || showOneShotOnly || selectedDay != nil || !selectedColors.isEmpty
+            || showOneShotOnly || selectedDay != nil || selectedPublisher != nil
+            || !selectedColors.isEmpty
 
         if trimmed.isEmpty && !hasAnyFilter && contentMode == .entries {
             ContentUnavailableView {
