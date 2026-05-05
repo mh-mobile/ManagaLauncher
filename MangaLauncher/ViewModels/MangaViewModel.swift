@@ -389,13 +389,7 @@ final class MangaViewModel {
     }
 
     func publishers(for day: DayOfWeek) -> [String] {
-        let entries = fetchEntries(for: day)
-        let counts = Dictionary(grouping: entries.filter { !$0.publisher.isEmpty }, by: \.publisher)
-            .mapValues(\.count)
-        return counts.sorted { lhs, rhs in
-            if lhs.value != rhs.value { return lhs.value > rhs.value }
-            return lhs.key.localizedStandardCompare(rhs.key) == .orderedAscending
-        }.map(\.key)
+        PublisherIndex.counts(from: fetchEntries(for: day)).map(\.publisher)
     }
 
     func allEntries() -> [MangaEntry] {

@@ -24,6 +24,7 @@ struct SearchView: View {
 
     @State private var searchTask: Task<Void, Never>?
     @State private var cachedResults = SearchResults()
+    @State private var cachedPublishers: [String] = []
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
@@ -131,14 +132,15 @@ struct SearchView: View {
         return entries.filter { $0.publisher == publisher }
     }
 
-    private func availablePublishers() -> [String] {
-        let entries = applyDayFilter(to: viewModel.allEntries())
-        let counts = Dictionary(grouping: entries.filter { !$0.publisher.isEmpty }, by: \.publisher)
-            .mapValues(\.count)
-        return counts.sorted { lhs, rhs in
-            if lhs.value != rhs.value { return lhs.value > rhs.value }
-            return lhs.key.localizedStandardCompare(rhs.key) == .orderedAscending
-        }.map(\.key)
+    private func computePublishers() -> [String] {
+        PublisherIndex.counts(from: applyDayFilter(to: viewModel.allEntries())).map(\.publisher)
+    }
+
+    private func refreshPublishers() {
+        cachedPublishers = computePublishers()
+        if let pub = selectedPublisher, !cachedPublishers.contains(pub) {
+            selectedPublisher = nil
+        }
     }
 
     // MARK: - Body
@@ -159,10 +161,9 @@ struct SearchView: View {
                         contentMode: $contentMode,
                         selectedColors: $selectedColors
                     )
-                    let publishers = availablePublishers()
-                    if !publishers.isEmpty {
+                    if !cachedPublishers.isEmpty {
                         PublisherFilterView(
-                            publishers: publishers,
+                            publishers: cachedPublishers,
                             viewModel: viewModel,
                             selectedPublisher: $selectedPublisher
                         )
@@ -218,7 +219,10 @@ struct SearchView: View {
             }
             #endif
         }
-        .onAppear { refreshResults() }
+        .onAppear {
+            refreshPublishers()
+            refreshResults()
+        }
         .onDisappear { searchTask?.cancel() }
         .onChange(of: searchText) { _, _ in
             searchTask?.cancel()
@@ -233,15 +237,15 @@ struct SearchView: View {
         .onChange(of: readingFilter) { _, _ in refreshResults() }
         .onChange(of: showOneShotOnly) { _, _ in refreshResults() }
         .onChange(of: selectedDay) { _, _ in
-            // 曜日変更で publisher リストが変わるため、選択中の publisher が消える可能性がある
-            if let pub = selectedPublisher, !availablePublishers().contains(pub) {
-                selectedPublisher = nil
-            }
+            refreshPublishers()
             refreshResults()
         }
         .onChange(of: selectedPublisher) { _, _ in refreshResults() }
         .onChange(of: selectedColors) { _, _ in refreshResults() }
-        .onChange(of: viewModel.refreshCounter) { _, _ in refreshResults() }
+        .onChange(of: viewModel.refreshCounter) { _, _ in
+            refreshPublishers()
+            refreshResults()
+        }
         .onMangaDataChange {
             viewModel.refresh()
         }
