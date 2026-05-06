@@ -75,6 +75,7 @@ struct MangaLauncherApp: App {
     let container: ModelContainer
     @Environment(\.scenePhase) private var scenePhase
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @AppStorage(UserDefaultsKeys.hasSeenOnboarding) private var hasSeenOnboarding = false
     @State private var intentPrefill: IntentPrefill?
     @State private var syncMonitor = CloudSyncMonitor()
     /// アプリ全体で共有する単一の MangaViewModel。
@@ -152,13 +153,19 @@ struct MangaLauncherApp: App {
                         QuickActionService.handlePendingIfNeeded()
                         NotificationCenter.default.post(name: .mangaDataDidChange, object: nil)
                         updateBadge()
-                        QuickActionService.updateShortcutItems(
-                            unreadCount: viewModel.unreadCount(for: .today)
-                        )
+                        // updateBadge で最新の unreadCount が確定した後に登録する。
+                        // オンボーディング未完了時はタブが表示されないため登録しない。
+                        if hasSeenOnboarding {
+                            QuickActionService.updateShortcutItems(
+                                unreadCount: viewModel.unreadCount(for: .today)
+                            )
+                        }
                     } else if newPhase == .background {
-                        QuickActionService.updateShortcutItems(
-                            unreadCount: viewModel.unreadCount(for: .today)
-                        )
+                        if hasSeenOnboarding {
+                            QuickActionService.updateShortcutItems(
+                                unreadCount: viewModel.unreadCount(for: .today)
+                            )
+                        }
                     }
                 }
         }
