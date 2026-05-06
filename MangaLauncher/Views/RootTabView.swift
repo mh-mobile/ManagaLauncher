@@ -44,6 +44,12 @@ struct RootTabView: View {
         .onReceive(NotificationCenter.default.publisher(for: .openCatchUp)) { _ in
             selectedTab = .home
         }
+        .onReceive(NotificationCenter.default.publisher(for: .openAddSheet)) { _ in
+            selectedTab = .home
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .switchToSearch)) { _ in
+            selectedTab = .search
+        }
         // どのタブから削除してもトーストが表示されるように全体 overlay で保持
         .overlay(alignment: .bottom) {
             if !viewModel.pendingDeleteEntries.isEmpty {

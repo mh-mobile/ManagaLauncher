@@ -44,6 +44,9 @@ struct ContentView: View {
             .onReceive(NotificationCenter.default.publisher(for: .openCatchUp)) { _ in
                 homeState.sheets.showingCatchUp = true
             }
+            .onReceive(NotificationCenter.default.publisher(for: .openAddSheet)) { _ in
+                homeState.sheets.showingAddSheet = true
+            }
     }
 
     // MARK: - Main Content
