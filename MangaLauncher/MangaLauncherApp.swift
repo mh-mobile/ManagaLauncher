@@ -17,6 +17,34 @@ extension Notification.Name {
     // .switchToDay / .openCatchUp は ControlIntents.swift (widget extension とも共有) で定義
 }
 
+class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(
+        _ application: UIApplication,
+        configurationForConnecting connectingSceneSession: UISceneSession,
+        options: UIScene.ConnectionOptions
+    ) -> UISceneConfiguration {
+        // コールドスタート時のクイックアクション処理
+        if let shortcutItem = options.shortcutItem {
+            QuickActionService.savePending(shortcutItem)
+        }
+        let config = UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
+        config.delegateClass = SceneDelegate.self
+        return config
+    }
+}
+
+class SceneDelegate: NSObject, UIWindowSceneDelegate {
+    /// ウォームスタート（バックグラウンド復帰）時のクイックアクション処理
+    func windowScene(
+        _ windowScene: UIWindowScene,
+        performActionFor shortcutItem: UIApplicationShortcutItem,
+        completionHandler: @escaping (Bool) -> Void
+    ) {
+        QuickActionService.handle(shortcutItem)
+        completionHandler(true)
+    }
+}
+
 class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         let identifier = response.notification.request.identifier
@@ -46,6 +74,8 @@ struct IntentPrefill: Identifiable {
 struct MangaLauncherApp: App {
     let container: ModelContainer
     @Environment(\.scenePhase) private var scenePhase
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @AppStorage(UserDefaultsKeys.hasSeenOnboarding) private var hasSeenOnboarding = false
     @State private var intentPrefill: IntentPrefill?
     @State private var syncMonitor = CloudSyncMonitor()
     /// アプリ全体で共有する単一の MangaViewModel。
@@ -120,8 +150,22 @@ struct MangaLauncherApp: App {
                         checkPendingIntent()
                         checkPendingOpenDay()
                         checkPendingOpenCatchUp()
+                        QuickActionService.handlePendingIfNeeded()
                         NotificationCenter.default.post(name: .mangaDataDidChange, object: nil)
                         updateBadge()
+                        // updateBadge で最新の unreadCount が確定した後に登録する。
+                        // オンボーディング未完了時はタブが表示されないため登録しない。
+                        if hasSeenOnboarding {
+                            QuickActionService.updateShortcutItems(
+                                unreadCount: viewModel.unreadCount(for: .today)
+                            )
+                        }
+                    } else if newPhase == .background {
+                        if hasSeenOnboarding {
+                            QuickActionService.updateShortcutItems(
+                                unreadCount: viewModel.unreadCount(for: .today)
+                            )
+                        }
                     }
                 }
         }

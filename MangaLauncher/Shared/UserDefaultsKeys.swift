@@ -33,4 +33,8 @@ extension Notification.Name {
     static let switchToDay = Notification.Name("switchToDay")
     /// キャッチアップ画面の起動リクエスト。
     static let openCatchUp = Notification.Name("openCatchUp")
+    /// ホームタブの新規登録シート表示リクエスト。
+    static let openAddSheet = Notification.Name("openAddSheet")
+    /// 検索タブへの切替リクエスト。
+    static let switchToSearch = Notification.Name("switchToSearch")
 }
