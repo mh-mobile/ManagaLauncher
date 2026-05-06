@@ -1349,3 +1349,110 @@ struct LinkedTextTests {
         #expect(String(result.characters).isEmpty)
     }
 }
+
+// MARK: - MangaViewModel.mergePublisher
+
+@Suite("MangaViewModel.mergePublisher")
+struct MangaViewModelMergePublisherTests {
+
+    private func makeContainer() throws -> ModelContainer {
+        try ModelContainer(
+            for: MangaEntry.self, ReadingActivity.self, MangaComment.self,
+                 MangaLink.self, PublisherMetadata.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+    }
+
+    @Test("対象の publisher だけが変更される")
+    @MainActor
+    func mergesOnlyMatchingEntries() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        let a = MangaEntry(name: "A", publisher: "ジャンプ")
+        let b = MangaEntry(name: "B", publisher: "ジャンプ")
+        let c = MangaEntry(name: "C", publisher: "マガジン")
+        context.insert(a)
+        context.insert(b)
+        context.insert(c)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.mergePublisher(from: "ジャンプ", to: "週刊少年ジャンプ")
+
+        #expect(a.publisher == "週刊少年ジャンプ")
+        #expect(b.publisher == "週刊少年ジャンプ")
+        #expect(c.publisher == "マガジン")
+    }
+
+    @Test("同名への統合は no-op")
+    @MainActor
+    func sameName() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        let a = MangaEntry(name: "A", publisher: "ジャンプ")
+        context.insert(a)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.mergePublisher(from: "ジャンプ", to: "ジャンプ")
+
+        #expect(a.publisher == "ジャンプ")
+    }
+
+    @Test("空文字列は no-op")
+    @MainActor
+    func emptyStrings() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        let a = MangaEntry(name: "A", publisher: "ジャンプ")
+        context.insert(a)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.mergePublisher(from: "", to: "マガジン")
+        vm.mergePublisher(from: "ジャンプ", to: "")
+
+        #expect(a.publisher == "ジャンプ")
+    }
+
+    @Test("soft-delete されたエントリも統合される")
+    @MainActor
+    func includesSoftDeleted() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        let active = MangaEntry(name: "Active", publisher: "ジャンプ")
+        let deleted = MangaEntry(name: "Deleted", publisher: "ジャンプ")
+        deleted.deletedAt = Date()
+        context.insert(active)
+        context.insert(deleted)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.mergePublisher(from: "ジャンプ", to: "週刊少年ジャンプ")
+
+        #expect(active.publisher == "週刊少年ジャンプ")
+        #expect(deleted.publisher == "週刊少年ジャンプ")
+    }
+
+    @Test("previewCount が正しい件数を返す")
+    @MainActor
+    func previewCount() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        context.insert(MangaEntry(name: "A", publisher: "ジャンプ"))
+        context.insert(MangaEntry(name: "B", publisher: "ジャンプ"))
+        context.insert(MangaEntry(name: "C", publisher: "マガジン"))
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        #expect(vm.mergePublisherPreviewCount(for: "ジャンプ") == 2)
+        #expect(vm.mergePublisherPreviewCount(for: "マガジン") == 1)
+        #expect(vm.mergePublisherPreviewCount(for: "サンデー") == 0)
+        #expect(vm.mergePublisherPreviewCount(for: "") == 0)
+    }
+}
