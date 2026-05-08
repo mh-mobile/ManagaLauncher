@@ -115,7 +115,13 @@ final class MangaViewModel {
 
         var toDelete: [MangaEntry] = []
         for (url, group) in groups where group.count >= 2 && !url.isEmpty {
-            let sorted = group.sorted { Self.dedupeScore(of: $0) > Self.dedupeScore(of: $1) }
+            // 同点時は UUID 文字列順で安定化させ、複数端末で kept が一致するようにする。
+            let sorted = group.sorted { lhs, rhs in
+                let l = Self.dedupeScore(of: lhs)
+                let r = Self.dedupeScore(of: rhs)
+                if l != r { return l > r }
+                return lhs.id.uuidString < rhs.id.uuidString
+            }
             toDelete.append(contentsOf: sorted.dropFirst())
         }
 

@@ -384,6 +384,62 @@ struct MangaViewModelDedupeTests {
         #expect(firstCount == 1)
         #expect(secondCount == 1)
     }
+
+    @Test("dedupe 後も kept エントリの ReadingActivity は保持される")
+    @MainActor
+    func dedupePreservesReadingActivity() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let url = "https://example.com/keep-activity"
+        let sharedID = UUID()
+
+        // 同 URL × 同 UUID の重複(実環境で観測されたパターン)
+        context.insert(MangaEntry(id: sharedID, name: "A", url: url))
+        context.insert(MangaEntry(id: sharedID, name: "A", url: url))
+        // 共有 mangaEntryID の Activity を 3 件
+        context.insert(ReadingActivity(date: Date(timeIntervalSince1970: 1_700_000_000), mangaName: "A", mangaEntryID: sharedID))
+        context.insert(ReadingActivity(date: Date(timeIntervalSince1970: 1_700_086_400), mangaName: "A", mangaEntryID: sharedID))
+        context.insert(ReadingActivity(date: Date(timeIntervalSince1970: 1_700_172_800), mangaName: "A", mangaEntryID: sharedID))
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+
+        // エントリは 1 件に統合される
+        let entries = try activeEntries(context)
+        #expect(entries.count == 1)
+
+        // ReadingActivity は 1 件も削除されない(草が消えない)
+        let allActivities = try context.fetch(FetchDescriptor<ReadingActivity>())
+        #expect(allActivities.count == 3)
+
+        // kept エントリと Activity の mangaEntryID が一致する(参照が孤児にならない)
+        if let kept = entries.first {
+            #expect(allActivities.allSatisfy { $0.mangaEntryID == kept.id })
+        }
+    }
+
+    @Test("score 同点時は UUID 文字列の昇順で kept が決まる(端末間で安定)")
+    @MainActor
+    func dedupeBreaksTiesByUUID() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let url = "https://example.com/tie"
+
+        // どちらも score=0 の同条件エントリ。UUID 順で勝者が決まることを確認。
+        let smallerUUID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+        let largerUUID = UUID(uuidString: "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF")!
+        context.insert(MangaEntry(id: largerUUID, name: "loser", url: url))
+        context.insert(MangaEntry(id: smallerUUID, name: "winner", url: url))
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+
+        let remaining = try activeEntries(context)
+        #expect(remaining.count == 1)
+        #expect(remaining.first?.id == smallerUUID)
+    }
 }
 
 @Suite("MangaViewModel.allUnreadEntries / allUnreadCount")
