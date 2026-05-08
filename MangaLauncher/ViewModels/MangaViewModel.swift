@@ -86,15 +86,22 @@ final class MangaViewModel {
         }
     }
 
-    /// 同じ URL を持つエントリが複数存在する場合に、情報量が最も多い 1 件を残して
+    /// 同じ URL × 同じ曜日 のエントリが複数存在する場合、情報量が最も多い 1 件を残して
     /// 残りを削除する。SwiftData + CloudKit では `@Attribute(.unique)` が使えず、
-    /// 端末間の同期不整合等で同 URL のレコードが複数残ることがある。
+    /// 端末間の同期不整合等で重複が残ることがある。
     ///
-    /// 注意: 重複エントリは UUID (`id`) が同一なケースが多い。`permanentlyDelete`
-    /// 経由だと `mangaEntryID == entry.id` で関連 ReadingActivity / Comment / Link
-    /// を引いてしまい、残す側のデータも消える危険がある。dedupe では
-    /// `modelContext.delete(entry)` を直接使って関連データはそのまま残す
-    /// (UUID が同じ kept エントリから引き続けるため孤児にならない)。
+    /// グルーピングキーは `(URL, dayOfWeek)` の複合キー。アプリ自身の重複防止
+    /// (`addEntry`) も `url + dayOfWeek` で判定しているため、それに揃える。
+    /// 同一 URL でも異なる曜日に登録されたエントリは正当な別物として扱う。
+    ///
+    /// 注意:
+    /// - 重複エントリは UUID (`id`) が同一なケースが多いが、別端末発番で UUID が
+    ///   異なるケースもあり得る。後者で関連 ReadingActivity / Comment / Link が
+    ///   孤児にならないよう、削除前に **losing 側の UUID を kept 側の UUID に
+    ///   付け替える** (re-point)。同 UUID のときは no-op になる。
+    /// - 削除後は `hiddenIDs` / `deletedIDs` キャッシュに stale な UUID が残る
+    ///   可能性があるので reload する(同 UUID の hidden/deleted が混ざっていた場合、
+    ///   kept エントリが誤って隠される事故を防ぐ)。
     private func dedupeEntriesIfNeeded() {
         let descriptor = FetchDescriptor<MangaEntry>(
             predicate: #Predicate { $0.deletedAt == nil }
@@ -109,12 +116,20 @@ final class MangaViewModel {
         }
         guard active.count >= 2 else { return }
 
-        let groups = Dictionary(grouping: active) { entry in
-            entry.url.trimmingCharacters(in: .whitespacesAndNewlines)
+        struct DedupeKey: Hashable {
+            let url: String
+            let day: Int
         }
 
-        var toDelete: [MangaEntry] = []
-        for (url, group) in groups where group.count >= 2 && !url.isEmpty {
+        let groups = Dictionary(grouping: active) { entry in
+            DedupeKey(
+                url: entry.url.trimmingCharacters(in: .whitespacesAndNewlines),
+                day: entry.dayOfWeekRawValue
+            )
+        }
+
+        var deletions: [(kept: MangaEntry, losers: [MangaEntry])] = []
+        for (key, group) in groups where group.count >= 2 && !key.url.isEmpty {
             // 同点時は UUID 文字列順で安定化させ、複数端末で kept が一致するようにする。
             let sorted = group.sorted { lhs, rhs in
                 let l = Self.dedupeScore(of: lhs)
@@ -122,21 +137,56 @@ final class MangaViewModel {
                 if l != r { return l > r }
                 return lhs.id.uuidString < rhs.id.uuidString
             }
-            toDelete.append(contentsOf: sorted.dropFirst())
+            guard let kept = sorted.first else { continue }
+            let losers = Array(sorted.dropFirst())
+            deletions.append((kept: kept, losers: losers))
         }
 
-        guard !toDelete.isEmpty else { return }
+        guard !deletions.isEmpty else { return }
 
-        print("[MangaViewModel] dedupe: removing \(toDelete.count) duplicate entries")
-        for entry in toDelete {
-            modelContext.delete(entry)
+        let totalToDelete = deletions.reduce(0) { $0 + $1.losers.count }
+        print("[MangaViewModel] dedupe: removing \(totalToDelete) duplicate entries across \(deletions.count) groups")
+        for (kept, losers) in deletions {
+            for loser in losers {
+                if loser.id != kept.id {
+                    repointRelatedReferences(from: loser.id, to: kept.id)
+                }
+                modelContext.delete(loser)
+            }
         }
         do {
             try modelContext.save()
+            // 削除した UUID と同じ UUID を kept が持つ場合に備えてキャッシュを再構築
+            reloadHiddenIDs()
+            reloadDeletedIDs()
             refreshCounter += 1
         } catch {
             print("[MangaViewModel] dedupe save failed: \(error)")
             lastError = .migration(error)
+        }
+    }
+
+    /// 重複統合で削除されるエントリの UUID を参照している
+    /// ReadingActivity / MangaComment / MangaLink を、残す方の UUID に付け替える。
+    /// 同 UUID のときは fetch しても 0 件なので何もしない。
+    private func repointRelatedReferences(from oldID: UUID, to newID: UUID) {
+        let activityDescriptor = FetchDescriptor<ReadingActivity>(
+            predicate: #Predicate { $0.mangaEntryID == oldID }
+        )
+        if let activities = try? modelContext.fetch(activityDescriptor) {
+            for a in activities { a.mangaEntryID = newID }
+        }
+        let commentDescriptor = FetchDescriptor<MangaComment>(
+            predicate: #Predicate { $0.mangaEntryID == oldID }
+        )
+        if let comments = try? modelContext.fetch(commentDescriptor) {
+            for c in comments { c.mangaEntryID = newID }
+        }
+        let linkDescriptor = FetchDescriptor<MangaLink>(
+            predicate: #Predicate { $0.mangaEntryID == oldID }
+        )
+        if let links = try? modelContext.fetch(linkDescriptor) {
+            for l in links { l.mangaEntryID = newID }
         }
     }
 

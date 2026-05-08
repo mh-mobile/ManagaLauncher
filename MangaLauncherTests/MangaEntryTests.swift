@@ -419,6 +419,66 @@ struct MangaViewModelDedupeTests {
         }
     }
 
+    @Test("同 URL × 異なる曜日 は別物として保持される(マルチ曜日登録の保護)")
+    @MainActor
+    func dedupeKeepsSameURLAcrossDifferentDays() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let url = "https://example.com/multi-day"
+
+        // 同じ URL を月・火・水に登録した状態(addEntry の days: 引数の正常系)
+        let monday = MangaEntry(name: "A", url: url, dayOfWeek: .monday)
+        let tuesday = MangaEntry(name: "A", url: url, dayOfWeek: .tuesday)
+        let wednesday = MangaEntry(name: "A", url: url, dayOfWeek: .wednesday)
+        context.insert(monday)
+        context.insert(tuesday)
+        context.insert(wednesday)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+
+        let remaining = try activeEntries(context)
+        #expect(remaining.count == 3)
+        let days = Set(remaining.map(\.dayOfWeek))
+        #expect(days == Set([.monday, .tuesday, .wednesday]))
+    }
+
+    @Test("UUID が異なる重複でも関連 ReadingActivity が孤児化しない(re-point される)")
+    @MainActor
+    func dedupeRepointsRelatedRowsAcrossDifferentUUIDs() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let url = "https://example.com/cross-device-dup"
+
+        // 別端末で発番された前提で UUID が異なる重複(同 URL × 同曜日)
+        let losingID = UUID()
+        let winningID = UUID()
+        let loser = MangaEntry(id: losingID, name: "A", url: url)
+        let winner = MangaEntry(id: winningID, name: "A", url: url)
+        winner.memo = "高スコア側"  // kept が確定するように
+        context.insert(loser)
+        context.insert(winner)
+
+        // losingID 側に紐付いた Activity を作る
+        context.insert(ReadingActivity(date: Date(timeIntervalSince1970: 1_700_000_000), mangaName: "A", mangaEntryID: losingID))
+        context.insert(ReadingActivity(date: Date(timeIntervalSince1970: 1_700_086_400), mangaName: "A", mangaEntryID: losingID))
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+
+        // エントリは winner 1 件のみ
+        let entries = try activeEntries(context)
+        #expect(entries.count == 1)
+        #expect(entries.first?.id == winningID)
+
+        // Activity は削除されず、mangaEntryID が winning 側に付け替えられている
+        let activities = try context.fetch(FetchDescriptor<ReadingActivity>())
+        #expect(activities.count == 2)
+        #expect(activities.allSatisfy { $0.mangaEntryID == winningID })
+    }
+
     @Test("score 同点時は UUID 文字列の昇順で kept が決まる(端末間で安定)")
     @MainActor
     func dedupeBreaksTiesByUUID() throws {
