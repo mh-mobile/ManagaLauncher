@@ -57,6 +57,7 @@ final class MangaViewModel {
         migrateLegacyStateIfNeeded()
         backfillMemoUpdatedAtIfNeeded()
         purgeExpiredSoftDeletes()
+        dedupeEntriesIfNeeded()
     }
 
     /// 旧 Bool 状態（isOnHiatus / isCompleted / isBacklog）を
@@ -83,6 +84,67 @@ final class MangaViewModel {
             print("[MangaViewModel] state migration save failed: \(error)")
             lastError = .migration(error)
         }
+    }
+
+    /// 同じ URL を持つエントリが複数存在する場合に、情報量が最も多い 1 件を残して
+    /// 残りを削除する。SwiftData + CloudKit では `@Attribute(.unique)` が使えず、
+    /// 端末間の同期不整合等で同 URL のレコードが複数残ることがある。
+    ///
+    /// 注意: 重複エントリは UUID (`id`) が同一なケースが多い。`permanentlyDelete`
+    /// 経由だと `mangaEntryID == entry.id` で関連 ReadingActivity / Comment / Link
+    /// を引いてしまい、残す側のデータも消える危険がある。dedupe では
+    /// `modelContext.delete(entry)` を直接使って関連データはそのまま残す
+    /// (UUID が同じ kept エントリから引き続けるため孤児にならない)。
+    private func dedupeEntriesIfNeeded() {
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.deletedAt == nil }
+        )
+        let active: [MangaEntry]
+        do {
+            active = try modelContext.fetch(descriptor)
+        } catch {
+            print("[MangaViewModel] dedupe fetch failed: \(error)")
+            lastError = .migration(error)
+            return
+        }
+        guard active.count >= 2 else { return }
+
+        let groups = Dictionary(grouping: active) { entry in
+            entry.url.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        var toDelete: [MangaEntry] = []
+        for (url, group) in groups where group.count >= 2 && !url.isEmpty {
+            let sorted = group.sorted { Self.dedupeScore(of: $0) > Self.dedupeScore(of: $1) }
+            toDelete.append(contentsOf: sorted.dropFirst())
+        }
+
+        guard !toDelete.isEmpty else { return }
+
+        print("[MangaViewModel] dedupe: removing \(toDelete.count) duplicate entries")
+        for entry in toDelete {
+            modelContext.delete(entry)
+        }
+        do {
+            try modelContext.save()
+            refreshCounter += 1
+        } catch {
+            print("[MangaViewModel] dedupe save failed: \(error)")
+            lastError = .migration(error)
+        }
+    }
+
+    /// 重複グループ内で残す 1 件を決めるためのスコア。値が大きいほど情報量が多い。
+    private static func dedupeScore(of entry: MangaEntry) -> Int {
+        var s = 0
+        if !entry.memo.isEmpty { s += 10 }
+        if entry.lastReadDate != nil { s += 5 }
+        if entry.isFocused { s += 5 }
+        if entry.currentEpisode != nil { s += 3 }
+        if entry.imageData != nil { s += 2 }
+        if entry.episodeLabel != nil { s += 1 }
+        if entry.nextExpectedUpdate != nil { s += 1 }
+        return s
     }
 
     /// memoUpdatedAt 追加前に書かれたメモには nil が入っているので、

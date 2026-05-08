@@ -259,6 +259,133 @@ struct MangaViewModelFindEntriesTests {
     }
 }
 
+@Suite("MangaViewModel dedupe-on-startup")
+struct MangaViewModelDedupeTests {
+
+    private func makeContainer() throws -> ModelContainer {
+        try ModelContainer(
+            for: MangaEntry.self, ReadingActivity.self, MangaComment.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+    }
+
+    private func activeEntries(_ context: ModelContext) throws -> [MangaEntry] {
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.deletedAt == nil }
+        )
+        return try context.fetch(descriptor)
+    }
+
+    @Test("同 URL の重複は最も情報量が多い 1 件を残して削除される")
+    @MainActor
+    func dedupeKeepsHighestScore() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let url = "https://example.com/title/1"
+
+        let plain = MangaEntry(name: "A", url: url)
+        let withMemo = MangaEntry(name: "A", url: url)
+        withMemo.memo = "高スコアにしたいエントリ"
+        let withProgress = MangaEntry(name: "A", url: url)
+        withProgress.currentEpisode = 5
+        context.insert(plain)
+        context.insert(withMemo)
+        context.insert(withProgress)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+
+        let remaining = try activeEntries(context)
+        #expect(remaining.count == 1)
+        #expect(remaining.first?.memo == "高スコアにしたいエントリ")
+    }
+
+    @Test("URL が異なるエントリは保持される")
+    @MainActor
+    func dedupeKeepsDistinctURLs() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        context.insert(MangaEntry(name: "A", url: "https://example.com/a"))
+        context.insert(MangaEntry(name: "B", url: "https://example.com/b"))
+        context.insert(MangaEntry(name: "C", url: "https://example.com/c"))
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+
+        let remaining = try activeEntries(context)
+        #expect(remaining.count == 3)
+    }
+
+    @Test("URL が空のエントリは別エントリとして扱う(誤統合しない)")
+    @MainActor
+    func dedupeIgnoresEmptyURL() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        context.insert(MangaEntry(name: "noUrl1", url: ""))
+        context.insert(MangaEntry(name: "noUrl2", url: ""))
+        context.insert(MangaEntry(name: "noUrl3", url: "   "))
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+
+        let remaining = try activeEntries(context)
+        #expect(remaining.count == 3)
+    }
+
+    @Test("削除済み (deletedAt != nil) エントリは dedupe 対象外")
+    @MainActor
+    func dedupeSkipsSoftDeleted() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let url = "https://example.com/x"
+
+        let kept = MangaEntry(name: "kept", url: url)
+        let deleted = MangaEntry(name: "deleted", url: url)
+        deleted.deletedAt = Date()
+        context.insert(kept)
+        context.insert(deleted)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+
+        let active = try activeEntries(context)
+        #expect(active.count == 1)
+        #expect(active.first?.name == "kept")
+
+        let allDescriptor = FetchDescriptor<MangaEntry>()
+        let all = try context.fetch(allDescriptor)
+        #expect(all.count == 2)
+    }
+
+    @Test("dedupe は冪等(2 回呼んでも結果が変わらない)")
+    @MainActor
+    func dedupeIsIdempotent() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let url = "https://example.com/idem"
+        context.insert(MangaEntry(name: "A", url: url))
+        context.insert(MangaEntry(name: "A", url: url))
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+        let firstCount = try activeEntries(context).count
+
+        // 同じ ViewModel インスタンスは didRunStartupMigrations フラグで再実行されないため、
+        // 別インスタンスで再実行しても結果が変わらないことを確認。
+        let vm2 = MangaViewModel(modelContext: context)
+        vm2.runStartupMigrationsIfNeeded()
+        let secondCount = try activeEntries(context).count
+
+        #expect(firstCount == 1)
+        #expect(secondCount == 1)
+    }
+}
+
 @Suite("MangaViewModel.allUnreadEntries / allUnreadCount")
 struct MangaViewModelAllUnreadTests {
 
