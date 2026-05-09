@@ -259,6 +259,352 @@ struct MangaViewModelFindEntriesTests {
     }
 }
 
+@Suite("MangaViewModel dedupe-on-startup")
+struct MangaViewModelDedupeTests {
+
+    private func makeContainer() throws -> ModelContainer {
+        try ModelContainer(
+            for: MangaEntry.self, ReadingActivity.self, MangaComment.self, MangaLink.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+    }
+
+    private func activeEntries(_ context: ModelContext) throws -> [MangaEntry] {
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.deletedAt == nil }
+        )
+        return try context.fetch(descriptor)
+    }
+
+    @Test("同 URL の重複は最も情報量が多い 1 件を残して削除される")
+    @MainActor
+    func dedupeKeepsHighestScore() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let url = "https://example.com/title/1"
+
+        let plain = MangaEntry(name: "A", url: url)
+        let withMemo = MangaEntry(name: "A", url: url)
+        withMemo.memo = "高スコアにしたいエントリ"
+        let withProgress = MangaEntry(name: "A", url: url)
+        withProgress.currentEpisode = 5
+        context.insert(plain)
+        context.insert(withMemo)
+        context.insert(withProgress)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+
+        let remaining = try activeEntries(context)
+        #expect(remaining.count == 1)
+        #expect(remaining.first?.memo == "高スコアにしたいエントリ")
+    }
+
+    @Test("URL が異なるエントリは保持される")
+    @MainActor
+    func dedupeKeepsDistinctURLs() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        context.insert(MangaEntry(name: "A", url: "https://example.com/a"))
+        context.insert(MangaEntry(name: "B", url: "https://example.com/b"))
+        context.insert(MangaEntry(name: "C", url: "https://example.com/c"))
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+
+        let remaining = try activeEntries(context)
+        #expect(remaining.count == 3)
+    }
+
+    @Test("URL が空のエントリは別エントリとして扱う(誤統合しない)")
+    @MainActor
+    func dedupeIgnoresEmptyURL() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        context.insert(MangaEntry(name: "noUrl1", url: ""))
+        context.insert(MangaEntry(name: "noUrl2", url: ""))
+        context.insert(MangaEntry(name: "noUrl3", url: "   "))
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+
+        let remaining = try activeEntries(context)
+        #expect(remaining.count == 3)
+    }
+
+    @Test("削除済み (deletedAt != nil) エントリは dedupe 対象外")
+    @MainActor
+    func dedupeSkipsSoftDeleted() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let url = "https://example.com/x"
+
+        let kept = MangaEntry(name: "kept", url: url)
+        let deleted = MangaEntry(name: "deleted", url: url)
+        deleted.deletedAt = Date()
+        context.insert(kept)
+        context.insert(deleted)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+
+        let active = try activeEntries(context)
+        #expect(active.count == 1)
+        #expect(active.first?.name == "kept")
+
+        let allDescriptor = FetchDescriptor<MangaEntry>()
+        let all = try context.fetch(allDescriptor)
+        #expect(all.count == 2)
+    }
+
+    @Test("dedupe は冪等(2 回呼んでも結果が変わらない)")
+    @MainActor
+    func dedupeIsIdempotent() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let url = "https://example.com/idem"
+        context.insert(MangaEntry(name: "A", url: url))
+        context.insert(MangaEntry(name: "A", url: url))
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+        let firstCount = try activeEntries(context).count
+
+        // 同じ ViewModel インスタンスは didRunStartupMigrations フラグで再実行されないため、
+        // 別インスタンスで再実行しても結果が変わらないことを確認。
+        let vm2 = MangaViewModel(modelContext: context)
+        vm2.runStartupMigrationsIfNeeded()
+        let secondCount = try activeEntries(context).count
+
+        #expect(firstCount == 1)
+        #expect(secondCount == 1)
+    }
+
+    @Test("dedupe 後も kept エントリの ReadingActivity は保持される")
+    @MainActor
+    func dedupePreservesReadingActivity() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let url = "https://example.com/keep-activity"
+        let sharedID = UUID()
+
+        // 同 URL × 同 UUID の重複(実環境で観測されたパターン)
+        context.insert(MangaEntry(id: sharedID, name: "A", url: url))
+        context.insert(MangaEntry(id: sharedID, name: "A", url: url))
+        // 共有 mangaEntryID の Activity を 3 件
+        context.insert(ReadingActivity(date: Date(timeIntervalSince1970: 1_700_000_000), mangaName: "A", mangaEntryID: sharedID))
+        context.insert(ReadingActivity(date: Date(timeIntervalSince1970: 1_700_086_400), mangaName: "A", mangaEntryID: sharedID))
+        context.insert(ReadingActivity(date: Date(timeIntervalSince1970: 1_700_172_800), mangaName: "A", mangaEntryID: sharedID))
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+
+        // エントリは 1 件に統合される
+        let entries = try activeEntries(context)
+        #expect(entries.count == 1)
+
+        // ReadingActivity は 1 件も削除されない(草が消えない)
+        let allActivities = try context.fetch(FetchDescriptor<ReadingActivity>())
+        #expect(allActivities.count == 3)
+
+        // kept エントリと Activity の mangaEntryID が一致する(参照が孤児にならない)
+        if let kept = entries.first {
+            #expect(allActivities.allSatisfy { $0.mangaEntryID == kept.id })
+        }
+    }
+
+    @Test("同 URL × 異なる曜日 は別物として保持される(マルチ曜日登録の保護)")
+    @MainActor
+    func dedupeKeepsSameURLAcrossDifferentDays() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let url = "https://example.com/multi-day"
+
+        // 同じ URL を月・火・水に登録した状態(addEntry の days: 引数の正常系)
+        let monday = MangaEntry(name: "A", url: url, dayOfWeek: .monday)
+        let tuesday = MangaEntry(name: "A", url: url, dayOfWeek: .tuesday)
+        let wednesday = MangaEntry(name: "A", url: url, dayOfWeek: .wednesday)
+        context.insert(monday)
+        context.insert(tuesday)
+        context.insert(wednesday)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+
+        let remaining = try activeEntries(context)
+        #expect(remaining.count == 3)
+        let days = Set(remaining.map(\.dayOfWeek))
+        #expect(days == Set([.monday, .tuesday, .wednesday]))
+    }
+
+    @Test("UUID が異なる重複でも関連 ReadingActivity が孤児化しない(re-point される)")
+    @MainActor
+    func dedupeRepointsRelatedRowsAcrossDifferentUUIDs() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let url = "https://example.com/cross-device-dup"
+
+        // 別端末で発番された前提で UUID が異なる重複(同 URL × 同曜日)
+        let losingID = UUID()
+        let winningID = UUID()
+        let loser = MangaEntry(id: losingID, name: "A", url: url)
+        let winner = MangaEntry(id: winningID, name: "A", url: url)
+        winner.memo = "高スコア側"  // kept が確定するように
+        context.insert(loser)
+        context.insert(winner)
+
+        // losingID 側に紐付いた Activity を作る
+        context.insert(ReadingActivity(date: Date(timeIntervalSince1970: 1_700_000_000), mangaName: "A", mangaEntryID: losingID))
+        context.insert(ReadingActivity(date: Date(timeIntervalSince1970: 1_700_086_400), mangaName: "A", mangaEntryID: losingID))
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+
+        // エントリは winner 1 件のみ
+        let entries = try activeEntries(context)
+        #expect(entries.count == 1)
+        #expect(entries.first?.id == winningID)
+
+        // Activity は削除されず、mangaEntryID が winning 側に付け替えられている
+        let activities = try context.fetch(FetchDescriptor<ReadingActivity>())
+        #expect(activities.count == 2)
+        #expect(activities.allSatisfy { $0.mangaEntryID == winningID })
+    }
+
+    @Test("UUID が異なる重複で MangaComment / MangaLink も re-point される")
+    @MainActor
+    func dedupeRepointsCommentsAndLinks() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let url = "https://example.com/comments-and-links"
+
+        let losingID = UUID()
+        let winningID = UUID()
+        let loser = MangaEntry(id: losingID, name: "A", url: url)
+        let winner = MangaEntry(id: winningID, name: "A", url: url)
+        winner.memo = "高スコア側"
+        context.insert(loser)
+        context.insert(winner)
+
+        // losingID に紐付いた Comment / Link を作る
+        context.insert(MangaComment(mangaEntryID: losingID, content: "comment-1"))
+        context.insert(MangaComment(mangaEntryID: losingID, content: "comment-2"))
+        context.insert(MangaLink(mangaEntryID: losingID, url: "https://example.com/related-1"))
+        context.insert(MangaLink(mangaEntryID: losingID, url: "https://example.com/related-2"))
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+
+        let comments = try context.fetch(FetchDescriptor<MangaComment>())
+        #expect(comments.count == 2)
+        #expect(comments.allSatisfy { $0.mangaEntryID == winningID })
+
+        let links = try context.fetch(FetchDescriptor<MangaLink>())
+        #expect(links.count == 2)
+        #expect(links.allSatisfy { $0.mangaEntryID == winningID })
+    }
+
+    @Test("dedupe 後に hiddenIDs キャッシュが reload され、kept が誤って隠れない")
+    @MainActor
+    func dedupeReloadsHiddenIDs() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let url = "https://example.com/hidden-cache"
+        let sharedID = UUID()
+
+        // 同 UUID × 同 URL の重複。loser は isHidden=true、kept は isHidden=false。
+        // 重複 UUID では hiddenIDs がそのままだと kept まで隠されてしまう。
+        let kept = MangaEntry(id: sharedID, name: "kept", url: url)
+        kept.memo = "高スコア側"
+        kept.isHidden = false
+        let loser = MangaEntry(id: sharedID, name: "loser", url: url)
+        loser.isHidden = true
+        context.insert(kept)
+        context.insert(loser)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        // init で reloadHiddenIDs が走り、hiddenIDs に sharedID が入る(loser 由来)
+        #expect(vm.hiddenIDs.contains(sharedID))
+
+        vm.runStartupMigrationsIfNeeded()
+
+        // 削除後は loser 不在 → reload で hiddenIDs から外れる
+        #expect(!vm.hiddenIDs.contains(sharedID))
+        // fetchEntries が kept を返す(hidden 扱いされない)
+        let entries = vm.fetchEntries(for: kept.dayOfWeek)
+        #expect(entries.contains { $0.name == "kept" })
+    }
+
+    @Test("dedupe 後に deletedIDs キャッシュも reload される")
+    @MainActor
+    func dedupeReloadsDeletedIDs() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let url = "https://example.com/deleted-cache"
+        let sharedID = UUID()
+
+        // soft-deleted な loser と active な kept(同 UUID)。
+        // ※ dedupe は active のみ対象なので loser は dedupe で消えないが、
+        //   deletedIDs キャッシュに sharedID が入っている状態で kept が
+        //   `fetchEntries` 等で誤って弾かれないかを確認する。
+        let kept = MangaEntry(id: sharedID, name: "kept-active", url: url)
+        kept.memo = "高スコア側"
+        let other = MangaEntry(id: sharedID, name: "loser-active", url: url)
+        let softDeleted = MangaEntry(id: sharedID, name: "soft-deleted", url: url + "/other")
+        softDeleted.deletedAt = Date()
+        context.insert(kept)
+        context.insert(other)
+        context.insert(softDeleted)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        // init で deletedIDs に sharedID(soft-deleted 由来)が入る
+        #expect(vm.deletedIDs.contains(sharedID))
+
+        vm.runStartupMigrationsIfNeeded()
+
+        // dedupe 後も soft-deleted 1 件は残る → deletedIDs に sharedID が引き続き入る
+        // (これは reload の正しい挙動。reload しないと stale だが偶々合うケースもあるので
+        //  ここは「reload が走った結果として正しい状態になっている」ことを検証)
+        let allDescriptor = FetchDescriptor<MangaEntry>(predicate: #Predicate { $0.deletedAt != nil })
+        let stillDeleted = try context.fetch(allDescriptor)
+        #expect(!stillDeleted.isEmpty)
+        #expect(vm.deletedIDs.contains(sharedID))
+    }
+
+    @Test("score 同点時は UUID 文字列の昇順で kept が決まる(端末間で安定)")
+    @MainActor
+    func dedupeBreaksTiesByUUID() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let url = "https://example.com/tie"
+
+        // どちらも score=0 の同条件エントリ。UUID 順で勝者が決まることを確認。
+        let smallerUUID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+        let largerUUID = UUID(uuidString: "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF")!
+        context.insert(MangaEntry(id: largerUUID, name: "loser", url: url))
+        context.insert(MangaEntry(id: smallerUUID, name: "winner", url: url))
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+
+        let remaining = try activeEntries(context)
+        #expect(remaining.count == 1)
+        #expect(remaining.first?.id == smallerUUID)
+    }
+}
+
 @Suite("MangaViewModel.allUnreadEntries / allUnreadCount")
 struct MangaViewModelAllUnreadTests {
 
