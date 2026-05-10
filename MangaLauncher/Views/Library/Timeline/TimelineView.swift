@@ -226,8 +226,8 @@ struct TimelineView: View {
 
     private func pageDates() -> [Date] {
         let calendar = Calendar.current
-        return (-Self.pageRadius...Self.pageRadius).map {
-            calendar.date(byAdding: .day, value: $0, to: pageAnchor)!
+        return (-Self.pageRadius...Self.pageRadius).compactMap {
+            calendar.date(byAdding: .day, value: $0, to: pageAnchor)
         }
     }
 

@@ -24,23 +24,35 @@ public enum URLResolver {
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        request.timeoutInterval = 10
 
         do {
             let (_, response) = try await URLSession.shared.data(for: request)
             if let finalURL = response.url {
                 return finalURL.absoluteString
             }
-        } catch {}
+        } catch {
+            print("[URLResolver] Failed to resolve \(urlString): \(error.localizedDescription)")
+        }
 
         return urlString
     }
 }
 
 public enum OGPFetcher {
+    /// HTML ページの取得タイムアウト (秒)
+    private static let htmlTimeout: TimeInterval = 15
+    /// OG 画像の取得タイムアウト (秒)
+    private static let imageTimeout: TimeInterval = 10
+    /// OG 画像の最大ダウンロードサイズ (5 MB)
+    private static let maxImageBytes = 5 * 1024 * 1024
+
     public static func fetch(from urlString: String) async -> OGPResult {
         guard let url = URL(string: urlString) else { return OGPResult() }
         do {
-            let (data, _) = try await URLSession.shared.data(from: url)
+            var htmlRequest = URLRequest(url: url)
+            htmlRequest.timeoutInterval = htmlTimeout
+            let (data, _) = try await URLSession.shared.data(for: htmlRequest)
             guard let html = String(data: data, encoding: .utf8) else { return OGPResult() }
 
             let siteName = extractMetaContent(from: html, property: "og:site_name")
@@ -54,14 +66,19 @@ public enum OGPFetcher {
                 } else {
                     resolvedURL = URL(string: imageURLString, relativeTo: url)?.absoluteString ?? imageURLString
                 }
-                if let imageURL = URL(string: resolvedURL),
-                   let (imgData, _) = try? await URLSession.shared.data(from: imageURL) {
-                    imageData = downsizedJPEGData(imgData, maxDimension: 600)
+                if let imageURL = URL(string: resolvedURL) {
+                    var imgRequest = URLRequest(url: imageURL)
+                    imgRequest.timeoutInterval = imageTimeout
+                    if let (imgData, _) = try? await URLSession.shared.data(for: imgRequest),
+                       imgData.count <= maxImageBytes {
+                        imageData = downsizedJPEGData(imgData, maxDimension: 600)
+                    }
                 }
             }
 
             return OGPResult(imageData: imageData, siteName: siteName, title: ogTitle)
         } catch {
+            print("[OGPFetcher] Failed to fetch from \(urlString): \(error.localizedDescription)")
             return OGPResult()
         }
     }

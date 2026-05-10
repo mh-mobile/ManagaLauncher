@@ -789,7 +789,7 @@ final class MangaViewModel {
     }
 
     func purgeExpiredSoftDeletes() {
-        let cutoff = Calendar.current.date(byAdding: .day, value: -30, to: Date())!
+        guard let cutoff = Calendar.current.date(byAdding: .day, value: -30, to: Date()) else { return }
         let descriptor = FetchDescriptor<MangaEntry>(predicate: #Predicate { $0.deletedAt != nil && $0.deletedAt! < cutoff })
         guard let expired = try? modelContext.fetch(descriptor), !expired.isEmpty else { return }
         for entry in expired {

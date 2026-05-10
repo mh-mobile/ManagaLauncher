@@ -83,9 +83,9 @@ struct EditEntryView: View {
         let todayWeekday = calendar.component(.weekday, from: today) - 1
         let target = selectedDay.rawValue
         let daysToNext = (target - todayWeekday + 7) % 7
-        let firstDate = daysToNext == 0 ? today : calendar.date(byAdding: .day, value: daysToNext, to: today)!
-        return (0..<8).map { i in
-            calendar.date(byAdding: .day, value: i * 7, to: firstDate)!
+        let firstDate = daysToNext == 0 ? today : (calendar.date(byAdding: .day, value: daysToNext, to: today) ?? today)
+        return (0..<8).compactMap { i in
+            calendar.date(byAdding: .day, value: i * 7, to: firstDate)
         }
     }
 
@@ -96,7 +96,7 @@ struct EditEntryView: View {
         let target = day.rawValue
         let daysAhead = (target - todayWeekday + 7) % 7
         let next = daysAhead == 0 ? 7 : daysAhead // if today, go to next week
-        return calendar.date(byAdding: .day, value: next, to: today)!
+        return calendar.date(byAdding: .day, value: next, to: today) ?? today
     }
 
     private static let allowedSchemes: Set<String> = ["https", "http"]
