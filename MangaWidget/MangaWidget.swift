@@ -410,7 +410,8 @@ struct MangaLauncherWidget: Widget {
             do {
                 return try SharedModelContainer.createLocalOnly()
             } catch {
-                fatalError("[MangaWidget] ModelContainer creation failed completely: \(error)")
+                print("[MangaWidget] Local-only container also failed, using in-memory: \(error)")
+                return SharedModelContainer.createInMemory()
             }
         }
     }

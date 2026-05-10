@@ -58,6 +58,23 @@ enum SharedModelContainer {
         return try ModelContainer(for: schema, configurations: [config])
     }
 
+    /// ストレージ破損・権限エラーなどで永続ストアが開けない場合の最終手段。
+    /// in-memory コンテナを返すのでデータは表示されないが、クラッシュは回避する。
+    static func createInMemory() -> ModelContainer {
+        let schema = Schema([MangaEntry.self, ReadingActivity.self, MangaComment.self, MangaLink.self, PublisherMetadata.self])
+        let config = ModelConfiguration(
+            "MangaLauncher",
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
+        do {
+            return try ModelContainer(for: schema, configurations: [config])
+        } catch {
+            fatalError("[SharedModelContainer] Even in-memory container failed: \(error)")
+        }
+    }
+
     static var storeURL: URL {
         let directory = appGroupContainerURL ?? fallbackURL
         return directory.appendingPathComponent("MangaLauncher.store")

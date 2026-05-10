@@ -67,12 +67,7 @@ public enum OGPFetcher {
                     resolvedURL = URL(string: imageURLString, relativeTo: url)?.absoluteString ?? imageURLString
                 }
                 if let imageURL = URL(string: resolvedURL) {
-                    var imgRequest = URLRequest(url: imageURL)
-                    imgRequest.timeoutInterval = imageTimeout
-                    if let (imgData, _) = try? await URLSession.shared.data(for: imgRequest),
-                       imgData.count <= maxImageBytes {
-                        imageData = downsizedJPEGData(imgData, maxDimension: 600)
-                    }
+                    imageData = try? await fetchImageWithLimit(from: imageURL)
                 }
             }
 
@@ -81,6 +76,35 @@ public enum OGPFetcher {
             print("[OGPFetcher] Failed to fetch from \(urlString): \(error.localizedDescription)")
             return OGPResult()
         }
+    }
+
+    /// 画像をストリーミング受信し、`maxImageBytes` を超えた時点でキャンセルする。
+    /// 通信量自体を抑えることでモバイルデータの浪費を防ぐ。
+    private static func fetchImageWithLimit(from url: URL) async throws -> Data? {
+        var request = URLRequest(url: url)
+        request.timeoutInterval = imageTimeout
+
+        let (bytes, response) = try await URLSession.shared.bytes(for: request)
+
+        // Content-Length が事前に分かる場合は早期に弾く
+        if let httpResponse = response as? HTTPURLResponse,
+           let contentLength = httpResponse.value(forHTTPHeaderField: "Content-Length"),
+           let length = Int(contentLength), length > maxImageBytes {
+            print("[OGPFetcher] Image too large (Content-Length: \(length) bytes), skipping")
+            return nil
+        }
+
+        var data = Data()
+        for try await byte in bytes {
+            data.append(byte)
+            if data.count > maxImageBytes {
+                print("[OGPFetcher] Image exceeded \(maxImageBytes) bytes during download, cancelling")
+                return nil
+            }
+        }
+
+        guard !data.isEmpty else { return nil }
+        return downsizedJPEGData(data, maxDimension: 600)
     }
 
     private static func extractMetaContent(from html: String, property: String) -> String? {
