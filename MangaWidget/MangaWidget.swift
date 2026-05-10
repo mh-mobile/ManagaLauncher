@@ -403,7 +403,17 @@ struct MangaLauncherWidget: Widget {
     let kind = "MangaWidget"
 
     private var container: ModelContainer {
-        try! SharedModelContainer.create()
+        do {
+            return try SharedModelContainer.create()
+        } catch {
+            print("[MangaWidget] CloudKit container failed, falling back to local-only: \(error)")
+            do {
+                return try SharedModelContainer.createLocalOnly()
+            } catch {
+                print("[MangaWidget] Local-only container also failed, using in-memory: \(error)")
+                return SharedModelContainer.createInMemory()
+            }
+        }
     }
 
     var body: some WidgetConfiguration {

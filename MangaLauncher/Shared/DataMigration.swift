@@ -8,7 +8,10 @@ enum DataMigration {
         guard SharedModelContainer.appGroupContainerURL != nil else { return }
 
         let fileManager = FileManager.default
-        let appSupportURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        guard let appSupportURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            print("[DataMigration] Application Support directory not found")
+            return
+        }
 
         // SwiftData default store path
         let oldStoreURL = appSupportURL.appendingPathComponent("default.store")

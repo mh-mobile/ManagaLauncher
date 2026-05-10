@@ -53,9 +53,9 @@ struct ShareExtensionView: View {
         let todayWeekday = calendar.component(.weekday, from: today) - 1
         let target = selectedDay.rawValue
         let daysToNext = (target - todayWeekday + 7) % 7
-        let firstDate = daysToNext == 0 ? today : calendar.date(byAdding: .day, value: daysToNext, to: today)!
-        return (0..<8).map { i in
-            calendar.date(byAdding: .day, value: i * 7, to: firstDate)!
+        let firstDate = daysToNext == 0 ? today : (calendar.date(byAdding: .day, value: daysToNext, to: today) ?? today)
+        return (0..<8).compactMap { i in
+            calendar.date(byAdding: .day, value: i * 7, to: firstDate)
         }
     }
 
@@ -403,12 +403,17 @@ struct ShareExtensionView: View {
         let range = NSRange(html.startIndex..., in: html)
         let matches = regex.matches(in: html, range: range)
 
+        // 通信量を抑えるため、解決するリンク数を制限する
+        let maxResolveCount = 3
         var seen = Set<String>()
+        var resolvedCount = 0
         for match in matches {
+            guard resolvedCount < maxResolveCount else { break }
             guard let matchRange = Range(match.range, in: html) else { continue }
             let tcoURL = String(html[matchRange])
             guard !seen.contains(tcoURL) else { continue }
             seen.insert(tcoURL)
+            resolvedCount += 1
 
             let resolved = await URLResolver.resolveAll(tcoURL)
             let resolvedHost = URL(string: resolved)?.host ?? ""

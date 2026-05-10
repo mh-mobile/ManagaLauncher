@@ -199,14 +199,19 @@ struct ReadingHeatmapView: View {
         // Find Monday of this week
         let weekday = calendar.component(.weekday, from: today) // 1=Sun, 2=Mon, ...
         let daysFromMonday = (weekday + 5) % 7 // Mon=0, Tue=1, ..., Sun=6
-        let thisMonday = calendar.date(byAdding: .day, value: -daysFromMonday, to: today)!
-        let startMonday = calendar.date(byAdding: .weekOfYear, value: -(weeks - 1), to: thisMonday)!
+        guard let thisMonday = calendar.date(byAdding: .day, value: -daysFromMonday, to: today),
+              let startMonday = calendar.date(byAdding: .weekOfYear, value: -(weeks - 1), to: thisMonday) else {
+            return []
+        }
 
         var grid: [[Date?]] = []
         for week in 0..<weeks {
             var column: [Date?] = []
             for day in 0..<7 {
-                let date = calendar.date(byAdding: .day, value: week * 7 + day, to: startMonday)!
+                guard let date = calendar.date(byAdding: .day, value: week * 7 + day, to: startMonday) else {
+                    column.append(nil)
+                    continue
+                }
                 if date <= today {
                     column.append(date)
                 } else {

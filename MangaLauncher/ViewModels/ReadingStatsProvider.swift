@@ -5,9 +5,10 @@ struct ReadingStatsProvider {
     let modelContext: ModelContext
 
     func fetchActivityCounts(days: Int = 84) -> [Date: Int] {
-        let startDate = Calendar.current.startOfDay(
-            for: Calendar.current.date(byAdding: .day, value: -days, to: Date())!
-        )
+        guard let baseDate = Calendar.current.date(byAdding: .day, value: -days, to: Date()) else {
+            return [:]
+        }
+        let startDate = Calendar.current.startOfDay(for: baseDate)
         let descriptor = FetchDescriptor<ReadingActivity>(
             predicate: #Predicate { $0.date >= startDate },
             sortBy: [SortDescriptor(\.date)]
@@ -36,12 +37,14 @@ struct ReadingStatsProvider {
         var checkDate = calendar.startOfDay(for: Date())
 
         if counts[checkDate] == nil {
-            checkDate = calendar.date(byAdding: .day, value: -1, to: checkDate)!
+            guard let prev = calendar.date(byAdding: .day, value: -1, to: checkDate) else { return 0 }
+            checkDate = prev
         }
 
         while counts[checkDate] != nil {
             streak += 1
-            checkDate = calendar.date(byAdding: .day, value: -1, to: checkDate)!
+            guard let prev = calendar.date(byAdding: .day, value: -1, to: checkDate) else { break }
+            checkDate = prev
         }
         return streak
     }
@@ -76,7 +79,9 @@ struct ReadingStatsProvider {
         let today = calendar.startOfDay(for: Date())
         let weekday = calendar.component(.weekday, from: today)
         let daysFromMonday = (weekday + 5) % 7
-        let monday = calendar.date(byAdding: .day, value: -daysFromMonday, to: today)!
+        guard let monday = calendar.date(byAdding: .day, value: -daysFromMonday, to: today) else {
+            return 0
+        }
         let descriptor = FetchDescriptor<ReadingActivity>(
             predicate: #Predicate { $0.date >= monday }
         )
