@@ -29,11 +29,13 @@ struct SettingsView: View {
     private enum ImportResult: Identifiable {
         case success(Int)
         case failure
+        case versionError(Int)
 
         var id: String {
             switch self {
             case .success: "success"
             case .failure: "failure"
+            case .versionError: "versionError"
             }
         }
     }
@@ -298,6 +300,12 @@ struct SettingsView: View {
                         message: Text("ファイルを読み込めませんでした。正しいバックアップファイルか確認してください。"),
                         dismissButton: .default(Text("OK"))
                     )
+                case .versionError(let version):
+                    Alert(
+                        title: Text("バージョン非対応"),
+                        message: Text("バックアップファイルのバージョン(\(version))はこのアプリより新しいため読み込めません。アプリを最新版にアップデートしてください。"),
+                        dismissButton: .default(Text("OK"))
+                    )
                 }
             }
             .fileExporter(
@@ -420,6 +428,10 @@ struct SettingsView: View {
             return
         }
         let count = viewModel.importBackupData(data)
-        importResult = .success(count)
+        if count < 0 {
+            importResult = .versionError(-count)
+        } else {
+            importResult = .success(count)
+        }
     }
 }

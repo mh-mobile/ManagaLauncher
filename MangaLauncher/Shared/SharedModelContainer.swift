@@ -13,6 +13,10 @@ enum SharedModelContainer {
     /// CloudKit 付きの ModelContainer を最大 `maxAttempts` 回リトライして生成する。
     /// アプリ更新直後など CloudKit の準備が間に合わない一時的な失敗を吸収する。
     /// 全試行失敗時は最後のエラーを throw する。
+    ///
+    /// 注: この関数はアプリ・Widget・ShareExtension の起動パスから同期的に呼ばれるため、
+    /// Thread.sleep を使っている。リトライ間隔は短く (0.1s)、最大ブロック時間は
+    /// 0.1s × (maxAttempts - 1) = 0.2s に抑えている。
     static func create(maxAttempts: Int = 3) throws -> ModelContainer {
         let schema = Schema([MangaEntry.self, ReadingActivity.self, MangaComment.self, MangaLink.self, PublisherMetadata.self])
         let config = ModelConfiguration(
@@ -30,7 +34,7 @@ enum SharedModelContainer {
                 lastError = error
                 print("[SharedModelContainer] create() attempt \(attempt)/\(attempts) failed: \(error)")
                 if attempt < attempts {
-                    Thread.sleep(forTimeInterval: 0.5)
+                    Thread.sleep(forTimeInterval: 0.1)
                 }
             }
         }

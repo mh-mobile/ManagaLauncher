@@ -3,6 +3,10 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct BackupData: Codable {
+    /// 現在のバックアップフォーマットバージョン。エクスポート時に書き込まれる。
+    /// インポート時に backup.version > currentVersion なら拒否する。
+    static let currentVersion = 15
+
     let version: Int
     let exportDate: Date
     let entries: [BackupEntry]
@@ -160,7 +164,7 @@ struct BackupData: Codable {
 
     static func from(_ entries: [MangaEntry], activities: [ReadingActivity] = [], comments: [MangaComment] = [], links: [MangaLink] = [], publisherMetadata: [PublisherMetadata] = []) -> BackupData {
         BackupData(
-            version: 15,
+            version: currentVersion,
             exportDate: Date(),
             entries: entries.map {
                 BackupEntry(

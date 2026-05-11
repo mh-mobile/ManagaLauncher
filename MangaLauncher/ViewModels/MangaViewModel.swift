@@ -902,10 +902,19 @@ final class MangaViewModel {
         return try? encoder.encode(backup)
     }
 
+    /// バックアップデータをインポートする。
+    /// - Returns: インポート件数。0 はデコード失敗または新規なし。
+    ///   負の値はバージョンエラー (絶対値がバックアップの version)。
     func importBackupData(_ data: Data) -> Int {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         guard let backup = try? decoder.decode(BackupData.self, from: data) else { return 0 }
+
+        // 将来のバージョンのバックアップは安全に読み込めない可能性があるため拒否する
+        if backup.version > BackupData.currentVersion {
+            print("[Backup] version \(backup.version) > currentVersion \(BackupData.currentVersion), rejecting import")
+            return -backup.version
+        }
 
         let existingIDs = Set(modelContext.fetchLogged(FetchDescriptor<MangaEntry>()).map(\.id))
 
