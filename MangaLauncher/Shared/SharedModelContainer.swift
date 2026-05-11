@@ -15,8 +15,8 @@ enum SharedModelContainer {
     /// 全試行失敗時は最後のエラーを throw する。
     ///
     /// 注: この関数はアプリ・Widget・ShareExtension の起動パスから同期的に呼ばれるため、
-    /// Thread.sleep を使っている。リトライ間隔は短く (0.1s)、最大ブロック時間は
-    /// 0.1s × (maxAttempts - 1) = 0.2s に抑えている。
+    /// Thread.sleep を使っている。リトライ間隔は 0.1s で、最大ブロック時間は
+    /// 0.1s × (maxAttempts - 1) (デフォルト maxAttempts=3 の場合 0.2s)。
     static func create(maxAttempts: Int = 3) throws -> ModelContainer {
         let schema = Schema([MangaEntry.self, ReadingActivity.self, MangaComment.self, MangaLink.self, PublisherMetadata.self])
         let config = ModelConfiguration(

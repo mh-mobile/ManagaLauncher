@@ -1300,7 +1300,10 @@ struct PublisherMetadataBackupTests {
         let container2 = try makeContainer()
         let context2 = container2.mainContext
         let vm2 = MangaViewModel(modelContext: context2)
-        let imported = vm2.importBackupData(data)
+        guard case .imported(let imported) = vm2.importBackupData(data) else {
+            Issue.record("import should succeed")
+            return
+        }
 
         // entry(1) + publisherMetadata(1) = 2
         #expect(imported >= 2)
@@ -1321,9 +1324,44 @@ struct PublisherMetadataBackupTests {
 
         let container = try makeContainer()
         let vm = MangaViewModel(modelContext: container.mainContext)
-        let imported = vm.importBackupData(json)
+        guard case .imported(let imported) = vm.importBackupData(json) else {
+            Issue.record("old version backup should decode successfully")
+            return
+        }
         #expect(imported == 0)
         // クラッシュせず何も import されないことを確認できれば OK
+    }
+
+    @Test("将来バージョンのバックアップはバージョンエラーを返す")
+    @MainActor
+    func futureVersionRejected() throws {
+        let json = """
+        {
+            "version": 999,
+            "exportDate": "2026-01-01T00:00:00Z",
+            "entries": []
+        }
+        """.data(using: .utf8)!
+
+        let container = try makeContainer()
+        let vm = MangaViewModel(modelContext: container.mainContext)
+        guard case .versionError(let version) = vm.importBackupData(json) else {
+            Issue.record("future version should return versionError")
+            return
+        }
+        #expect(version == 999)
+    }
+
+    @Test("不正な JSON はデコード失敗を返す")
+    @MainActor
+    func invalidJsonReturnsDecodeFailed() throws {
+        let json = "{ invalid json }".data(using: .utf8)!
+        let container = try makeContainer()
+        let vm = MangaViewModel(modelContext: container.mainContext)
+        guard case .decodeFailed = vm.importBackupData(json) else {
+            Issue.record("invalid JSON should return decodeFailed")
+            return
+        }
     }
 }
 
@@ -1573,7 +1611,10 @@ struct MangaLinkBackupTests {
         let container2 = try makeContainer()
         let context2 = container2.mainContext
         let vm2 = MangaViewModel(modelContext: context2)
-        let importedCount = vm2.importBackupData(exportData)
+        guard case .imported(let importedCount) = vm2.importBackupData(exportData) else {
+            Issue.record("import should succeed")
+            return
+        }
 
         // entry(1) + links(2) = 3
         #expect(importedCount == 3)
@@ -1605,7 +1646,10 @@ struct MangaLinkBackupTests {
         }
 
         // 同じコンテナに再インポート → 既存と重複するのでスキップ
-        let importedCount = vm.importBackupData(exportData)
+        guard case .imported(let importedCount) = vm.importBackupData(exportData) else {
+            Issue.record("import should succeed")
+            return
+        }
         #expect(importedCount == 0)
     }
 }

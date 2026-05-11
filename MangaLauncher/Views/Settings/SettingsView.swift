@@ -427,11 +427,13 @@ struct SettingsView: View {
             importResult = .failure
             return
         }
-        let count = viewModel.importBackupData(data)
-        if count < 0 {
-            importResult = .versionError(-count)
-        } else {
+        switch viewModel.importBackupData(data) {
+        case .imported(let count):
             importResult = .success(count)
+        case .decodeFailed:
+            importResult = .failure
+        case .versionError(let version):
+            importResult = .versionError(version)
         }
     }
 }

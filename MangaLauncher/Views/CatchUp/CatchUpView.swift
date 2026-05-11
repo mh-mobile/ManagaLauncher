@@ -407,6 +407,7 @@ struct CatchUpView: View {
             return
         }
         gradientTask = Task.detached(priority: .userInitiated) {
+            guard !Task.isCancelled else { return }
             let gradient = ImageColorExtractor.extractGradient(from: imageData)
             guard !Task.isCancelled else { return }
             await MainActor.run {
