@@ -26,6 +26,7 @@ struct CatchUpView: View {
     @State private var streakAchievement: Int?
     @State private var milestoneAchievement: Int?
     @State private var backgroundGradient: ImageColorExtractor.GradientColors?
+    @State private var gradientTask: Task<Void, Never>?
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
     private var hasGradient: Bool { backgroundGradient != nil }
@@ -393,19 +394,22 @@ struct CatchUpView: View {
     }
 
     private func updateBackgroundGradient() {
+        // 前回のタスクをキャンセルして多重実行を防ぐ
+        gradientTask?.cancel()
+
         guard currentIndex < unreadItems.count else { return }
         let entry = unreadItems[currentIndex]
         guard let imageData = entry.imageData else {
             let gradient = ImageColorExtractor.gradientFromColor(Color.fromName(entry.iconColor))
-            Task { @MainActor in
-                withAnimation(.easeInOut(duration: 0.5)) {
-                    backgroundGradient = gradient
-                }
+            withAnimation(.easeInOut(duration: 0.5)) {
+                backgroundGradient = gradient
             }
             return
         }
-        Task.detached(priority: .userInitiated) {
+        gradientTask = Task.detached(priority: .userInitiated) {
+            guard !Task.isCancelled else { return }
             let gradient = ImageColorExtractor.extractGradient(from: imageData)
+            guard !Task.isCancelled else { return }
             await MainActor.run {
                 withAnimation(.easeInOut(duration: 0.5)) {
                     backgroundGradient = gradient
