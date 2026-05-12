@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 struct BackupData: Codable {
     /// 現在のバックアップフォーマットバージョン。エクスポート時に書き込まれる。
     /// インポート時に backup.version > currentVersion なら拒否する。
-    static let currentVersion = 15
+    static let currentVersion = 16
 
     let version: Int
     let exportDate: Date
@@ -103,12 +103,14 @@ struct BackupData: Codable {
         let isHidden: Bool?
         // v13+
         let deletedAt: Date?
+        // v16+
+        let personalRating: Int?
         // Legacy fields (kept for backward-compat with v5 backups)
         let isOnHiatus: Bool?
         let isCompleted: Bool?
         let isBacklog: Bool?
 
-        init(id: UUID, name: String, url: String, dayOfWeekRawValue: Int, sortOrder: Int, iconColor: String, publisher: String, imageData: Data?, lastReadDate: Date? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, isOneShot: Bool = false, publicationStatusRawValue: Int = 0, readingStateRawValue: Int = 0, memo: String = "", memoUpdatedAt: Date? = nil, currentEpisode: Int? = nil, episodeLabel: String? = nil, isHidden: Bool = false, deletedAt: Date? = nil) {
+        init(id: UUID, name: String, url: String, dayOfWeekRawValue: Int, sortOrder: Int, iconColor: String, publisher: String, imageData: Data?, lastReadDate: Date? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, isOneShot: Bool = false, publicationStatusRawValue: Int = 0, readingStateRawValue: Int = 0, memo: String = "", memoUpdatedAt: Date? = nil, currentEpisode: Int? = nil, episodeLabel: String? = nil, isHidden: Bool = false, deletedAt: Date? = nil, personalRating: Int? = nil) {
             self.id = id
             self.name = name
             self.url = url
@@ -129,6 +131,7 @@ struct BackupData: Codable {
             self.episodeLabel = episodeLabel
             self.isHidden = isHidden
             self.deletedAt = deletedAt
+            self.personalRating = personalRating
             self.isOnHiatus = nil
             self.isCompleted = nil
             self.isBacklog = nil
@@ -156,6 +159,7 @@ struct BackupData: Codable {
             episodeLabel = try container.decodeIfPresent(String.self, forKey: .episodeLabel)
             isHidden = try container.decodeIfPresent(Bool.self, forKey: .isHidden)
             deletedAt = try container.decodeIfPresent(Date.self, forKey: .deletedAt)
+            personalRating = try container.decodeIfPresent(Int.self, forKey: .personalRating)
             isOnHiatus = try container.decodeIfPresent(Bool.self, forKey: .isOnHiatus)
             isCompleted = try container.decodeIfPresent(Bool.self, forKey: .isCompleted)
             isBacklog = try container.decodeIfPresent(Bool.self, forKey: .isBacklog)
@@ -186,7 +190,8 @@ struct BackupData: Codable {
                     memoUpdatedAt: $0.memoUpdatedAt,
                     currentEpisode: $0.currentEpisode,
                     episodeLabel: $0.episodeLabel,
-                    isHidden: $0.isHidden
+                    isHidden: $0.isHidden,
+                    personalRating: $0.personalRating
                 )
             },
             activities: activities.map {

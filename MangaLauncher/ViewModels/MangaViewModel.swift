@@ -197,6 +197,7 @@ final class MangaViewModel {
         if entry.lastReadDate != nil { s += 5 }
         if entry.isFocused { s += 5 }
         if entry.currentEpisode != nil { s += 3 }
+        if entry.personalRating != nil { s += 3 }
         if entry.imageData != nil { s += 2 }
         if entry.episodeLabel != nil { s += 1 }
         if entry.nextExpectedUpdate != nil { s += 1 }
@@ -275,6 +276,16 @@ final class MangaViewModel {
         if state != .backlog {
             entry.isFocused = false
             entry.focusedAt = nil
+        }
+        save()
+    }
+
+    /// パーソナル評価を設定する。nil で評価解除。
+    func setPersonalRating(_ entry: MangaEntry, to rating: Int?) {
+        if let r = rating {
+            entry.personalRating = max(1, min(5, r))
+        } else {
+            entry.personalRating = nil
         }
         save()
     }
@@ -378,7 +389,7 @@ final class MangaViewModel {
         save()
     }
 
-    func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, publicationStatus: PublicationStatus = .active, readingState: ReadingState = .following, isOneShot: Bool = false, memo: String = "", currentEpisode: Int? = nil, episodeLabel: String? = nil) {
+    func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, publicationStatus: PublicationStatus = .active, readingState: ReadingState = .following, isOneShot: Bool = false, memo: String = "", currentEpisode: Int? = nil, episodeLabel: String? = nil, personalRating: Int? = nil) {
         for day in days {
             // 同一URL + 同一曜日の重複登録を防止（状態問わず全エントリ対象）
             if allEntries().contains(where: { $0.dayOfWeek == day && $0.url == url }) { continue }
@@ -405,6 +416,7 @@ final class MangaViewModel {
             }
             entry.currentEpisode = currentEpisode
             entry.episodeLabel = episodeLabel
+            entry.personalRating = personalRating
             modelContext.insert(entry)
         }
         save()
@@ -426,6 +438,7 @@ final class MangaViewModel {
         memo: String,
         currentEpisode: Int? = nil,
         episodeLabel: String? = nil,
+        personalRating: Int? = nil,
         markAsReadOnSave: Bool = false
     ) {
         // URL または曜日が変更された場合、同一URL+曜日の重複を防止
@@ -462,6 +475,7 @@ final class MangaViewModel {
         }
         entry.currentEpisode = currentEpisode
         entry.episodeLabel = episodeLabel
+        entry.personalRating = personalRating
 
         // 「保存時に既読にする」を同一トランザクション内で処理し、save() を1回に統合
         if markAsReadOnSave, entry.modelContext != nil {
@@ -943,6 +957,7 @@ final class MangaViewModel {
             entry.currentEpisode = backupEntry.currentEpisode
             entry.episodeLabel = backupEntry.episodeLabel
             entry.isHidden = backupEntry.isHidden ?? false
+            entry.personalRating = backupEntry.personalRating
             // v6+ バックアップは publicationStatusRawValue / readingStateRawValue を authoritative とする。
             // 両方 nil のときだけ v5 以前の legacy Bool から導出する。
             // 通常 export 側は両方を必ず書くので片方 nil は現実にはほぼ起こらないが、

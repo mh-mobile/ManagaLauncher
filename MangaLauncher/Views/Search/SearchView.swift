@@ -17,6 +17,7 @@ struct SearchView: View {
     @State private var selectedDay: DayOfWeek? = nil
     @State private var selectedPublisher: String? = nil
     @State private var selectedColors: Set<String> = []
+    @State private var ratingFilter: Int? = nil
     @State private var safariURL: URL?
     @State private var editingEntry: MangaEntry?
     @State private var commentingEntry: MangaEntry?
@@ -43,11 +44,12 @@ struct SearchView: View {
         let dayFiltered = applyDayFilter(to: allEntries)
         let publisherFiltered = applyPublisherFilter(to: dayFiltered)
         let colorFiltered = applyColorFilter(to: publisherFiltered)
+        let ratingFiltered = applyRatingFilter(to: colorFiltered)
 
         let trimmed = searchText.trimmingCharacters(in: .whitespaces)
 
         if contentMode == .memo {
-            let memoMatched = colorFiltered.filter {
+            let memoMatched = ratingFiltered.filter {
                 !$0.memo.isEmpty
                     && (trimmed.isEmpty || $0.memo.localizedCaseInsensitiveContains(trimmed))
             }
@@ -55,8 +57,8 @@ struct SearchView: View {
         }
 
         if contentMode == .comment {
-            let candidateIDs = Set(colorFiltered.map(\.id))
-            let entriesByID = Dictionary(colorFiltered.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+            let candidateIDs = Set(ratingFiltered.map(\.id))
+            let entriesByID = Dictionary(ratingFiltered.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
             let allComments = viewModel.allComments()
             let commentMatched: [(MangaComment, MangaEntry)] = allComments.compactMap { comment in
                 guard candidateIDs.contains(comment.mangaEntryID),
@@ -70,7 +72,7 @@ struct SearchView: View {
             return SearchResults(entries: [], memos: [], comments: commentMatched)
         }
 
-        let candidates = applyEntryFilters(to: colorFiltered)
+        let candidates = applyEntryFilters(to: ratingFiltered)
 
         guard !trimmed.isEmpty else {
             return SearchResults(entries: candidates, memos: [], comments: [])
@@ -122,6 +124,11 @@ struct SearchView: View {
         return entries.filter { selectedColors.contains($0.iconColor) }
     }
 
+    private func applyRatingFilter(to entries: [MangaEntry]) -> [MangaEntry] {
+        guard let rating = ratingFilter else { return entries }
+        return entries.filter { $0.personalRating == rating }
+    }
+
     private func applyDayFilter(to entries: [MangaEntry]) -> [MangaEntry] {
         guard let day = selectedDay else { return entries }
         return entries.filter { $0.dayOfWeek == day }
@@ -159,7 +166,8 @@ struct SearchView: View {
                         readingFilter: $readingFilter,
                         showOneShotOnly: $showOneShotOnly,
                         contentMode: $contentMode,
-                        selectedColors: $selectedColors
+                        selectedColors: $selectedColors,
+                        ratingFilter: $ratingFilter
                     )
                     if !cachedPublishers.isEmpty {
                         PublisherFilterView(
@@ -242,6 +250,7 @@ struct SearchView: View {
         }
         .onChange(of: selectedPublisher) { _, _ in refreshResults() }
         .onChange(of: selectedColors) { _, _ in refreshResults() }
+        .onChange(of: ratingFilter) { _, _ in refreshResults() }
         .onChange(of: viewModel.refreshCounter) { _, _ in
             refreshPublishers()
             refreshResults()
@@ -267,7 +276,7 @@ struct SearchView: View {
         let trimmed = searchText.trimmingCharacters(in: .whitespaces)
         let hasAnyFilter = publicationFilter != nil || readingFilter != nil
             || showOneShotOnly || selectedDay != nil || selectedPublisher != nil
-            || !selectedColors.isEmpty
+            || !selectedColors.isEmpty || ratingFilter != nil
 
         if trimmed.isEmpty && !hasAnyFilter && contentMode == .entries {
             ContentUnavailableView {

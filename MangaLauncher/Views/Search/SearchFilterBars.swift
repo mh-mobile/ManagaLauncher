@@ -9,6 +9,7 @@ struct SearchFilterBars: View {
     @Binding var showOneShotOnly: Bool
     @Binding var contentMode: SearchContentMode
     @Binding var selectedColors: Set<String>
+    @Binding var ratingFilter: Int?
 
     private let colorLabelStore = ColorLabelStore.shared
     private var theme: ThemeStyle { ThemeManager.shared.style }
@@ -93,6 +94,12 @@ struct SearchFilterBars: View {
                 ForEach(MangaColor.all) { mangaColor in
                     colorChip(for: mangaColor)
                 }
+
+                Spacer().frame(width: 4)
+
+                ForEach(1...5, id: \.self) { star in
+                    ratingChip(star: star)
+                }
             }
             .padding(.horizontal)
             .padding(.bottom, 8)
@@ -120,6 +127,36 @@ struct SearchFilterBars: View {
                 }
             }
             .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                isSelected
+                    ? AnyShapeStyle(theme.primary.opacity(0.2))
+                    : AnyShapeStyle(theme.surfaceContainerHigh)
+            )
+            .overlay(
+                Capsule().strokeBorder(isSelected ? theme.primary : Color.clear, lineWidth: 1.5)
+            )
+            .foregroundStyle(theme.onSurface)
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func ratingChip(star: Int) -> some View {
+        let isSelected = ratingFilter == star
+        return Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                ratingFilter = isSelected ? nil : star
+            }
+        } label: {
+            HStack(spacing: 2) {
+                Image(systemName: "star.fill")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.yellow)
+                Text("\(star)")
+                    .font(theme.captionFont)
+            }
+            .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .background(
                 isSelected

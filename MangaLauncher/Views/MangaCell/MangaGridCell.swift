@@ -76,6 +76,9 @@ struct MangaGridCell: View {
                                     .foregroundStyle(theme.onSurfaceVariant)
                             }
                         }
+                        if entry.personalRating != nil {
+                            StarRatingView(rating: entry.personalRating, size: 8)
+                        }
                     }
                     Spacer(minLength: 0)
                 }

@@ -69,6 +69,9 @@ struct CatchUpCardView: View {
                                 .foregroundStyle(theme.onSurfaceVariant)
                         }
                     }
+                    if entry.personalRating != nil {
+                        StarRatingView(rating: entry.personalRating, size: 12)
+                    }
                 }
                 .padding(.horizontal, theme.spacingMD)
                 .padding(.vertical, theme.spacingSM + 4)
@@ -95,6 +98,9 @@ struct CatchUpCardView: View {
                             .font(theme.subheadlineFont)
                             .foregroundStyle(hasGradientBackground ? .white.opacity(0.7) : theme.onSurfaceVariant)
                     }
+                }
+                if entry.personalRating != nil {
+                    StarRatingView(rating: entry.personalRating, size: 12)
                 }
             }
             .padding()
@@ -123,6 +129,9 @@ struct CatchUpCardView: View {
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundStyle(theme.onSurfaceVariant)
                         }
+                    }
+                    if entry.personalRating != nil {
+                        StarRatingView(rating: entry.personalRating, size: 12)
                     }
                 }
                 .padding(.horizontal, theme.spacingMD)
