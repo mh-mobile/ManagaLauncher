@@ -281,6 +281,8 @@ final class MangaViewModel {
     }
 
     /// パーソナル評価を設定する。nil で評価解除。
+    /// 現在は編集画面経由で updateEntry() から保存されるが、
+    /// 将来コンテキストメニュー等から直接評価変更する場合に使用する。
     func setPersonalRating(_ entry: MangaEntry, to rating: Int?) {
         if let r = rating {
             entry.personalRating = max(1, min(5, r))
@@ -416,7 +418,7 @@ final class MangaViewModel {
             }
             entry.currentEpisode = currentEpisode
             entry.episodeLabel = episodeLabel
-            entry.personalRating = personalRating
+            entry.personalRating = personalRating.map { max(1, min(5, $0)) }
             modelContext.insert(entry)
         }
         save()
@@ -475,7 +477,7 @@ final class MangaViewModel {
         }
         entry.currentEpisode = currentEpisode
         entry.episodeLabel = episodeLabel
-        entry.personalRating = personalRating
+        entry.personalRating = personalRating.map { max(1, min(5, $0)) }
 
         // 「保存時に既読にする」を同一トランザクション内で処理し、save() を1回に統合
         if markAsReadOnSave, entry.modelContext != nil {

@@ -45,7 +45,7 @@ struct SearchResultRow: View {
                         if entry.personalRating != nil {
                             StarRatingView(rating: entry.personalRating, size: 9)
                         }
-                        if !hasAnyStatus(entry) && entry.personalRating == nil {
+                        if !hasAnyStatus(entry) {
                             dayBadge(entry.dayOfWeek.shortName)
                         }
                     }

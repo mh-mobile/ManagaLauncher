@@ -59,7 +59,11 @@ struct LibrarySectionBuilder {
     private func highRatedSection() -> LibrarySection? {
         let highRated = allEntries
             .filter { ($0.personalRating ?? 0) >= 4 }
-            .sorted { ($0.personalRating ?? 0) > ($1.personalRating ?? 0) }
+            .sorted {
+                let l = $0.personalRating ?? 0, r = $1.personalRating ?? 0
+                if l != r { return l > r }
+                return $0.name.localizedStandardCompare($1.name) == .orderedAscending
+            }
         guard !highRated.isEmpty else { return nil }
         return LibrarySection(title: "高評価", icon: "star.fill", iconColor: .yellow, entries: highRated)
     }

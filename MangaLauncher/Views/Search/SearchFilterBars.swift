@@ -195,6 +195,7 @@ struct SearchFilterBars: View {
         publicationFilter = nil
         readingFilter = nil
         showOneShotOnly = false
+        ratingFilter = nil
     }
 }
 
