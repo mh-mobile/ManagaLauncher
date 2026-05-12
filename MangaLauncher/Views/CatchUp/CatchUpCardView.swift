@@ -10,11 +10,18 @@ struct CatchUpCardView: View {
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
+    private var catchUpAccessibilityLabel: String {
+        var parts = [entry.name]
+        if !entry.publisher.isEmpty { parts.append(entry.publisher) }
+        if let rating = entry.personalRating { parts.append("評価 \(rating)つ星") }
+        return parts.joined(separator: "、")
+    }
+
     var body: some View {
         cardContent
             .contentShape(Rectangle())
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(entry.name)\(entry.publisher.isEmpty ? "" : "、\(entry.publisher)")")
+            .accessibilityLabel(catchUpAccessibilityLabel)
             .accessibilityHint("タップでサイトを開く、長押しで編集")
             .onTapGesture {
                 onOpenURL(entry.url)

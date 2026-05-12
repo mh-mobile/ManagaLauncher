@@ -289,7 +289,17 @@ final class MangaViewModel {
         } else {
             entry.personalRating = nil
         }
-        save()
+        // entry が属するコンテキストで保存する（setHidden と同じパターン）
+        do {
+            if let ctx = entry.modelContext {
+                try ctx.save()
+            } else {
+                try modelContext.save()
+            }
+        } catch {
+            print("[MangaViewModel] setPersonalRating save failed: \(error)")
+        }
+        refreshCounter += 1
     }
 
     /// 非表示フラグの切り替え（refresh() は呼ばない）
@@ -959,7 +969,7 @@ final class MangaViewModel {
             entry.currentEpisode = backupEntry.currentEpisode
             entry.episodeLabel = backupEntry.episodeLabel
             entry.isHidden = backupEntry.isHidden ?? false
-            entry.personalRating = backupEntry.personalRating
+            entry.personalRating = backupEntry.personalRating.map { max(1, min(5, $0)) }
             // v6+ バックアップは publicationStatusRawValue / readingStateRawValue を authoritative とする。
             // 両方 nil のときだけ v5 以前の legacy Bool から導出する。
             // 通常 export 側は両方を必ず書くので片方 nil は現実にはほぼ起こらないが、
