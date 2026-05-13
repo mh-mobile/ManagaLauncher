@@ -76,6 +76,9 @@ struct MangaRowCell: View {
                                 .foregroundStyle(theme.onSurfaceVariant)
                         }
                     }
+                    if entry.personalRating != nil {
+                        StarRatingView(rating: entry.personalRating, size: 10)
+                    }
                 }
 
                 Spacer()

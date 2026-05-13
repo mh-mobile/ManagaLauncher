@@ -63,6 +63,10 @@ struct LibraryCard: View {
                     }
                     .frame(width: cardWidth, alignment: .leading)
                 }
+                if entry.personalRating != nil {
+                    StarRatingView(rating: entry.personalRating, size: 9)
+                        .frame(width: cardWidth, alignment: .leading)
+                }
             }
         }
         .buttonStyle(.plain)

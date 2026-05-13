@@ -10,11 +10,18 @@ struct CatchUpCardView: View {
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
+    private var catchUpAccessibilityLabel: String {
+        var parts = [entry.name]
+        if !entry.publisher.isEmpty { parts.append(entry.publisher) }
+        if let rating = entry.personalRating { parts.append("評価 \(rating)つ星") }
+        return parts.joined(separator: "、")
+    }
+
     var body: some View {
         cardContent
             .contentShape(Rectangle())
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(entry.name)\(entry.publisher.isEmpty ? "" : "、\(entry.publisher)")")
+            .accessibilityLabel(catchUpAccessibilityLabel)
             .accessibilityHint("タップでサイトを開く、長押しで編集")
             .onTapGesture {
                 onOpenURL(entry.url)
@@ -69,6 +76,9 @@ struct CatchUpCardView: View {
                                 .foregroundStyle(theme.onSurfaceVariant)
                         }
                     }
+                    if entry.personalRating != nil {
+                        StarRatingView(rating: entry.personalRating, size: 12)
+                    }
                 }
                 .padding(.horizontal, theme.spacingMD)
                 .padding(.vertical, theme.spacingSM + 4)
@@ -95,6 +105,9 @@ struct CatchUpCardView: View {
                             .font(theme.subheadlineFont)
                             .foregroundStyle(hasGradientBackground ? .white.opacity(0.7) : theme.onSurfaceVariant)
                     }
+                }
+                if entry.personalRating != nil {
+                    StarRatingView(rating: entry.personalRating, size: 12)
                 }
             }
             .padding()
@@ -123,6 +136,9 @@ struct CatchUpCardView: View {
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundStyle(theme.onSurfaceVariant)
                         }
+                    }
+                    if entry.personalRating != nil {
+                        StarRatingView(rating: entry.personalRating, size: 12)
                     }
                 }
                 .padding(.horizontal, theme.spacingMD)

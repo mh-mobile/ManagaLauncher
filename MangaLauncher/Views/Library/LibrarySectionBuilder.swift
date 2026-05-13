@@ -11,6 +11,7 @@ struct LibrarySectionBuilder {
             recentSection(),
             unreadSection(),
             backlogSection(),
+            highRatedSection(),
         ].compactMap { $0 })
         sections.append(contentsOf: colorLabelSections())
         sections.append(contentsOf: [
@@ -52,6 +53,19 @@ struct LibrarySectionBuilder {
         let backlog = allEntries.filter { $0.readingState == .backlog }
         guard !backlog.isEmpty else { return nil }
         return LibrarySection(title: "積読", icon: "books.vertical", entries: backlog)
+    }
+
+    /// 高評価（4〜5つ星）
+    private func highRatedSection() -> LibrarySection? {
+        let highRated = allEntries
+            .filter { ($0.personalRating ?? 0) >= 4 }
+            .sorted {
+                let l = $0.personalRating ?? 0, r = $1.personalRating ?? 0
+                if l != r { return l > r }
+                return $0.name.localizedStandardCompare($1.name) == .orderedAscending
+            }
+        guard !highRated.isEmpty else { return nil }
+        return LibrarySection(title: "高評価", icon: "star.fill", iconColor: .yellow, entries: highRated)
     }
 
     /// カラーラベル別（ラベル設定済みのもののみ）

@@ -42,6 +42,9 @@ struct SearchResultRow: View {
                             }
                         }
                         MangaStatusBadgeView(entry: entry, fontSize: 9)
+                        if entry.personalRating != nil {
+                            StarRatingView(rating: entry.personalRating, size: 9)
+                        }
                         if !hasAnyStatus(entry) {
                             dayBadge(entry.dayOfWeek.shortName)
                         }

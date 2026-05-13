@@ -11,6 +11,7 @@ extension MangaEntry {
         var parts = [name]
         if !publisher.isEmpty { parts.append(publisher) }
         if let text = episodeDisplayText { parts.append(text) }
+        if let rating = personalRating { parts.append("評価 \(rating)つ星") }
         if !isRead { parts.append("未読") }
         if showsNextUpdateBadge,
            let next = NextUpdateFormatter.format(nextExpectedUpdate, style: nextUpdateStyle) {

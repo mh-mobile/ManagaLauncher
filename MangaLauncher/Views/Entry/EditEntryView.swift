@@ -36,6 +36,7 @@ struct EditEntryView: View {
     @State private var episodeText: String = ""
     @State private var episodeLabel: String = ""
     @State private var markAsReadOnSave: Bool = false
+    @State private var personalRating: Int?
     @State private var editingLink: MangaLink?
     @State private var showingAddLink = false
 
@@ -149,6 +150,7 @@ struct EditEntryView: View {
                 }
 
                 episodeSection
+                ratingSection
                 memoSection
 
                 if isEditing {
@@ -435,6 +437,23 @@ struct EditEntryView: View {
     }
 
     @ViewBuilder
+    private var ratingSection: some View {
+        Section {
+            HStack {
+                Text("パーソナル評価")
+                Spacer()
+                StarRatingView(rating: personalRating, size: 22) { newRating in
+                    personalRating = newRating
+                }
+            }
+        } header: {
+            Text("評価")
+        } footer: {
+            Text("作品への個人的な評価を5段階で記録できます。タップで評価、同じ星をタップで解除。")
+        }
+    }
+
+    @ViewBuilder
     private var memoSection: some View {
         Section {
             TextField("メモ（あらすじ・キャラ相関図など）", text: $memo, axis: .vertical)
@@ -576,6 +595,7 @@ struct EditEntryView: View {
             currentEpisode = entry.currentEpisode
             episodeText = entry.currentEpisode.map { String($0) } ?? ""
             episodeLabel = entry.episodeLabel ?? ""
+            personalRating = entry.personalRating
             didLoadEntry = true
         } else if entry == nil, !didLoadEntry {
             nextUpdateDate = nextUpdateCandidates.first ?? nextOccurrence(of: selectedDay)
@@ -625,6 +645,7 @@ struct EditEntryView: View {
                 memo: memo,
                 currentEpisode: currentEpisode,
                 episodeLabel: labelToSave,
+                personalRating: personalRating,
                 markAsReadOnSave: markAsReadOnSave
             )
         } else {
@@ -642,7 +663,8 @@ struct EditEntryView: View {
                 isOneShot: isOneShot,
                 memo: memo,
                 currentEpisode: currentEpisode,
-                episodeLabel: labelToSave
+                episodeLabel: labelToSave,
+                personalRating: personalRating
             )
         }
     }
