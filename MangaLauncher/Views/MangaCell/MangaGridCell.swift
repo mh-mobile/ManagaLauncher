@@ -79,6 +79,9 @@ struct MangaGridCell: View {
                         if entry.personalRating != nil {
                             StarRatingView(rating: entry.personalRating, size: 8)
                         }
+                        if entry.showsBacklogProgress {
+                            BacklogProgressView(entry: entry, fontSize: 8, barHeight: 2)
+                        }
                     }
                     Spacer(minLength: 0)
                 }

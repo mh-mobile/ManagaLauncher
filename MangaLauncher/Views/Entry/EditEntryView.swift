@@ -37,6 +37,8 @@ struct EditEntryView: View {
     @State private var episodeLabel: String = ""
     @State private var markAsReadOnSave: Bool = false
     @State private var personalRating: Int?
+    @State private var latestEpisode: Int?
+    @State private var latestEpisodeText: String = ""
     @State private var editingLink: MangaLink?
     @State private var showingAddLink = false
 
@@ -417,6 +419,32 @@ struct EditEntryView: View {
                 }
             }
             HStack {
+                Text("最新話数")
+                Spacer()
+                TextField("未設定", text: $latestEpisodeText)
+                    #if os(iOS) || os(visionOS)
+                    .keyboardType(.numberPad)
+                    #endif
+                    .multilineTextAlignment(.trailing)
+                    .onChange(of: latestEpisodeText) { _, newValue in
+                        if newValue.isEmpty {
+                            latestEpisode = nil
+                        } else if let val = Int(newValue), val > 0 {
+                            latestEpisode = val
+                        }
+                    }
+                if latestEpisode != nil {
+                    Button {
+                        latestEpisode = nil
+                        latestEpisodeText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            HStack {
                 Text("ラベル")
                 Spacer()
                 TextField("おまけ、1.5話 など", text: $episodeLabel)
@@ -432,7 +460,7 @@ struct EditEntryView: View {
         } header: {
             Text("話数")
         } footer: {
-            Text("読んだ話数を記録します。「保存時に既読にする」をオンにすると、保存と同時に読書記録が作成されます。")
+            Text("読んだ話数を記録します。最新話数を設定すると積読の進捗が表示されます。「保存時に既読にする」をオンにすると、保存と同時に読書記録が作成されます。")
         }
     }
 
@@ -595,6 +623,8 @@ struct EditEntryView: View {
             currentEpisode = entry.currentEpisode
             episodeText = entry.currentEpisode.map { String($0) } ?? ""
             episodeLabel = entry.episodeLabel ?? ""
+            latestEpisode = entry.latestEpisode
+            latestEpisodeText = entry.latestEpisode.map { String($0) } ?? ""
             personalRating = entry.personalRating
             didLoadEntry = true
         } else if entry == nil, !didLoadEntry {
@@ -646,6 +676,7 @@ struct EditEntryView: View {
                 currentEpisode: currentEpisode,
                 episodeLabel: labelToSave,
                 personalRating: personalRating,
+                latestEpisode: latestEpisode,
                 markAsReadOnSave: markAsReadOnSave
             )
         } else {
@@ -664,7 +695,8 @@ struct EditEntryView: View {
                 memo: memo,
                 currentEpisode: currentEpisode,
                 episodeLabel: labelToSave,
-                personalRating: personalRating
+                personalRating: personalRating,
+                latestEpisode: latestEpisode
             )
         }
     }
