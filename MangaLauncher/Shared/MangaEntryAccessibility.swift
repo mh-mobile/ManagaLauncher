@@ -11,6 +11,11 @@ extension MangaEntry {
         var parts = [name]
         if !publisher.isEmpty { parts.append(publisher) }
         if let text = episodeDisplayText { parts.append(text) }
+        if readingState == .backlog,
+           let current = currentEpisode,
+           let latest = latestEpisode {
+            parts.append("積読進捗 \(current)/\(latest)話")
+        }
         if let rating = personalRating { parts.append("評価 \(rating)つ星") }
         if !isRead { parts.append("未読") }
         if showsNextUpdateBadge,

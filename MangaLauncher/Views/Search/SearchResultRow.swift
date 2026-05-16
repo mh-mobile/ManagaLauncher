@@ -45,6 +45,10 @@ struct SearchResultRow: View {
                         if entry.personalRating != nil {
                             StarRatingView(rating: entry.personalRating, size: 9)
                         }
+                        if entry.showsBacklogProgress {
+                            BacklogProgressView(entry: entry, fontSize: 8, barHeight: 2)
+                                .frame(maxWidth: 80)
+                        }
                         if !hasAnyStatus(entry) {
                             dayBadge(entry.dayOfWeek.shortName)
                         }

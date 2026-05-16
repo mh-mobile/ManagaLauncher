@@ -67,6 +67,10 @@ struct LibraryCard: View {
                     StarRatingView(rating: entry.personalRating, size: 9)
                         .frame(width: cardWidth, alignment: .leading)
                 }
+                if entry.showsBacklogProgress {
+                    BacklogProgressView(entry: entry, fontSize: 9, barHeight: 3)
+                        .frame(width: cardWidth, alignment: .leading)
+                }
             }
         }
         .buttonStyle(.plain)

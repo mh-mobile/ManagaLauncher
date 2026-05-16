@@ -79,6 +79,10 @@ struct MangaRowCell: View {
                     if entry.personalRating != nil {
                         StarRatingView(rating: entry.personalRating, size: 10)
                     }
+                    if entry.showsBacklogProgress {
+                        BacklogProgressView(entry: entry, fontSize: 9, barHeight: 2)
+                            .frame(maxWidth: 120)
+                    }
                 }
 
                 Spacer()

@@ -121,6 +121,8 @@ final class MangaEntry {
     var deletedAt: Date?
     /// パーソナル評価 (1〜5)。nil は未評価。
     var personalRating: Int?
+    /// 最新話数。nil は未設定。積読の進捗表示に使用。
+    var latestEpisode: Int?
     /// フォーカス積読フラグ。最大3本まで同時にフォーカス可能。
     var isFocused: Bool = false
     /// フォーカス指定日時。フォーカス中積読セクションの並び順（降順 = 新しいフォーカスが先頭）に使う。
@@ -273,6 +275,14 @@ final class MangaEntry {
         }
         normalizeOneShotInvariants()
         stateMigrationVersion = 1
+    }
+
+    /// 積読の進捗を表示すべきか
+    @Transient
+    var showsBacklogProgress: Bool {
+        readingState == .backlog
+            && currentEpisode != nil
+            && latestEpisode != nil
     }
 
     init(
