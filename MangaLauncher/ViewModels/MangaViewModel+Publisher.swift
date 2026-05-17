@@ -124,7 +124,7 @@ extension MangaViewModel {
     }
 
     /// メタデータレコードを完全削除（mergePublisher 用）。
-    func deletePublisherMetadata(name: String) {
+    private func deletePublisherMetadata(name: String) {
         let descriptor = FetchDescriptor<PublisherMetadata>(
             predicate: #Predicate { $0.name == name }
         )

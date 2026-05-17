@@ -211,7 +211,7 @@ extension MangaViewModel {
         save()
     }
 
-    func permanentlyDeleteWithoutSave(_ entry: MangaEntry) {
+    private func permanentlyDeleteWithoutSave(_ entry: MangaEntry) {
         deletedIDs.remove(entry.id)
         hiddenIDs.remove(entry.id)
         let entryID = entry.id

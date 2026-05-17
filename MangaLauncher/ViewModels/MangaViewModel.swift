@@ -10,6 +10,8 @@ import WidgetKit
 @MainActor
 final class MangaViewModel {
     var selectedDay: DayOfWeek = .today
+    // Note: 以下のプロパティは extension ファイルからの書き込みが必要なため internal にしている。
+    // View 側から直接書き換えないこと。読み取りのみ OK。
     var refreshCounter = 0
     var hiddenIDs: Set<UUID> = []
     var deletedIDs: Set<UUID> = []
