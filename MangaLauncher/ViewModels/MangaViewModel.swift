@@ -23,10 +23,11 @@ final class MangaViewModel {
     /// allEntries / allComments / allActivities の N+1 fetch を避けるため、
     /// refreshCounter に紐付けた簡易キャッシュ。
     /// refreshCounter が変わるとキャッシュは無効化される。
-    @ObservationIgnored var cacheVersion = -1
-    @ObservationIgnored var cachedEntries: [MangaEntry]?
+    @ObservationIgnored private var cacheVersion = -1
+    @ObservationIgnored private var cachedEntries: [MangaEntry]?
+    /// extension ファイル (Comments / Publisher) から書き込まれるキャッシュは internal のまま。
     @ObservationIgnored var cachedComments: [MangaComment]?
-    @ObservationIgnored var cachedActivities: [ReadingActivity]?
+    @ObservationIgnored private var cachedActivities: [ReadingActivity]?
     /// publisher 名 → アイコン Data の辞書キャッシュ。
     @ObservationIgnored var cachedPublisherIcons: [String: Data?]?
 
@@ -35,13 +36,18 @@ final class MangaViewModel {
 
     var browserContext: BrowserContext?
 
-    var modelContext: ModelContext
+    private(set) var modelContext: ModelContext
     @ObservationIgnored var didRunStartupMigrations = false
 
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
         reloadHiddenIDs()
         reloadDeletedIDs()
+        // 起動時の重い処理 (migration / backfill) は init では実行しない。
+        // CloudKit 同期前のローカル DB を書き換えると、cloud で持っている値を
+        // デフォルトで上書きしてしまうリスクがある (Vision Pro 初回起動などで観測)。
+        // 代わりに scenePhase = .active のタイミングで `runStartupMigrationsIfNeeded()`
+        // を呼んでもらう。
     }
 
     // MARK: - Core Fetch
