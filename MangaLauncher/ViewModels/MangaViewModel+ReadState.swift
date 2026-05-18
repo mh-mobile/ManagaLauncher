@@ -15,7 +15,7 @@ extension MangaViewModel {
     /// 掲載状況の付け替え
     func setPublicationStatus(_ entry: MangaEntry, to status: PublicationStatus) {
         entry.publicationStatus = status
-        save()
+        saveEntryChange(for: entry)
     }
 
     /// 読書状況の付け替え
@@ -27,7 +27,7 @@ extension MangaViewModel {
             entry.isFocused = false
             entry.focusedAt = nil
         }
-        save()
+        saveEntryChange(for: entry)
     }
 
     /// パーソナル評価を設定する。nil で評価解除。
@@ -81,6 +81,7 @@ extension MangaViewModel {
         if !entry.isOneShot {
             entry.advanceToNextUpdate()
         }
+        // 同日・同エントリのアクティビティが既に存在する場合は再 insert しない。
         let today = Calendar.current.startOfDay(for: Date())
         let entryID = entry.id
         let existingDescriptor = FetchDescriptor<ReadingActivity>(
@@ -93,12 +94,13 @@ extension MangaViewModel {
                 mangaName: entry.name,
                 mangaEntryID: entry.id
             )
-            modelContext.insert(activity)
+            // entry と同じコンテキストに挿入（refresh() 後の不整合を防ぐ）
+            (entry.modelContext ?? modelContext).insert(activity)
         }
         if entry.isOneShot {
             entry.readingState = .archived
         }
-        save()
+        saveEntryChange(for: entry)
     }
 
     func markAsUnread(_ entry: MangaEntry) {
@@ -115,7 +117,7 @@ extension MangaViewModel {
         if let activity = modelContext.fetchLogged(descriptor).first {
             modelContext.delete(activity)
         }
-        save()
+        saveEntryChange(for: entry)
     }
 
     // MARK: Unread Queries
@@ -192,16 +194,7 @@ extension MangaViewModel {
     }
 
     private func saveFocusChange(for entry: MangaEntry) {
-        if let entryCtx = entry.modelContext, entryCtx !== modelContext {
-            do {
-                try entryCtx.save()
-            } catch {
-                print("[MangaViewModel] saveFocusChange entryCtx save failed: \(error)")
-                lastError = .save(error)
-                return
-            }
-        }
-        save()
+        saveEntryChange(for: entry)
     }
 
     // MARK: Soft Delete

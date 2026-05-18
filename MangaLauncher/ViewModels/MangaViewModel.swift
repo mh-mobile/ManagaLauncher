@@ -217,6 +217,23 @@ final class MangaViewModel {
 
     // MARK: - Save
 
+    /// entry が属する ModelContext で先に保存してから、viewModel の modelContext も保存する。
+    /// `refresh()` で `modelContext` が差し替わった後、UI が保持する entry が
+    /// 旧コンテキストに残っている場合の不整合を防ぐ共通ヘルパー。
+    /// `updateEntry` / `setHidden` / `setPersonalRating` 等と同じパターン。
+    func saveEntryChange(for entry: MangaEntry) {
+        if let entryCtx = entry.modelContext, entryCtx !== modelContext {
+            do {
+                try entryCtx.save()
+            } catch {
+                print("[MangaViewModel] saveEntryChange entryCtx save failed: \(error)")
+                lastError = .save(error)
+                return
+            }
+        }
+        save()
+    }
+
     func save() {
         do {
             try modelContext.save()
