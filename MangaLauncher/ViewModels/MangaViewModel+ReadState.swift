@@ -1,10 +1,5 @@
 import Foundation
-import SwiftUI
 import SwiftData
-import NotificationKit
-#if canImport(WidgetKit)
-import WidgetKit
-#endif
 
 // MARK: - Read State, Focused Backlog, Soft Delete
 
@@ -37,16 +32,7 @@ extension MangaViewModel {
         } else {
             entry.personalRating = nil
         }
-        do {
-            if let ctx = entry.modelContext {
-                try ctx.save()
-            } else {
-                try modelContext.save()
-            }
-        } catch {
-            print("[MangaViewModel] setPersonalRating save failed: \(error)")
-        }
-        refreshCounter += 1
+        saveEntryChange(for: entry)
     }
 
     /// 非表示フラグの切り替え
@@ -57,21 +43,7 @@ extension MangaViewModel {
         } else {
             hiddenIDs.remove(entry.id)
         }
-        do {
-            if let ctx = entry.modelContext {
-                try ctx.save()
-            } else {
-                try modelContext.save()
-            }
-        } catch {
-            print("[MangaViewModel] setHidden save failed: \(error)")
-        }
-        refreshCounter += 1
-        #if canImport(WidgetKit)
-        WidgetCenter.shared.reloadAllTimelines()
-        #endif
-        BadgeManager.updateBadge(unreadCount: unreadCount(for: .today))
-        rescheduleNotifications()
+        saveEntryChange(for: entry)
     }
 
     // MARK: Mark Read / Unread

@@ -35,7 +35,6 @@ extension MangaViewModel {
     func deleteLink(_ link: MangaLink) {
         modelContext.delete(link)
         save()
-        refreshCounter += 1
     }
 
     func fetchLinks(for entry: MangaEntry) -> [MangaLink] {
@@ -62,6 +61,5 @@ extension MangaViewModel {
             link.sortOrder = index
         }
         save()
-        refreshCounter += 1
     }
 }
