@@ -27,6 +27,7 @@ struct CatchUpView: View {
     @State private var milestoneAchievement: Int?
     @State private var backgroundGradient: ImageColorExtractor.GradientColors?
     @State private var gradientTask: Task<Void, Never>?
+    @State private var showMarkAllReadAlert = false
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
     private var hasGradient: Bool { backgroundGradient != nil }
@@ -95,6 +96,16 @@ struct CatchUpView: View {
                         }
                     }
                 }
+                if !isCompleted && !unreadItems.isEmpty && remainingCount >= 2 {
+                    ToolbarItem(placement: .automatic) {
+                        Button {
+                            showMarkAllReadAlert = true
+                        } label: {
+                            Image(systemName: "checkmark.circle")
+                        }
+                        .accessibilityLabel("残りを全部既読にする")
+                    }
+                }
             }
         }
         .onAppear {
@@ -139,6 +150,14 @@ struct CatchUpView: View {
             }
         }
         #endif
+        .alert("残りを全部既読にする", isPresented: $showMarkAllReadAlert) {
+            Button("全部既読", role: .destructive) {
+                markAllRemainingAsRead()
+            }
+            Button("キャンセル", role: .cancel) {}
+        } message: {
+            Text("残り \(remainingCount) 件を既読にします。この操作は「元に戻す」で取り消せます。")
+        }
         .gesture(dismissDragGesture, including: isCompleted || unreadItems.isEmpty ? .all : .subviews)
         .preferredColorScheme(hasGradient ? .dark : theme.resolvedColorScheme(system: systemColorScheme))
     }
@@ -334,6 +353,19 @@ struct CatchUpView: View {
 
         currentIndex -= 1
         offset = .zero
+    }
+
+    /// 残りの未読エントリをすべて既読にする。
+    /// 各エントリを undoStack に積むので、完了後に undo で個別に戻せる。
+    private func markAllRemainingAsRead() {
+        guard currentIndex < unreadItems.count else { return }
+        for i in currentIndex..<unreadItems.count {
+            let entry = unreadItems[i]
+            undoStack.append((entry: entry, action: .read))
+            viewModel.markAsRead(entry)
+        }
+        offset = .zero
+        currentIndex = unreadItems.count
     }
 
     // MARK: - Completed View
