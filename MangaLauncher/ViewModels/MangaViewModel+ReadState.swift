@@ -80,30 +80,43 @@ extension MangaViewModel {
     func markEntriesAsRead(_ entries: [MangaEntry]) {
         guard !entries.isEmpty else { return }
         let today = Calendar.current.startOfDay(for: Date())
+
+        // 今日の既存アクティビティを一括取得（N回 fetch → 1回に最適化）
+        let entryIDs = entries.map(\.id)
+        let existingDescriptor = FetchDescriptor<ReadingActivity>(
+            predicate: #Predicate { $0.date == today }
+        )
+        let existingActivityEntryIDs = Set(
+            modelContext.fetchLogged(existingDescriptor)
+                .filter { entryIDs.contains($0.mangaEntryID) }
+                .map(\.mangaEntryID)
+        )
+
         for entry in entries {
+            let ctx = entry.modelContext ?? modelContext
             entry.lastReadDate = Date()
             if !entry.isOneShot {
                 entry.advanceToNextUpdate()
             }
-            let entryID = entry.id
-            let existingDescriptor = FetchDescriptor<ReadingActivity>(
-                predicate: #Predicate { $0.date == today && $0.mangaEntryID == entryID }
-            )
-            let hasExisting = !modelContext.fetchLogged(existingDescriptor).isEmpty
-            if !hasExisting {
+            // 存在チェックと挿入を同じコンテキストで行う
+            if !existingActivityEntryIDs.contains(entry.id) {
                 let activity = ReadingActivity(
                     date: Date(),
                     mangaName: entry.name,
                     mangaEntryID: entry.id
                 )
-                (entry.modelContext ?? modelContext).insert(activity)
+                ctx.insert(activity)
             }
             if entry.isOneShot {
                 entry.readingState = .archived
             }
         }
-        // entry が複数コンテキストに跨る可能性に備え、先頭エントリのコンテキストを保存
-        if let entryCtx = entries.first?.modelContext, entryCtx !== modelContext {
+        // entry が複数コンテキストに跨る可能性に備え、全ユニークコンテキストを保存
+        var savedContexts = Set<ObjectIdentifier>()
+        for entry in entries {
+            guard let entryCtx = entry.modelContext, entryCtx !== modelContext else { continue }
+            let ctxID = ObjectIdentifier(entryCtx)
+            guard savedContexts.insert(ctxID).inserted else { continue }
             do {
                 try entryCtx.save()
             } catch {
