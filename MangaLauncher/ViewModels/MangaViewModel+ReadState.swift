@@ -75,6 +75,46 @@ extension MangaViewModel {
         saveEntryChange(for: entry)
     }
 
+    /// 複数エントリを一括既読にする。save() を1回にまとめてパフォーマンスを最適化。
+    /// CatchUp の「全部既読」で使用。
+    func markEntriesAsRead(_ entries: [MangaEntry]) {
+        guard !entries.isEmpty else { return }
+        let today = Calendar.current.startOfDay(for: Date())
+        for entry in entries {
+            entry.lastReadDate = Date()
+            if !entry.isOneShot {
+                entry.advanceToNextUpdate()
+            }
+            let entryID = entry.id
+            let existingDescriptor = FetchDescriptor<ReadingActivity>(
+                predicate: #Predicate { $0.date == today && $0.mangaEntryID == entryID }
+            )
+            let hasExisting = !modelContext.fetchLogged(existingDescriptor).isEmpty
+            if !hasExisting {
+                let activity = ReadingActivity(
+                    date: Date(),
+                    mangaName: entry.name,
+                    mangaEntryID: entry.id
+                )
+                (entry.modelContext ?? modelContext).insert(activity)
+            }
+            if entry.isOneShot {
+                entry.readingState = .archived
+            }
+        }
+        // entry が複数コンテキストに跨る可能性に備え、先頭エントリのコンテキストを保存
+        if let entryCtx = entries.first?.modelContext, entryCtx !== modelContext {
+            do {
+                try entryCtx.save()
+            } catch {
+                print("[MangaViewModel] markEntriesAsRead entryCtx save failed: \(error)")
+                lastError = .save(error)
+                return
+            }
+        }
+        save()
+    }
+
     func markAsUnread(_ entry: MangaEntry) {
         entry.lastReadDate = nil
         if entry.isOneShot {

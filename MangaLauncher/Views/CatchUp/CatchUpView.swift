@@ -357,13 +357,14 @@ struct CatchUpView: View {
 
     /// 残りの未読エントリをすべて既読にする。
     /// 各エントリを undoStack に積むので、完了後に undo で個別に戻せる。
+    /// バッチ版 `markEntriesAsRead` を使い、save() を1回にまとめる。
     private func markAllRemainingAsRead() {
         guard currentIndex < unreadItems.count else { return }
-        for i in currentIndex..<unreadItems.count {
-            let entry = unreadItems[i]
+        let remaining = Array(unreadItems[currentIndex...])
+        for entry in remaining {
             undoStack.append((entry: entry, action: .read))
-            viewModel.markAsRead(entry)
         }
+        viewModel.markEntriesAsRead(remaining)
         offset = .zero
         currentIndex = unreadItems.count
     }
