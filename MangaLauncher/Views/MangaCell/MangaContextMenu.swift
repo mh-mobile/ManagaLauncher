@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct MangaContextMenu: View {
     let entry: MangaEntry
@@ -109,7 +112,11 @@ struct MangaContextMenu: View {
 
         #if canImport(UIKit)
         Button {
-            UIPasteboard.general.string = entry.url
+            if let url = URL(string: entry.url) {
+                UIPasteboard.general.url = url
+            } else {
+                UIPasteboard.general.string = entry.url
+            }
         } label: {
             Label("リンクをコピー", systemImage: "doc.on.doc")
         }
