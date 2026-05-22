@@ -107,6 +107,14 @@ struct MangaContextMenu: View {
             }
         }
 
+        #if canImport(UIKit)
+        Button {
+            UIPasteboard.general.string = entry.url
+        } label: {
+            Label("リンクをコピー", systemImage: "doc.on.doc")
+        }
+        #endif
+
         if let onShowLifetime {
             Button {
                 onShowLifetime()
