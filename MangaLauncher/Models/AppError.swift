@@ -14,17 +14,6 @@ struct AppError: Identifiable, Equatable {
         )
     }
 
-    static func backupImport(_ message: String) -> AppError {
-        AppError(title: "インポート失敗", message: message)
-    }
-
-    static func backupExport(_ underlying: Error) -> AppError {
-        AppError(
-            title: "エクスポート失敗",
-            message: underlying.localizedDescription
-        )
-    }
-
     static func save(_ underlying: Error) -> AppError {
         AppError(
             title: "保存失敗",
