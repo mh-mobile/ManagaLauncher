@@ -42,18 +42,6 @@ enum DayOfWeek: Int, Codable, CaseIterable, Identifiable {
     }
 }
 
-enum MangaType: Int, Codable, CaseIterable {
-    case serial = 0
-    case oneShot = 1
-
-    var displayName: String {
-        switch self {
-        case .serial: "連載"
-        case .oneShot: "読み切り"
-        }
-    }
-}
-
 /// 作品の掲載状況（出版社・作者側の状態）
 enum PublicationStatus: Int, Codable, CaseIterable, Identifiable {
     case active = 0      // 連載中
@@ -140,17 +128,8 @@ final class MangaEntry {
     var isCompleted: Bool = false
     var isBacklog: Bool = false
 
-    @Transient
-    var mangaType: MangaType {
-        get { isOneShot ? .oneShot : .serial }
-        set {
-            isOneShot = newValue == .oneShot
-            normalizeOneShotInvariants()
-        }
-    }
-
     /// 読み切りのときに不整合な状態 (hiatus/finished、backlog) を矯正する。
-    /// ViewModel / mangaType setter から共通に呼ばれる。
+    /// ViewModel の addEntry / updateEntry から呼ばれる。
     func normalizeOneShotInvariants() {
         guard isOneShot else { return }
         if publicationStatusRawValue != PublicationStatus.active.rawValue {

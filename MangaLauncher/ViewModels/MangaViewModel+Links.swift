@@ -47,13 +47,6 @@ extension MangaViewModel {
         return modelContext.fetchLogged(descriptor)
     }
 
-    func allLinks() -> [MangaLink] {
-        let descriptor = FetchDescriptor<MangaLink>(
-            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
-        )
-        return modelContext.fetchLogged(descriptor)
-    }
-
     func moveLinks(for entry: MangaEntry, from source: IndexSet, to destination: Int) {
         var links = fetchLinks(for: entry)
         links.move(fromOffsets: source, toOffset: destination)

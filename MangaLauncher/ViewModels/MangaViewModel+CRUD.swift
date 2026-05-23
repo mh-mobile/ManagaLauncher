@@ -159,19 +159,6 @@ extension MangaViewModel {
         save()
     }
 
-    func recordEpisodeRead(_ entry: MangaEntry, episodeNumber: Int) {
-        let now = Date()
-        entry.lastReadDate = now
-        let activity = ReadingActivity(
-            date: now,
-            mangaName: entry.name,
-            mangaEntryID: entry.id,
-            episodeNumber: episodeNumber
-        )
-        modelContext.insert(activity)
-        save()
-    }
-
     func incrementEpisode(_ entry: MangaEntry) {
         let newEpisode = (entry.currentEpisode ?? 0) + 1
         entry.currentEpisode = newEpisode
