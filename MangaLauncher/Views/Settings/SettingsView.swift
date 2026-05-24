@@ -73,12 +73,14 @@ struct SettingsView: View {
                                 .controlSize(.small)
                         }
                     case .available(let version):
-                        Link(destination: URL(string: "https://apps.apple.com/jp/app/%E3%83%9E%E3%83%B3%E3%82%AC%E6%9B%9C%E6%97%A5/id6760709060")!) {
-                            HStack {
-                                Text("v\(version)が利用可能です")
-                                Spacer()
-                                Image(systemName: "arrow.up.circle.fill")
-                                    .foregroundStyle(.blue)
+                        if let storeURL = URL(string: AppConstants.appStoreURL) {
+                            Link(destination: storeURL) {
+                                HStack {
+                                    Text("v\(version)が利用可能です")
+                                    Spacer()
+                                    Image(systemName: "arrow.up.circle.fill")
+                                        .foregroundStyle(.blue)
+                                }
                             }
                         }
                     case .upToDate:
@@ -383,7 +385,7 @@ struct SettingsView: View {
     private func checkForUpdate() {
         updateStatus = .checking
         Task {
-            guard let url = URL(string: "https://itunes.apple.com/lookup?bundleId=com.mh-mobile.MangaYoubi&country=jp") else {
+            guard let url = URL(string: AppConstants.itunesLookupURL) else {
                 updateStatus = .error
                 return
             }
