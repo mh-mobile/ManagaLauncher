@@ -1,6 +1,6 @@
 import Foundation
 
-/// アプリ全体で使う UserDefaults / AppStorage キーの一元定義。
+/// アプリ全体で使う UserDefaults / AppStorage キーおよび定数の一元定義。
 /// 文字列リテラルの散在を防ぎ、タイポ検出を型システムに任せる。
 enum UserDefaultsKeys {
     // MARK: - Achievement / streak
@@ -24,6 +24,15 @@ enum UserDefaultsKeys {
     static let pendingOpenDay = "pendingOpenDay"
     static let pendingOpenCatchUp = "pendingOpenCatchUp"
     static let pendingIntentImage = "pendingIntentImage.jpg" // App Group 内ファイル名
+}
+
+/// アプリ全体で使う URL 定数の一元定義。
+/// リテラルの散在を防ぎ、変更時の影響範囲を限定する。
+enum AppConstants {
+    /// App Store のアプリページ URL。
+    static let appStoreURL = URL(string: "https://apps.apple.com/jp/app/%E3%83%9E%E3%83%B3%E3%82%AC%E6%9B%9C%E6%97%A5/id6760709060")!
+    /// iTunes Search API のバージョン確認エンドポイント。
+    static let itunesLookupURL = URL(string: "https://itunes.apple.com/lookup?bundleId=com.mh-mobile.MangaYoubi&country=jp")!
 }
 
 /// Notification.Name もここで集約する。MangaLauncherApp と widget extension

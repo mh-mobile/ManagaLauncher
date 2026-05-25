@@ -73,7 +73,7 @@ struct SettingsView: View {
                                 .controlSize(.small)
                         }
                     case .available(let version):
-                        Link(destination: URL(string: "https://apps.apple.com/jp/app/%E3%83%9E%E3%83%B3%E3%82%AC%E6%9B%9C%E6%97%A5/id6760709060")!) {
+                        Link(destination: AppConstants.appStoreURL) {
                             HStack {
                                 Text("v\(version)が利用可能です")
                                 Spacer()
@@ -383,12 +383,8 @@ struct SettingsView: View {
     private func checkForUpdate() {
         updateStatus = .checking
         Task {
-            guard let url = URL(string: "https://itunes.apple.com/lookup?bundleId=com.mh-mobile.MangaYoubi&country=jp") else {
-                updateStatus = .error
-                return
-            }
             do {
-                let (data, _) = try await URLSession.shared.data(from: url)
+                let (data, _) = try await URLSession.shared.data(from: AppConstants.itunesLookupURL)
                 guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                       let results = json["results"] as? [[String: Any]],
                       let latest = results.first,
