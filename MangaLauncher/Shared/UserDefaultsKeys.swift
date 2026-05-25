@@ -26,6 +26,15 @@ enum UserDefaultsKeys {
     static let pendingIntentImage = "pendingIntentImage.jpg" // App Group 内ファイル名
 }
 
+/// アプリ全体で使う URL 定数の一元定義。
+/// リテラルの散在を防ぎ、変更時の影響範囲を限定する。
+enum AppConstants {
+    /// App Store のアプリページ URL。
+    static let appStoreURL = "https://apps.apple.com/jp/app/%E3%83%9E%E3%83%B3%E3%82%AC%E6%9B%9C%E6%97%A5/id6760709060"
+    /// iTunes Search API のバージョン確認エンドポイント。
+    static let itunesLookupURL = "https://itunes.apple.com/lookup?bundleId=com.mh-mobile.MangaYoubi&country=jp"
+}
+
 /// Notification.Name もここで集約する。MangaLauncherApp と widget extension
 /// 両方から共通で参照される。
 extension Notification.Name {
