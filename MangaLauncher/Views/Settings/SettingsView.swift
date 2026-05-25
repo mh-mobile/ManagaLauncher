@@ -73,14 +73,12 @@ struct SettingsView: View {
                                 .controlSize(.small)
                         }
                     case .available(let version):
-                        if let storeURL = URL(string: AppConstants.appStoreURL) {
-                            Link(destination: storeURL) {
-                                HStack {
-                                    Text("v\(version)が利用可能です")
-                                    Spacer()
-                                    Image(systemName: "arrow.up.circle.fill")
-                                        .foregroundStyle(.blue)
-                                }
+                        Link(destination: AppConstants.appStoreURL) {
+                            HStack {
+                                Text("v\(version)が利用可能です")
+                                Spacer()
+                                Image(systemName: "arrow.up.circle.fill")
+                                    .foregroundStyle(.blue)
                             }
                         }
                     case .upToDate:
@@ -385,12 +383,8 @@ struct SettingsView: View {
     private func checkForUpdate() {
         updateStatus = .checking
         Task {
-            guard let url = URL(string: AppConstants.itunesLookupURL) else {
-                updateStatus = .error
-                return
-            }
             do {
-                let (data, _) = try await URLSession.shared.data(from: url)
+                let (data, _) = try await URLSession.shared.data(from: AppConstants.itunesLookupURL)
                 guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                       let results = json["results"] as? [[String: Any]],
                       let latest = results.first,
