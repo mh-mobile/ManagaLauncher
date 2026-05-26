@@ -265,9 +265,12 @@ final class MangaViewModel {
 
     // MARK: - Delete Timer (internal)
 
+    /// Undo 猶予時間（秒）。この間に「元に戻す」が押されなければ確定削除する。
+    static let undoGracePeriod: TimeInterval = 5.0
+
     func restartDeleteTimer() {
         deleteTimer?.invalidate()
-        deleteTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
+        deleteTimer = Timer.scheduledTimer(withTimeInterval: Self.undoGracePeriod, repeats: false) { [weak self] _ in
             Task { @MainActor in
                 self?.commitPendingDeletes()
             }
@@ -276,7 +279,7 @@ final class MangaViewModel {
 
     func restartCommentDeleteTimer() {
         commentDeleteTimer?.invalidate()
-        commentDeleteTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
+        commentDeleteTimer = Timer.scheduledTimer(withTimeInterval: Self.undoGracePeriod, repeats: false) { [weak self] _ in
             Task { @MainActor in
                 self?.commitPendingCommentDeletes()
             }

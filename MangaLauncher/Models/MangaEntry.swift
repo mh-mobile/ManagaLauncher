@@ -108,6 +108,7 @@ final class MangaEntry {
     /// ソフトデリート日時（nil = 未削除）
     var deletedAt: Date?
     /// パーソナル評価 (1〜5)。nil は未評価。
+    /// 有効範囲は `MangaEntry.ratingRange` で定義。
     var personalRating: Int?
     /// 最新話数。nil は未設定。積読の進捗表示に使用。
     var latestEpisode: Int?
@@ -127,6 +128,17 @@ final class MangaEntry {
     var isOnHiatus: Bool = false
     var isCompleted: Bool = false
     var isBacklog: Bool = false
+
+    // MARK: - Rating
+
+    /// パーソナル評価の有効範囲。
+    static let ratingRange = 1...5
+
+    /// 値を有効範囲にクランプして返す。nil はそのまま nil。
+    static func clampedRating(_ value: Int?) -> Int? {
+        guard let v = value else { return nil }
+        return max(ratingRange.lowerBound, min(ratingRange.upperBound, v))
+    }
 
     /// 読み切りのときに不整合な状態 (hiatus/finished、backlog) を矯正する。
     /// ViewModel の addEntry / updateEntry から呼ばれる。
