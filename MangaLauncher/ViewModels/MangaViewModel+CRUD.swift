@@ -37,7 +37,7 @@ extension MangaViewModel {
             }
             entry.currentEpisode = currentEpisode
             entry.episodeLabel = episodeLabel
-            entry.personalRating = personalRating.map { max(1, min(5, $0)) }
+            entry.personalRating = MangaEntry.clampedRating(personalRating)
             entry.latestEpisode = latestEpisode.map { max(1, $0) }
             modelContext.insert(entry)
         }
@@ -98,7 +98,7 @@ extension MangaViewModel {
         }
         entry.currentEpisode = currentEpisode
         entry.episodeLabel = episodeLabel
-        entry.personalRating = personalRating.map { max(1, min(5, $0)) }
+        entry.personalRating = MangaEntry.clampedRating(personalRating)
         entry.latestEpisode = latestEpisode.map { max(1, $0) }
 
         // 「保存時に既読にする」を同一トランザクション内で処理し、save() を1回に統合

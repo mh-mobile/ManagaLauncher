@@ -27,11 +27,7 @@ extension MangaViewModel {
 
     /// パーソナル評価を設定する。nil で評価解除。
     func setPersonalRating(_ entry: MangaEntry, to rating: Int?) {
-        if let r = rating {
-            entry.personalRating = max(1, min(5, r))
-        } else {
-            entry.personalRating = nil
-        }
+        entry.personalRating = MangaEntry.clampedRating(rating)
         saveEntryChange(for: entry)
     }
 

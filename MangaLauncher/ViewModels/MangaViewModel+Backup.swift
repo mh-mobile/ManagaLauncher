@@ -67,7 +67,7 @@ extension MangaViewModel {
             entry.currentEpisode = backupEntry.currentEpisode
             entry.episodeLabel = backupEntry.episodeLabel
             entry.isHidden = backupEntry.isHidden ?? false
-            entry.personalRating = backupEntry.personalRating.map { max(1, min(5, $0)) }
+            entry.personalRating = MangaEntry.clampedRating(backupEntry.personalRating)
             entry.latestEpisode = backupEntry.latestEpisode.map { max(1, $0) }
             if backupEntry.publicationStatusRawValue != nil || backupEntry.readingStateRawValue != nil {
                 entry.publicationStatusRawValue = backupEntry.publicationStatusRawValue
