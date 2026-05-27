@@ -350,9 +350,10 @@ struct MangaWidgetEntryView: View {
 
     // MARK: - Grid Cell
 
+    private static let fallbackURL = URL(string: "mangalauncher://")!
+
     private static func deepLink(for item: MangaWidgetItem) -> URL {
-        URL(string: "mangalauncher://open?id=\(item.id.uuidString)")
-            ?? URL(string: "mangalauncher://")!
+        URL(string: "mangalauncher://open?id=\(item.id.uuidString)") ?? fallbackURL
     }
 
     private func gridCell(item: MangaWidgetItem, size: CGFloat) -> some View {

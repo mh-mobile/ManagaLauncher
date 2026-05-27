@@ -217,11 +217,15 @@ struct MangaLifetimeView: View {
     private func monthBoundaries() -> [Date] {
         let calendar = Calendar.current
         var result: [Date] = []
-        var comps = calendar.dateComponents([.year, .month], from: domainStart)
-        comps.month = (comps.month ?? 0) + 1
-        while let date = calendar.date(from: comps), date < domainEnd {
-            result.append(date)
-            comps.month = (comps.month ?? 0) + 1
+        // domainStart の翌月1日を起点に、domainEnd まで1か月ずつ列挙
+        guard let firstOfNextMonth = calendar.date(byAdding: .month, value: 1,
+                                                    to: calendar.dateInterval(of: .month, for: domainStart)?.start ?? domainStart)
+        else { return result }
+        var cursor = firstOfNextMonth
+        while cursor < domainEnd {
+            result.append(cursor)
+            guard let next = calendar.date(byAdding: .month, value: 1, to: cursor) else { break }
+            cursor = next
         }
         return result
     }

@@ -111,7 +111,7 @@ struct ReadingHeatmapView: View {
                         // Month labels
                         HStack(spacing: cellSpacing) {
                             ForEach(0..<weeks, id: \.self) { weekIndex in
-                                let date = grid[weekIndex].first ?? nil
+                                let date = grid[weekIndex].first.flatMap { $0 }
                                 if let date, isFirstWeekOfMonth(date: date, weekIndex: weekIndex, grid: grid) {
                                     Text(monthLabel(for: date))
                                         .font(theme.caption2Font)
@@ -252,7 +252,7 @@ struct ReadingHeatmapView: View {
         let calendar = Calendar.current
         let month = calendar.component(.month, from: date)
         if weekIndex == 0 { return true }
-        guard let prevDate = grid[weekIndex - 1].first ?? nil else { return true }
+        guard let prevDate = grid[weekIndex - 1].first.flatMap({ $0 }) else { return true }
         return calendar.component(.month, from: prevDate) != month
     }
 
