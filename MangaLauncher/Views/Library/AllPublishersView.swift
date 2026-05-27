@@ -166,8 +166,9 @@ struct PublisherEntriesView: View {
         #if os(iOS) || os(visionOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
-        .if(specialEpisodeEntry != nil || !entries.isEmpty) { view in
-            view.specialEpisodeAlert(entry: specialEpisodeEntry ?? entries[0], viewModel: viewModel, isPresented: $showSpecialEpisodeAlert)
+        .if((specialEpisodeEntry ?? entries.first) != nil) { view in
+            // 条件により specialEpisodeEntry ?? entries.first は必ず non-nil
+            view.specialEpisodeAlert(entry: (specialEpisodeEntry ?? entries.first)!, viewModel: viewModel, isPresented: $showSpecialEpisodeAlert)
         }
     }
 }
