@@ -55,6 +55,8 @@ extension MangaViewModel {
     /// 指定 publisher にアイコンが設定されているか。
     func publisherHasIcon(name: String) -> Bool {
         guard !name.isEmpty else { return false }
+        // loadAllPublisherIcons() は [String: Data?] なので添字は Data?? を返す。
+        // ?? nil で Data? にフラット化し、実際に iconData がある場合のみ true にする。
         return (loadAllPublisherIcons()[name] ?? nil) != nil
     }
 

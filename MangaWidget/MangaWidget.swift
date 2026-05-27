@@ -350,8 +350,13 @@ struct MangaWidgetEntryView: View {
 
     // MARK: - Grid Cell
 
+    private static func deepLink(for item: MangaWidgetItem) -> URL {
+        URL(string: "mangalauncher://open?id=\(item.id.uuidString)")
+            ?? URL(string: "mangalauncher://")!
+    }
+
     private func gridCell(item: MangaWidgetItem, size: CGFloat) -> some View {
-        Link(destination: URL(string: "mangalauncher://open?id=\(item.id.uuidString)")!) {
+        Link(destination: Self.deepLink(for: item)) {
             Group {
                 if let imageData = item.imageData, let image = imageData.toSwiftUIImage() {
                     image

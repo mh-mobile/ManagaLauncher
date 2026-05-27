@@ -218,10 +218,10 @@ struct MangaLifetimeView: View {
         let calendar = Calendar.current
         var result: [Date] = []
         var comps = calendar.dateComponents([.year, .month], from: domainStart)
-        comps.month! += 1
+        comps.month = (comps.month ?? 0) + 1
         while let date = calendar.date(from: comps), date < domainEnd {
             result.append(date)
-            comps.month! += 1
+            comps.month = (comps.month ?? 0) + 1
         }
         return result
     }
