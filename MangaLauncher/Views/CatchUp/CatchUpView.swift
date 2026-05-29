@@ -94,6 +94,7 @@ struct CatchUpView: View {
                         } label: {
                             Image(systemName: "arrow.uturn.backward")
                         }
+                        .accessibilityLabel("元に戻す")
                     }
                 }
                 if !isCompleted && !unreadItems.isEmpty && remainingCount >= 2 {
