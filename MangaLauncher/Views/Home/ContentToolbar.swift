@@ -37,6 +37,7 @@ struct ContentToolbar: ToolbarContent {
                     }
                 }
             }
+            .accessibilityLabel("キャッチアップ、未読\(unreadCount)件")
             .disabled(unreadCount == 0 || edit.isEditing)
         }
         ToolbarItem(placement: .automatic) {
@@ -45,6 +46,7 @@ struct ContentToolbar: ToolbarContent {
             } label: {
                 Image(systemName: displayMode == .list ? "square.grid.2x2" : "list.bullet")
             }
+            .accessibilityLabel(displayMode == .list ? "グリッド表示に切り替え" : "リスト表示に切り替え")
             .disabled(showingWallpaperPicker)
         }
         ToolbarItem(placement: .automatic) {
@@ -53,6 +55,7 @@ struct ContentToolbar: ToolbarContent {
             } label: {
                 Image(systemName: "plus")
             }
+            .accessibilityLabel("マンガを追加")
             .disabled(edit.isEditing)
         }
     }

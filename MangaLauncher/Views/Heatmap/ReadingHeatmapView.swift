@@ -370,6 +370,7 @@ private struct DayActivitySheet: View {
                 Image(systemName: "chevron.left")
                     .font(.body.weight(.semibold))
             }
+            .accessibilityLabel("前の日")
 
             Spacer()
 
@@ -389,6 +390,7 @@ private struct DayActivitySheet: View {
                 Image(systemName: "chevron.right")
                     .font(.body.weight(.semibold))
             }
+            .accessibilityLabel("次の日")
             .disabled(Calendar.current.isDateInToday(currentDate))
         }
         .padding(.horizontal)

@@ -162,6 +162,7 @@ struct QuickViewBrowserScreen: View {
                     .background(.black.opacity(0.85))
                     .clipShape(Circle())
             }
+            .accessibilityLabel("閉じる")
 
             Spacer()
 
@@ -195,6 +196,7 @@ struct QuickViewBrowserScreen: View {
                 .background(.black.opacity(0.85))
                 .clipShape(Capsule())
             }
+            .accessibilityLabel("メニュー")
 
             Spacer()
 
@@ -206,6 +208,7 @@ struct QuickViewBrowserScreen: View {
                     .background(.black.opacity(0.85))
                     .clipShape(Circle())
             }
+            .accessibilityLabel("再読み込み")
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
