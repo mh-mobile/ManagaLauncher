@@ -165,6 +165,7 @@ struct EditEntryView: View {
                     deleteSection
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .themedNavigationStyle()
             .navigationTitle(isEditing ? "編集" : "新規登録")
             #if os(iOS) || os(visionOS)
