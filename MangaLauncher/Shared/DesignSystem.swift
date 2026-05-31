@@ -269,12 +269,14 @@ extension ThemeStyle {
 final class ThemeManager {
     static let shared = ThemeManager()
 
+    private static let themeKey = "appTheme"
+
     var mode: ThemeMode {
-        didSet { UserDefaults.standard.set(mode.rawValue, forKey: "appTheme") }
+        didSet { UserDefaults.standard.set(mode.rawValue, forKey: Self.themeKey) }
     }
 
     private init() {
-        self.mode = ThemeMode(rawValue: UserDefaults.standard.string(forKey: "appTheme") ?? "classic") ?? .classic
+        self.mode = ThemeMode(rawValue: UserDefaults.standard.string(forKey: Self.themeKey) ?? "classic") ?? .classic
     }
 
     var style: ThemeStyle { mode.style }
