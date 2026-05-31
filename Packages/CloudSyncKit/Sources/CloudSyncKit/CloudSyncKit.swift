@@ -1,6 +1,8 @@
 import Foundation
-import CoreData
 import Observation
+#if canImport(CloudKit)
+import CloudKit
+#endif
 
 public enum CloudSyncStatus: Equatable {
     case idle
@@ -89,12 +91,10 @@ public final class CloudSyncMonitor {
                         syncStatus = .notAvailable
                     }
                 }
-            } catch {}
+            } catch {
+                print("[CloudSyncKit] Failed to check account status: \(error)")
+            }
         }
         #endif
     }
 }
-
-#if canImport(CloudKit)
-import CloudKit
-#endif
