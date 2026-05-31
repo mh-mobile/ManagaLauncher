@@ -10,6 +10,9 @@ public enum WallpaperManager {
     private static let typeKey = "wallpaperType"
     private static let colorKey = "wallpaperColor"
     private static let customColorKey = "wallpaperCustomColor"
+    private static let cropScaleKey = "wallpaperCropScale"
+    private static let cropOffsetXKey = "wallpaperCropOffsetX"
+    private static let cropOffsetYKey = "wallpaperCropOffsetY"
     private static let imageFileName = "wallpaper.jpg"
     private static let originalImageFileName = "wallpaper_original.jpg"
 
@@ -29,18 +32,18 @@ public enum WallpaperManager {
     }
 
     public static var cropScale: CGFloat {
-        get { CGFloat(UserDefaults.standard.double(forKey: "wallpaperCropScale").nonZeroOrDefault(1.0)) }
-        set { UserDefaults.standard.set(Double(newValue), forKey: "wallpaperCropScale") }
+        get { CGFloat(UserDefaults.standard.double(forKey: cropScaleKey).nonZeroOrDefault(1.0)) }
+        set { UserDefaults.standard.set(Double(newValue), forKey: cropScaleKey) }
     }
 
     public static var cropOffsetX: CGFloat {
-        get { CGFloat(UserDefaults.standard.double(forKey: "wallpaperCropOffsetX")) }
-        set { UserDefaults.standard.set(Double(newValue), forKey: "wallpaperCropOffsetX") }
+        get { CGFloat(UserDefaults.standard.double(forKey: cropOffsetXKey)) }
+        set { UserDefaults.standard.set(Double(newValue), forKey: cropOffsetXKey) }
     }
 
     public static var cropOffsetY: CGFloat {
-        get { CGFloat(UserDefaults.standard.double(forKey: "wallpaperCropOffsetY")) }
-        set { UserDefaults.standard.set(Double(newValue), forKey: "wallpaperCropOffsetY") }
+        get { CGFloat(UserDefaults.standard.double(forKey: cropOffsetYKey)) }
+        set { UserDefaults.standard.set(Double(newValue), forKey: cropOffsetYKey) }
     }
 
     public static func saveImage(_ data: Data) {
