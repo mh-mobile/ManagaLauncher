@@ -23,6 +23,7 @@ final class HomeState {
 }
 
 @Observable
+@MainActor
 final class PagingState {
     /// 初期値を今日の曜日に合わせることで、onAppear での pageIndex 変更による
     /// 不要なタブアニメーションを防止する。
@@ -57,6 +58,7 @@ final class PagingState {
 }
 
 @Observable
+@MainActor
 final class EditState {
     var isGridEditMode = false
     #if os(iOS) || os(visionOS)
@@ -82,6 +84,7 @@ final class EditState {
 }
 
 @Observable
+@MainActor
 final class WallpaperState {
     static let shared = WallpaperState()
 
@@ -112,6 +115,7 @@ final class WallpaperState {
 }
 
 @Observable
+@MainActor
 final class SheetState {
     var showingAddSheet = false
     var showingCatchUp = false
