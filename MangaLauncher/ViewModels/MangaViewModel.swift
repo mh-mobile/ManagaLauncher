@@ -50,6 +50,23 @@ final class MangaViewModel {
         // を呼んでもらう。
     }
 
+    // MARK: - Common Entry Filter
+
+    /// フェッチ結果から、削除予定・非表示・ソフトデリート済み・重複を除外する共通フィルタ。
+    /// `excludeHidden: false` にすると hiddenIDs による除外をスキップする（hiddenEntries 用）。
+    private func filterEntries(_ entries: [MangaEntry], excludeHidden: Bool = true) -> [MangaEntry] {
+        let pendingIDs = Set(pendingDeleteEntries.map(\.id))
+        let currentDeletedIDs = deletedIDs
+        let currentHiddenIDs = excludeHidden ? hiddenIDs : []
+        var seenIDs = Set<UUID>()
+        return entries.filter { entry in
+            guard !currentHiddenIDs.contains(entry.id) else { return false }
+            guard !pendingIDs.contains(entry.id) else { return false }
+            guard !currentDeletedIDs.contains(entry.id) else { return false }
+            return seenIDs.insert(entry.id).inserted
+        }
+    }
+
     // MARK: - Core Fetch
 
     /// 曜日ごとの「今追っかけている」エントリを取得する。
@@ -68,17 +85,7 @@ final class MangaViewModel {
             },
             sortBy: [SortDescriptor(\.sortOrder)]
         )
-        let results = modelContext.fetchLogged(descriptor)
-        let pendingIDs = Set(pendingDeleteEntries.map(\.id))
-        let currentHiddenIDs = hiddenIDs
-        let currentDeletedIDs = deletedIDs
-        var seenIDs = Set<UUID>()
-        return results.filter { entry in
-            guard !currentHiddenIDs.contains(entry.id) else { return false }
-            guard !pendingIDs.contains(entry.id) else { return false }
-            guard !currentDeletedIDs.contains(entry.id) else { return false }
-            return seenIDs.insert(entry.id).inserted
-        }
+        return filterEntries(modelContext.fetchLogged(descriptor))
     }
 
     func publishers(for day: DayOfWeek) -> [String] {
@@ -92,16 +99,7 @@ final class MangaViewModel {
             predicate: #Predicate { $0.deletedAt == nil && $0.isHidden == false },
             sortBy: [SortDescriptor(\.lastReadDate, order: .reverse), SortDescriptor(\.name)]
         )
-        let pendingIDs = Set(pendingDeleteEntries.map(\.id))
-        let currentHiddenIDs = hiddenIDs
-        let currentDeletedIDs = deletedIDs
-        var seenIDs = Set<UUID>()
-        let result = modelContext.fetchLogged(descriptor).filter { entry in
-            guard !currentHiddenIDs.contains(entry.id) else { return false }
-            guard !pendingIDs.contains(entry.id) else { return false }
-            guard !currentDeletedIDs.contains(entry.id) else { return false }
-            return seenIDs.insert(entry.id).inserted
-        }
+        let result = filterEntries(modelContext.fetchLogged(descriptor))
         cachedEntries = result
         return result
     }
@@ -111,11 +109,7 @@ final class MangaViewModel {
             predicate: #Predicate { $0.isHidden == true },
             sortBy: [SortDescriptor(\.name)]
         )
-        let pendingIDs = Set(pendingDeleteEntries.map(\.id))
-        let currentDeletedIDs = deletedIDs
-        return modelContext.fetchLogged(descriptor).filter { entry in
-            !pendingIDs.contains(entry.id) && !currentDeletedIDs.contains(entry.id)
-        }
+        return filterEntries(modelContext.fetchLogged(descriptor), excludeHidden: false)
     }
 
     func findEntry(by id: UUID) -> MangaEntry? {
@@ -139,17 +133,7 @@ final class MangaViewModel {
         let descriptor = FetchDescriptor<MangaEntry>(
             predicate: #Predicate { $0.deletedAt == nil }
         )
-        let results = modelContext.fetchLogged(descriptor)
-        let pendingIDs = Set(pendingDeleteEntries.map(\.id))
-        let currentHiddenIDs = hiddenIDs
-        let currentDeletedIDs = deletedIDs
-        var seenIDs = Set<UUID>()
-        return results.filter { entry in
-            guard !currentHiddenIDs.contains(entry.id) else { return false }
-            guard !pendingIDs.contains(entry.id) else { return false }
-            guard !currentDeletedIDs.contains(entry.id) else { return false }
-            return seenIDs.insert(entry.id).inserted
-        }.count
+        return filterEntries(modelContext.fetchLogged(descriptor)).count
     }
 
     /// タイムラインのアクティビティドットや日別集計に使う全 ReadingActivity。
