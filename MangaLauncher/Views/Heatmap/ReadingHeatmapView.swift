@@ -36,7 +36,9 @@ struct ReadingHeatmapView: View {
         .onAppear {
             reloadStats()
         }
-        .sheet(item: $selectedDate) { date in
+        .sheet(item: $selectedDate, onDismiss: {
+            reloadStats()
+        }) { date in
             DayActivitySheet(initialDate: date, viewModel: viewModel, activityDates: Set(activityCounts.filter { $0.value > 0 }.keys))
         }
     }
