@@ -13,6 +13,9 @@ struct ReadingHeatmapView: View {
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
     @State private var activityCounts: [Date: Int] = [:]
+    @State private var yearlyStats: ReadingStatsProvider.YearlyStats?
+    @State private var totalReadCount: Int = 0
+    @State private var thisWeekReadCount: Int = 0
     @State private var selectedDate: Date?
 
     var body: some View {
@@ -31,26 +34,33 @@ struct ReadingHeatmapView: View {
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .onAppear {
-            activityCounts = viewModel.stats.fetchActivityCounts(days: weeks * 7)
+            reloadStats()
         }
         .sheet(item: $selectedDate) { date in
             DayActivitySheet(initialDate: date, viewModel: viewModel, activityDates: Set(activityCounts.filter { $0.value > 0 }.keys))
         }
     }
 
+    private func reloadStats() {
+        activityCounts = viewModel.stats.fetchActivityCounts(days: weeks * 7)
+        yearlyStats = viewModel.stats.yearlyStats()
+        totalReadCount = viewModel.stats.totalReadCount()
+        thisWeekReadCount = viewModel.stats.thisWeekReadCount()
+    }
+
     // MARK: - Stats
 
     private var statsSection: some View {
-        let yearly = viewModel.stats.yearlyStats()
+        let stats = yearlyStats
         return VStack(spacing: 12) {
             HStack(spacing: 16) {
-                statCard(title: "連続", value: "\(yearly.currentStreak)", unit: "日")
-                statCard(title: "最長", value: "\(yearly.longestStreak)", unit: "日")
-                statCard(title: "累計", value: "\(viewModel.stats.totalReadCount())", unit: "話")
+                statCard(title: "連続", value: "\(stats?.currentStreak ?? 0)", unit: "日")
+                statCard(title: "最長", value: "\(stats?.longestStreak ?? 0)", unit: "日")
+                statCard(title: "累計", value: "\(totalReadCount)", unit: "話")
             }
             HStack(spacing: 16) {
-                statCard(title: "今週", value: "\(viewModel.stats.thisWeekReadCount())", unit: "話")
-                statCard(title: "よく読む曜日", value: yearly.mostActiveDay ?? "-", unit: "")
+                statCard(title: "今週", value: "\(thisWeekReadCount)", unit: "話")
+                statCard(title: "よく読む曜日", value: stats?.mostActiveDay ?? "-", unit: "")
             }
         }
     }
