@@ -161,11 +161,12 @@ extension MangaViewModel {
 
     func incrementEpisode(_ entry: MangaEntry) {
         let newEpisode = (entry.currentEpisode ?? 0) + 1
+        let now = Date()
         entry.currentEpisode = newEpisode
         entry.episodeLabel = nil
-        entry.lastReadDate = Date()
+        entry.lastReadDate = now
         let activity = ReadingActivity(
-            date: Date(),
+            date: now,
             mangaName: entry.name,
             mangaEntryID: entry.id,
             episodeNumber: newEpisode

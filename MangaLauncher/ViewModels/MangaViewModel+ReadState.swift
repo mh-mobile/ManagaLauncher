@@ -286,7 +286,8 @@ extension MangaViewModel {
     }
 
     func deletedEntryCount() -> Int {
-        deletedEntries().count
+        // deletedEntries() はソート付きで重いため、カウントだけなら deletedIDs を使う
+        deletedIDs.count
     }
 
     func purgeExpiredSoftDeletes() {
