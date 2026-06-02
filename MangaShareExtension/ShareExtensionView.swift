@@ -71,8 +71,9 @@ struct ShareExtensionView: View {
     ]
 
     private var isValidURL: Bool {
-        guard let url = URL(string: url) else { return false }
-        return url.scheme != nil && !url.scheme!.isEmpty
+        guard let url = URL(string: url),
+              let scheme = url.scheme, !scheme.isEmpty else { return false }
+        return true
     }
 
     var body: some View {

@@ -129,11 +129,7 @@ final class MangaViewModel {
     }
 
     func totalEntryCount() -> Int {
-        let _ = refreshCounter
-        let descriptor = FetchDescriptor<MangaEntry>(
-            predicate: #Predicate { $0.deletedAt == nil }
-        )
-        return filterEntries(modelContext.fetchLogged(descriptor)).count
+        allEntries().count + hiddenEntries().count
     }
 
     /// タイムラインのアクティビティドットや日別集計に使う全 ReadingActivity。
@@ -237,7 +233,6 @@ final class MangaViewModel {
     // MARK: - Cache Invalidation
 
     func invalidateCacheIfStale() {
-        let _ = refreshCounter
         if cacheVersion != refreshCounter {
             cacheVersion = refreshCounter
             cachedEntries = nil

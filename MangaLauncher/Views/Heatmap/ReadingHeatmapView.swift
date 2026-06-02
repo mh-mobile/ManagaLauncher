@@ -41,15 +41,16 @@ struct ReadingHeatmapView: View {
     // MARK: - Stats
 
     private var statsSection: some View {
-        VStack(spacing: 12) {
+        let yearly = viewModel.stats.yearlyStats()
+        return VStack(spacing: 12) {
             HStack(spacing: 16) {
-                statCard(title: "連続", value: "\(viewModel.stats.currentStreak())", unit: "日")
-                statCard(title: "最長", value: "\(viewModel.stats.longestStreak())", unit: "日")
+                statCard(title: "連続", value: "\(yearly.currentStreak)", unit: "日")
+                statCard(title: "最長", value: "\(yearly.longestStreak)", unit: "日")
                 statCard(title: "累計", value: "\(viewModel.stats.totalReadCount())", unit: "話")
             }
             HStack(spacing: 16) {
                 statCard(title: "今週", value: "\(viewModel.stats.thisWeekReadCount())", unit: "話")
-                statCard(title: "よく読む曜日", value: viewModel.stats.mostActiveDay() ?? "-", unit: "")
+                statCard(title: "よく読む曜日", value: yearly.mostActiveDay ?? "-", unit: "")
             }
         }
     }

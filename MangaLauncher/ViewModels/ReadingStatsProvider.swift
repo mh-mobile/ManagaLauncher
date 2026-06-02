@@ -30,43 +30,29 @@ struct ReadingStatsProvider {
         return modelContext.fetchLogged(descriptor)
     }
 
-    func currentStreak() -> Int {
+    /// 年間の streak（現在・最長）と最もアクティブな曜日をまとめて計算する。
+    /// 個別に呼ぶと365日分のフェッチが毎回走るため、一度にまとめて取得する。
+    struct YearlyStats {
+        let currentStreak: Int
+        let longestStreak: Int
+        let mostActiveDay: String?
+    }
+
+    func yearlyStats() -> YearlyStats {
         let counts = fetchActivityCounts(days: 365)
-        let calendar = Calendar.current
-        var streak = 0
-        var checkDate = calendar.startOfDay(for: Date())
+        return YearlyStats(
+            currentStreak: Self.computeCurrentStreak(from: counts),
+            longestStreak: Self.computeLongestStreak(from: counts),
+            mostActiveDay: Self.computeMostActiveDay(from: counts)
+        )
+    }
 
-        if counts[checkDate] == nil {
-            guard let prev = calendar.date(byAdding: .day, value: -1, to: checkDate) else { return 0 }
-            checkDate = prev
-        }
-
-        while counts[checkDate] != nil {
-            streak += 1
-            guard let prev = calendar.date(byAdding: .day, value: -1, to: checkDate) else { break }
-            checkDate = prev
-        }
-        return streak
+    func currentStreak() -> Int {
+        Self.computeCurrentStreak(from: fetchActivityCounts(days: 365))
     }
 
     func longestStreak() -> Int {
-        let counts = fetchActivityCounts(days: 365)
-        let sortedDates = counts.keys.sorted()
-        guard !sortedDates.isEmpty else { return 0 }
-
-        let calendar = Calendar.current
-        var longest = 1
-        var current = 1
-
-        for i in 1..<sortedDates.count {
-            if calendar.date(byAdding: .day, value: 1, to: sortedDates[i - 1]) == sortedDates[i] {
-                current += 1
-                longest = max(longest, current)
-            } else {
-                current = 1
-            }
-        }
-        return longest
+        Self.computeLongestStreak(from: fetchActivityCounts(days: 365))
     }
 
     func totalReadCount() -> Int {
@@ -89,7 +75,49 @@ struct ReadingStatsProvider {
     }
 
     func mostActiveDay() -> String? {
-        let counts = fetchActivityCounts(days: 365)
+        Self.computeMostActiveDay(from: fetchActivityCounts(days: 365))
+    }
+
+    // MARK: - Pure Computation Helpers
+
+    private static func computeCurrentStreak(from counts: [Date: Int]) -> Int {
+        let calendar = Calendar.current
+        var streak = 0
+        var checkDate = calendar.startOfDay(for: Date())
+
+        if counts[checkDate] == nil {
+            guard let prev = calendar.date(byAdding: .day, value: -1, to: checkDate) else { return 0 }
+            checkDate = prev
+        }
+
+        while counts[checkDate] != nil {
+            streak += 1
+            guard let prev = calendar.date(byAdding: .day, value: -1, to: checkDate) else { break }
+            checkDate = prev
+        }
+        return streak
+    }
+
+    private static func computeLongestStreak(from counts: [Date: Int]) -> Int {
+        let sortedDates = counts.keys.sorted()
+        guard !sortedDates.isEmpty else { return 0 }
+
+        let calendar = Calendar.current
+        var longest = 1
+        var current = 1
+
+        for i in 1..<sortedDates.count {
+            if calendar.date(byAdding: .day, value: 1, to: sortedDates[i - 1]) == sortedDates[i] {
+                current += 1
+                longest = max(longest, current)
+            } else {
+                current = 1
+            }
+        }
+        return longest
+    }
+
+    private static func computeMostActiveDay(from counts: [Date: Int]) -> String? {
         guard !counts.isEmpty else { return nil }
         let calendar = Calendar.current
         var weekdayCounts: [Int: Int] = [:]
