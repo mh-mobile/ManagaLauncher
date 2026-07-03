@@ -230,17 +230,11 @@ extension MangaViewModel {
         hiddenIDs.remove(entry.id)
         let entryID = entry.id
         let activityDescriptor = FetchDescriptor<ReadingActivity>(predicate: #Predicate { $0.mangaEntryID == entryID })
-        if let activities = try? modelContext.fetch(activityDescriptor) {
-            for activity in activities { modelContext.delete(activity) }
-        }
+        for activity in modelContext.fetchLogged(activityDescriptor) { modelContext.delete(activity) }
         let commentDescriptor = FetchDescriptor<MangaComment>(predicate: #Predicate { $0.mangaEntryID == entryID })
-        if let comments = try? modelContext.fetch(commentDescriptor) {
-            for comment in comments { modelContext.delete(comment) }
-        }
+        for comment in modelContext.fetchLogged(commentDescriptor) { modelContext.delete(comment) }
         let linkDescriptor = FetchDescriptor<MangaLink>(predicate: #Predicate { $0.mangaEntryID == entryID })
-        if let links = try? modelContext.fetch(linkDescriptor) {
-            for link in links { modelContext.delete(link) }
-        }
+        for link in modelContext.fetchLogged(linkDescriptor) { modelContext.delete(link) }
         modelContext.delete(entry)
     }
 
@@ -257,7 +251,7 @@ extension MangaViewModel {
         }
         let day = entry.dayOfWeekRawValue
         let descriptor = FetchDescriptor<MangaEntry>(predicate: #Predicate { $0.dayOfWeekRawValue == day && $0.deletedAt == nil })
-        let maxOrder = (try? modelContext.fetch(descriptor))?.map(\.sortOrder).max() ?? -1
+        let maxOrder = modelContext.fetchLogged(descriptor).map(\.sortOrder).max() ?? -1
         entry.sortOrder = maxOrder + 1
     }
 
@@ -293,7 +287,7 @@ extension MangaViewModel {
     func purgeExpiredSoftDeletes() {
         guard let cutoff = Calendar.current.date(byAdding: .day, value: -30, to: Date()) else { return }
         let descriptor = FetchDescriptor<MangaEntry>(predicate: #Predicate { $0.deletedAt != nil })
-        guard let softDeleted = try? modelContext.fetch(descriptor) else { return }
+        let softDeleted = modelContext.fetchLogged(descriptor)
         let expired = softDeleted.filter { ($0.deletedAt ?? .distantFuture) < cutoff }
         guard !expired.isEmpty else { return }
         for entry in expired {

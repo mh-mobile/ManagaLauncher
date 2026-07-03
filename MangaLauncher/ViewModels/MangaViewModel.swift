@@ -150,7 +150,7 @@ final class MangaViewModel {
         let descriptor = FetchDescriptor<MangaEntry>(
             predicate: #Predicate { $0.isHidden == true && $0.deletedAt == nil }
         )
-        let entries = (try? modelContext.fetch(descriptor)) ?? []
+        let entries = modelContext.fetchLogged(descriptor)
         hiddenIDs = Set(entries.map(\.id))
     }
 
@@ -158,7 +158,7 @@ final class MangaViewModel {
         let descriptor = FetchDescriptor<MangaEntry>(
             predicate: #Predicate { $0.deletedAt != nil }
         )
-        let entries = (try? modelContext.fetch(descriptor)) ?? []
+        let entries = modelContext.fetchLogged(descriptor)
         deletedIDs = Set(entries.map(\.id))
     }
 

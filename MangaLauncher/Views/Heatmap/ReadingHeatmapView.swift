@@ -269,11 +269,15 @@ struct ReadingHeatmapView: View {
         return calendar.component(.month, from: prevDate) != month
     }
 
-    private func monthLabel(for date: Date) -> String {
+    private static let monthLabelFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ja_JP")
         formatter.dateFormat = "M月"
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private func monthLabel(for date: Date) -> String {
+        Self.monthLabelFormatter.string(from: date)
     }
 }
 
@@ -411,15 +415,11 @@ private struct DayActivitySheet: View {
     }
 
     private func openMangaURL(_ urlString: String) {
-        MangaURLOpener(
+        MangaURLOpener.make(
             browserMode: browserMode,
             openURL: openURL,
-            onSafariURL: { safariURL = $0 },
-            onQuickView: { viewModel.browserContext = $0 },
-            entryLookup: { url in
-                guard let e = viewModel.allEntries().first(where: { $0.url == url }) else { return nil }
-                return (e.name, e.publisher, e.imageData)
-            }
+            safariURL: $safariURL,
+            viewModel: viewModel
         ).open(urlString)
     }
 

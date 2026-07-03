@@ -254,15 +254,11 @@ struct TimelineView: View {
     }
 
     private func openMangaURL(_ urlString: String) {
-        MangaURLOpener(
+        MangaURLOpener.make(
             browserMode: browserMode,
             openURL: openURL,
-            onSafariURL: { safariURL = $0 },
-            onQuickView: { viewModel.browserContext = $0 },
-            entryLookup: { url in
-                guard let e = viewModel.allEntries().first(where: { $0.url == url }) else { return nil }
-                return (e.name, e.publisher, e.imageData)
-            }
+            safariURL: $safariURL,
+            viewModel: viewModel
         ).open(urlString)
     }
 
