@@ -145,6 +145,10 @@ struct MangaLauncherApp: App {
                     checkPendingOpenCatchUp()
                 }
                 .onChange(of: scenePhase) { _, newPhase in
+                    if newPhase != .active {
+                        // suspend 前にデバウンス中の Widget/バッジ/通知更新を確実に反映する
+                        viewModel.flushSaveSideEffects()
+                    }
                     if newPhase == .active {
                         startMigrationWaitIfNeeded()
                         checkPendingIntent()
