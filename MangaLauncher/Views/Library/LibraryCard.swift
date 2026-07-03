@@ -90,7 +90,8 @@ struct LibraryCard: View {
 
     @ViewBuilder
     private var cardImage: some View {
-        if let imageData = entry.imageData, let image = imageData.toSwiftUIImage() {
+        if let imageData = entry.imageData,
+           let image = imageData.toCachedSwiftUIImage(id: entry.id.uuidString) {
             image
                 .resizable()
                 .scaledToFill()

@@ -158,7 +158,8 @@ struct HiddenEntriesView: View {
             ScrollView {
                 MasonryLayout(entries: entries, availableWidth: geo.size.width - 32) { entry in
                     VStack(alignment: .leading, spacing: 6) {
-                        if let data = entry.imageData, let image = data.toSwiftUIImage() {
+                        if let data = entry.imageData,
+                           let image = data.toCachedSwiftUIImage(id: entry.id.uuidString) {
                             image
                                 .resizable()
                                 .scaledToFit()
@@ -203,7 +204,8 @@ struct HiddenEntriesView: View {
 
     @ViewBuilder
     private func entryThumbnail(_ entry: MangaEntry, size: CGFloat) -> some View {
-        if let data = entry.imageData, let image = data.toSwiftUIImage() {
+        if let data = entry.imageData,
+           let image = data.toCachedSwiftUIImage(id: entry.id.uuidString, maxPixelSize: ThumbnailCache.smallMaxPixelSize) {
             image
                 .resizable()
                 .scaledToFill()

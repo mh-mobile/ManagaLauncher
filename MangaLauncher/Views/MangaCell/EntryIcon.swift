@@ -8,7 +8,8 @@ struct EntryIcon: View {
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
     var body: some View {
-        if let imageData = entry.imageData, let image = imageData.toSwiftUIImage() {
+        if let imageData = entry.imageData,
+           let image = imageData.toCachedSwiftUIImage(id: entry.id.uuidString, maxPixelSize: ThumbnailCache.smallMaxPixelSize) {
             image
                 .resizable()
                 .scaledToFill()

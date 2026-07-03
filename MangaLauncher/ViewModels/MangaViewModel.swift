@@ -39,6 +39,10 @@ final class MangaViewModel {
     private(set) var modelContext: ModelContext
     @ObservationIgnored var didRunStartupMigrations = false
 
+    /// save() 後の外部反映 (Widget/バッジ/通知) のデバウンス用。
+    @ObservationIgnored private var saveSideEffectsTask: Task<Void, Never>?
+    @ObservationIgnored private var hasPendingSaveSideEffects = false
+
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
         reloadHiddenIDs()
@@ -150,7 +154,7 @@ final class MangaViewModel {
         let descriptor = FetchDescriptor<MangaEntry>(
             predicate: #Predicate { $0.isHidden == true && $0.deletedAt == nil }
         )
-        let entries = (try? modelContext.fetch(descriptor)) ?? []
+        let entries = modelContext.fetchLogged(descriptor)
         hiddenIDs = Set(entries.map(\.id))
     }
 
@@ -158,7 +162,7 @@ final class MangaViewModel {
         let descriptor = FetchDescriptor<MangaEntry>(
             predicate: #Predicate { $0.deletedAt != nil }
         )
-        let entries = (try? modelContext.fetch(descriptor)) ?? []
+        let entries = modelContext.fetchLogged(descriptor)
         deletedIDs = Set(entries.map(\.id))
     }
 
@@ -223,6 +227,36 @@ final class MangaViewModel {
             return
         }
         refreshCounter += 1
+        scheduleSaveSideEffects()
+    }
+
+    // MARK: - Save Side Effects (Widget / Badge / Notifications)
+
+    /// Widget リロード・バッジ更新・通知再スケジュールはいずれも外部プロセス向けの
+    /// 反映で即時性が不要な一方、通知再スケジュールは全7曜日分のフェッチを伴い重い。
+    /// CatchUp のスワイプ既読のように save() が連打される場面で毎回実行しないよう
+    /// 500ms デバウンスでまとめて実行する (DB 保存と UI 更新は save() で同期のまま)。
+    private func scheduleSaveSideEffects() {
+        hasPendingSaveSideEffects = true
+        saveSideEffectsTask?.cancel()
+        saveSideEffectsTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(500))
+            guard !Task.isCancelled else { return }
+            self?.performSaveSideEffectsNow()
+        }
+    }
+
+    /// scenePhase が .active 以外へ遷移するタイミングで App から呼ぶ。
+    /// アプリがすぐバックグラウンドへ行っても Widget/バッジ/通知が
+    /// 必ず最終状態に更新されることを保証する。pending が無ければ no-op。
+    func flushSaveSideEffects() {
+        guard hasPendingSaveSideEffects else { return }
+        saveSideEffectsTask?.cancel()
+        performSaveSideEffectsNow()
+    }
+
+    private func performSaveSideEffectsNow() {
+        hasPendingSaveSideEffects = false
         #if canImport(WidgetKit)
         WidgetCenter.shared.reloadAllTimelines()
         #endif

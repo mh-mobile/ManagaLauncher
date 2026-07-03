@@ -129,7 +129,8 @@ struct RecentlyDeletedView: View {
     @ViewBuilder
     private func entryRow(_ entry: MangaEntry) -> some View {
         HStack(spacing: 12) {
-            if let data = entry.imageData, let image = data.toSwiftUIImage() {
+            if let data = entry.imageData,
+               let image = data.toCachedSwiftUIImage(id: entry.id.uuidString, maxPixelSize: ThumbnailCache.smallMaxPixelSize) {
                 image
                     .resizable()
                     .scaledToFill()
