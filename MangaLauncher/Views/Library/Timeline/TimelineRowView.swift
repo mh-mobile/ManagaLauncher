@@ -1,4 +1,5 @@
 import SwiftUI
+import PlatformKit
 
 /// TimelineView の 1 行。時刻ラベル + 縦線 + タイプアイコン + 内容カード。
 struct TimelineRowView: View {
@@ -92,7 +93,7 @@ struct TimelineRowView: View {
         Group {
             if let entry = item.entry,
                let data = entry.imageData,
-               let image = data.toSwiftUIImage() {
+               let image = data.toCachedSwiftUIImage(id: entry.id.uuidString, maxPixelSize: ThumbnailCache.smallMaxPixelSize) {
                 image
                     .resizable()
                     .scaledToFill()

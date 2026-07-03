@@ -321,7 +321,7 @@ private struct DayActivitySheet: View {
                             } label: {
                                 HStack(spacing: 12) {
                                     if let entry, let imageData = entry.imageData,
-                                       let image = imageData.toSwiftUIImage() {
+                                       let image = imageData.toCachedSwiftUIImage(id: entry.id.uuidString, maxPixelSize: ThumbnailCache.smallMaxPixelSize) {
                                         image
                                             .resizable()
                                             .aspectRatio(contentMode: .fill)

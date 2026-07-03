@@ -138,7 +138,8 @@ struct MangaLifetimeView: View {
     @ViewBuilder
     private func thumbnail(for entry: MangaEntry) -> some View {
         Group {
-            if let data = entry.imageData, let image = data.toSwiftUIImage() {
+            if let data = entry.imageData,
+               let image = data.toCachedSwiftUIImage(id: entry.id.uuidString, maxPixelSize: ThumbnailCache.smallMaxPixelSize) {
                 image.resizable().scaledToFill()
             } else {
                 Color.fromName(entry.iconColor)
@@ -434,7 +435,8 @@ struct LifetimeDetailSheet: View {
     @ViewBuilder
     private var entryThumbnail: some View {
         Group {
-            if let data = lifetime.entry.imageData, let image = data.toSwiftUIImage() {
+            if let data = lifetime.entry.imageData,
+               let image = data.toCachedSwiftUIImage(id: lifetime.entry.id.uuidString, maxPixelSize: ThumbnailCache.smallMaxPixelSize) {
                 image.resizable().scaledToFill()
             } else {
                 Color.fromName(lifetime.entry.iconColor)
