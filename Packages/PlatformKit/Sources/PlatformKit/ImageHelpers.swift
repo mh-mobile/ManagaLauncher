@@ -18,6 +18,9 @@ extension Data {
 
 // MARK: - Cross-platform Image Resize
 
+/// 作品画像を保存する際の長辺ピクセル上限。最大表示は CatchUp カード 600pt @2x (iPad)。
+public let mangaImageMaxDimension: CGFloat = 1200
+
 /// 長辺を `maxDimension` ピクセル以下に縮小した JPEG を返す (拡大はしない)。
 /// - ImageIO の縮小デコードを使うので、巨大な寸法の画像でもフルサイズのビットマップを作らない
 /// - EXIF の向きを反映し、透過部分は白で塗る (JPEG は透過を持てず黒になるため)

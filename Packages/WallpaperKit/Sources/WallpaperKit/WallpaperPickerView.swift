@@ -66,7 +66,8 @@ public struct WallpaperPickerView: View {
             .onChange(of: selectedPhotoItem) { _, newItem in
                 Task {
                     if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                        if let jpeg = downsizedJPEGData(data, maxDimension: 2400) {
+                        // 拡大トリミングの余地を残す
+                        if let jpeg = downsizedJPEGData(data, maxDimension: 4000) {
                             #if canImport(UIKit)
                             try? await Task.sleep(for: .milliseconds(600))
                             presentNewPhotoCrop(originalJpeg: jpeg)

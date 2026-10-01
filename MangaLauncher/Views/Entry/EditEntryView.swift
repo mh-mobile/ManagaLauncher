@@ -309,7 +309,7 @@ struct EditEntryView: View {
                 PasteButton(payloadType: PasteImage.self) { items in
                     guard let item = items.first,
                           UIImage(data: item.data) != nil,
-                          let jpeg = downsizedJPEGData(item.data, maxDimension: 600) else { return }
+                          let jpeg = downsizedJPEGData(item.data, maxDimension: mangaImageMaxDimension) else { return }
                     imageData = jpeg
                 }
                 #endif
@@ -333,7 +333,7 @@ struct EditEntryView: View {
                     #if canImport(UIKit)
                     guard UIImage(data: data) != nil else { return }
                     #endif
-                    if let jpeg = downsizedJPEGData(data, maxDimension: 600) {
+                    if let jpeg = downsizedJPEGData(data, maxDimension: mangaImageMaxDimension) {
                         imageData = jpeg
                     }
                 }

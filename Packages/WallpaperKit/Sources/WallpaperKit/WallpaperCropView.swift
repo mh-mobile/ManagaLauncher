@@ -85,8 +85,9 @@ public struct WallpaperCropView: View {
                         Button("完了") {
                             if let uiImage = UIImage(data: imageData) {
                                 let cropped = renderCrop(image: uiImage, screenSize: geo.size)
+                                // 画面の長辺 (最大 ~2900px) を下回らないように
                                 if let data = cropped.jpegData(compressionQuality: 0.9),
-                                   let jpeg = downsizedJPEGData(data, maxDimension: 1200) {
+                                   let jpeg = downsizedJPEGData(data, maxDimension: 3000) {
                                     onDone(jpeg, scale, offset)
                                 }
                             }

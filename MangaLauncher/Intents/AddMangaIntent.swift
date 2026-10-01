@@ -67,7 +67,7 @@ struct AddMangaIntent: AppIntent {
         if let image,
            let containerURL = SharedModelContainer.appGroupContainerURL {
             let imageURL = containerURL.appendingPathComponent("pendingIntentImage.jpg")
-            if let jpeg = downsizedJPEGData(image.data, maxDimension: 600) {
+            if let jpeg = downsizedJPEGData(image.data, maxDimension: mangaImageMaxDimension) {
                 try? jpeg.write(to: imageURL)
             }
         }
