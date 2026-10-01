@@ -242,7 +242,8 @@ final class MangaViewModel {
     /// 反映で即時性が不要な一方、通知再スケジュールは全7曜日分のフェッチを伴い重い。
     /// CatchUp のスワイプ既読のように save() が連打される場面で毎回実行しないよう
     /// 500ms デバウンスでまとめて実行する (DB 保存と UI 更新は save() で同期のまま)。
-    private func scheduleSaveSideEffects() {
+    /// アプリ外 (共有拡張・iCloud 同期) での変更後にも App から呼び、Widget/バッジ/通知を最新化する。
+    func scheduleSaveSideEffects() {
         hasPendingSaveSideEffects = true
         saveSideEffectsTask?.cancel()
         saveSideEffectsTask = Task { @MainActor [weak self] in
