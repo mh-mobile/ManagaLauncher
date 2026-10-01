@@ -80,34 +80,37 @@ struct LibraryView: View {
         let recentActivity = ActivityBuilder.recent(entries: allEntries, comments: allComments, limit: 8)
         let totalActivityCount = ActivityBuilder.totalCount(entries: allEntries, comments: allComments)
 
-        if sections.isEmpty && recentActivity.isEmpty {
-            ContentUnavailableView {
-                Label("ライブラリは空です", systemImage: "books.vertical")
-                    .foregroundStyle(theme.onSurfaceVariant)
-            } description: {
-                Text("マンガを追加するとここに表示されます")
-                    .foregroundStyle(theme.onSurfaceVariant.opacity(0.7))
-            }
-        } else {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 24) {
+        // 空でも 非表示/最近削除 への導線と遷移先は残す (全作品を非表示・削除すると戻れなくなっていた)
+        let isEmpty = sections.isEmpty && recentActivity.isEmpty
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 24) {
+                if isEmpty {
+                    ContentUnavailableView {
+                        Label("ライブラリは空です", systemImage: "books.vertical")
+                            .foregroundStyle(theme.onSurfaceVariant)
+                    } description: {
+                        Text("マンガを追加するとここに表示されます")
+                            .foregroundStyle(theme.onSurfaceVariant.opacity(0.7))
+                    }
+                    .padding(.top, 60)
+                } else {
                     catchUpAllUnreadLink
                     focusedBacklogSection
                     timelineLink
-                    hiddenSectionLink
-                    recentlyDeletedLink
-                    if !recentActivity.isEmpty {
-                        recentActivitySection(items: recentActivity, totalCount: totalActivityCount)
-                    }
-                    ForEach(sections) { section in
-                        sectionView(section: section, viewModel: viewModel)
-                    }
                 }
-                .padding(.vertical)
+                hiddenSectionLink
+                recentlyDeletedLink
+                if !recentActivity.isEmpty {
+                    recentActivitySection(items: recentActivity, totalCount: totalActivityCount)
+                }
+                ForEach(sections) { section in
+                    sectionView(section: section, viewModel: viewModel)
+                }
             }
-            .navigationDestination(for: LibraryDestination.self) { destination in
-                libraryDestinationView(destination, viewModel: viewModel)
-            }
+            .padding(.vertical)
+        }
+        .navigationDestination(for: LibraryDestination.self) { destination in
+            libraryDestinationView(destination, viewModel: viewModel)
         }
     }
 

@@ -76,6 +76,7 @@ struct LibrarySectionBuilder {
             let entries = allEntries.filter { $0.iconColor == mangaColor.name }
             guard !entries.isEmpty else { return nil }
             return LibrarySection(
+                id: "color-\(mangaColor.name)",
                 title: label,
                 icon: "tag.fill",
                 iconColor: mangaColor.color,
@@ -123,18 +124,19 @@ struct LibrarySectionBuilder {
         return LibrarySection(title: "読了", icon: "checkmark.seal", entries: archived)
     }
 
-    /// 掲載誌別（登録数の多い順、上位5誌のみ。最初のセクションだけに「すべて表示」を付ける）
+    /// 掲載誌別（登録数の多い順、上位5誌のみ）。最初のセクションだけに「すべて表示」を付ける。
+    /// 掲載誌の統合・アイコン設定の入口でもあるので、5誌以下でも付ける。
     private func publisherSections() -> [LibrarySection] {
         let sortedPublishers = PublisherIndex.counts(from: allEntries)
-        let hasMore = sortedPublishers.count > 5
         return sortedPublishers.prefix(5).enumerated().compactMap { (index, item) -> LibrarySection? in
             let entries = allEntries.filter { $0.publisher == item.publisher }
             guard !entries.isEmpty else { return nil }
             return LibrarySection(
+                id: "publisher-\(item.publisher)",
                 title: item.publisher,
                 icon: "magazine",
                 entries: entries,
-                seeAll: (index == 0 && hasMore) ? .allPublishers : nil
+                seeAll: index == 0 ? .allPublishers : nil
             )
         }
     }

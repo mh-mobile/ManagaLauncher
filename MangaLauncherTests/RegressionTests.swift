@@ -333,3 +333,99 @@ struct VisibilityTests {
             == ActivityBuilder.all(entries: [entry], comments: comments).count)
     }
 }
+
+/// 並び替え・曜日移動・既読処理の不整合。
+@Suite("並び替えと次回更新日")
+@MainActor
+struct ReorderAndNextUpdateTests {
+    /// テスト中に解放されると mainContext が無効になるため保持する
+    private let container: ModelContainer
+
+    init() throws {
+        container = try makeContainer()
+    }
+
+    private func vmWith(_ specs: [(String, String)]) throws -> MangaViewModel {
+        let vm = MangaViewModel(modelContext: container.mainContext)
+        for (name, publisher) in specs {
+            vm.addEntry(name: name, url: "https://\(name).example", days: [.monday], iconColor: "blue", publisher: publisher)
+        }
+        return vm
+    }
+
+    @Test func reorderUnderPublisherFilterMovesOnlyVisibleEntries() throws {
+        let vm = try vmWith([("A", "J"), ("B", "M"), ("C", "J")])
+        let visible = vm.fetchEntries(for: .monday).filter { $0.publisher == "J" } // [A, C]
+        // フィルタ表示中に C を先頭へ
+        vm.moveEntries(for: .monday, visible: visible, from: IndexSet(integer: 1), to: 0)
+        #expect(vm.fetchEntries(for: .monday).map(\.name) == ["C", "B", "A"])
+    }
+
+    @Test func droppingOnSameDayKeepsNextUpdate() throws {
+        let vm = try vmWith([("A", "")])
+        let entry = try #require(vm.allEntries().first)
+        let scheduled = Calendar.current.date(byAdding: .day, value: 14, to: Calendar.current.startOfDay(for: Date()))
+        entry.nextExpectedUpdate = scheduled
+        vm.moveEntryToDay(entry, to: .monday)
+        #expect(entry.nextExpectedUpdate == scheduled)
+    }
+
+    @Test func biweeklyReadKeepsUpcomingReleaseDate() throws {
+        let calendar = Calendar.current
+        let entry = MangaEntry(name: "A", dayOfWeek: .monday, updateIntervalWeeks: 2)
+        // 次の更新 (月曜) はまだ来ていない。休み週に前回分を遅れて読んだ
+        let mostRecentMonday = MangaEntry.mostRecentOccurrence(of: .monday)
+        let upcoming = try #require(calendar.date(byAdding: .day, value: 7, to: mostRecentMonday))
+        entry.nextExpectedUpdate = upcoming
+        entry.recordRead()
+        #expect(entry.nextExpectedUpdate == upcoming)
+    }
+
+    @Test func pastScheduleAdvancesByIntervalKeepingPhase() throws {
+        let calendar = Calendar.current
+        let entry = MangaEntry(name: "A", dayOfWeek: .monday, updateIntervalWeeks: 2)
+        let mostRecentMonday = MangaEntry.mostRecentOccurrence(of: .monday)
+        entry.nextExpectedUpdate = calendar.date(byAdding: .day, value: -14, to: mostRecentMonday)
+        entry.recordRead()
+        #expect(entry.nextExpectedUpdate == calendar.date(byAdding: .day, value: 14, to: mostRecentMonday))
+    }
+
+    @Test func invalidIntervalDoesNotHang() {
+        let entry = MangaEntry(name: "A", dayOfWeek: .monday, updateIntervalWeeks: 0)
+        entry.nextExpectedUpdate = Date.distantPast.addingTimeInterval(86_400 * 365 * 1900)
+        entry.recordRead()
+        #expect((entry.nextExpectedUpdate ?? .distantPast) > Date())
+    }
+
+    @Test func incrementEpisodeAdvancesNextUpdateAndArchivesOneShot() throws {
+        let vm = try vmWith([("A", ""), ("B", "")])
+        let entries = vm.allEntries()
+        let serial = try #require(entries.first { $0.name == "A" })
+        vm.incrementEpisode(serial)
+        #expect((serial.nextExpectedUpdate ?? .distantPast) > Date())
+
+        let oneShot = try #require(entries.first { $0.name == "B" })
+        oneShot.isOneShot = true
+        vm.incrementEpisode(oneShot)
+        #expect(oneShot.readingState == .archived)
+    }
+}
+
+/// ライブラリのセクション: 掲載誌 5 誌以下だと統合/アイコン設定の画面に入れず、
+/// 掲載誌名が固定セクション名と同じだと ForEach の ID が重複していた。
+@Suite("LibrarySectionBuilder")
+@MainActor
+struct LibrarySectionBuilderTests {
+    @Test func publisherManagementReachableWithFewPublishers() {
+        let entry = MangaEntry(name: "A", publisher: "ジャンプ")
+        let sections = LibrarySectionBuilder(allEntries: [entry]).build()
+        #expect(sections.contains { $0.seeAll == .allPublishers })
+    }
+
+    @Test func sectionIDsAreUniqueEvenIfPublisherMatchesFixedTitle() {
+        let unread = MangaEntry(name: "A", publisher: "未読") // 未読セクション + 掲載誌「未読」
+        let sections = LibrarySectionBuilder(allEntries: [unread]).build()
+        #expect(sections.filter { $0.title == "未読" }.count == 2)
+        #expect(Set(sections.map(\.id)).count == sections.count)
+    }
+}
