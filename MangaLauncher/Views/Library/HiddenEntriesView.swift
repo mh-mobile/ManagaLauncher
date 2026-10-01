@@ -205,7 +205,7 @@ struct HiddenEntriesView: View {
     @ViewBuilder
     private func entryThumbnail(_ entry: MangaEntry, size: CGFloat) -> some View {
         if let data = entry.imageData,
-           let image = data.toCachedSwiftUIImage(id: entry.id.uuidString, maxPixelSize: ThumbnailCache.smallMaxPixelSize) {
+           let image = data.toCachedSwiftUIImage(id: entry.id.uuidString, fillPixelSize: ThumbnailCache.smallFillPixelSize) {
             image
                 .resizable()
                 .scaledToFill()

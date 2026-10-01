@@ -9,7 +9,7 @@ struct EntryIcon: View {
 
     var body: some View {
         if let imageData = entry.imageData,
-           let image = imageData.toCachedSwiftUIImage(id: entry.id.uuidString, maxPixelSize: ThumbnailCache.smallMaxPixelSize) {
+           let image = imageData.toCachedSwiftUIImage(id: entry.id.uuidString, fillPixelSize: ThumbnailCache.smallFillPixelSize) {
             image
                 .resizable()
                 .scaledToFill()

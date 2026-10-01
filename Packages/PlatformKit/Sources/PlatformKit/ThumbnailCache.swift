@@ -17,18 +17,27 @@ public final class ThumbnailCache: @unchecked Sendable {
         return cache
     }()
 
-    public func image(id: String, data: Data, maxPixelSize: CGFloat?) -> UIImage? {
-        let key = cacheKey(id: id, data: data, maxPixelSize: maxPixelSize) as NSString
+    init() {
+        // デコード済みビットマップは再生成できるので、メモリ警告時は全破棄して常駐量を解放する
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didReceiveMemoryWarningNotification, object: nil, queue: nil
+        ) { [cache] _ in
+            cache.removeAllObjects()
+        }
+    }
+
+    public func image(id: String, data: Data, fillPixelSize: CGFloat?) -> UIImage? {
+        let key = cacheKey(id: id, data: data, fillPixelSize: fillPixelSize) as NSString
         if let cached = cache.object(forKey: key) { return cached }
-        guard let image = decode(data, maxPixelSize: maxPixelSize) else { return nil }
+        guard let image = decode(data, fillPixelSize: fillPixelSize) else { return nil }
         let pixelWidth = image.size.width * image.scale
         let pixelHeight = image.size.height * image.scale
         cache.setObject(image, forKey: key, cost: Int(pixelWidth * pixelHeight) * 4)
         return image
     }
 
-    private func cacheKey(id: String, data: Data, maxPixelSize: CGFloat?) -> String {
-        let bucket = maxPixelSize.map { String(Int($0)) } ?? "full"
+    private func cacheKey(id: String, data: Data, fillPixelSize: CGFloat?) -> String {
+        let bucket = fillPixelSize.map { String(Int($0)) } ?? "full"
         return "\(id)|\(bucket)|\(data.count)|\(contentToken(data))"
     }
 
@@ -49,37 +58,40 @@ public final class ThumbnailCache: @unchecked Sendable {
         return hash
     }
 
-    /// maxPixelSize 指定時は ImageIO でダウンサンプルしつつ即時デコード。
+    /// fillPixelSize 指定時は ImageIO でダウンサンプルしつつ即時デコード。
     /// nil はフルサイズデコード (保存時に 600px へ縮小済みのデータをそのまま使う)。
-    private func decode(_ data: Data, maxPixelSize: CGFloat?) -> UIImage? {
-        guard let maxPixelSize else { return UIImage(data: data) }
+    private func decode(_ data: Data, fillPixelSize: CGFloat?) -> UIImage? {
+        guard let fillPixelSize else { return UIImage(data: data) }
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
+            return UIImage(data: data)
+        }
+        let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
+        let width = (properties?[kCGImagePropertyPixelWidth] as? NSNumber)?.doubleValue ?? 0
+        let height = (properties?[kCGImagePropertyPixelHeight] as? NSNumber)?.doubleValue ?? 0
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
+            kCGImageSourceThumbnailMaxPixelSize: Self.thumbnailMaxPixelSize(
+                width: width, height: height, fillPixelSize: fillPixelSize
+            ),
             kCGImageSourceShouldCacheImmediately: true,
             kCGImageSourceCreateThumbnailWithTransform: true,
         ]
-        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
-              let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
             return UIImage(data: data)
         }
         return UIImage(cgImage: cgImage)
     }
 }
 
-extension ThumbnailCache {
-    /// 表示サイズ ≤44pt の行サムネイル用バケット (44pt @3x = 132px < 160px)。
-    public static let smallMaxPixelSize: CGFloat = 160
-}
-
 extension Data {
-    /// `toSwiftUIImage()` のキャッシュ付き版。デコード結果を再利用するだけで描画結果は同一。
+    /// `toSwiftUIImage()` のキャッシュ付き版。
     /// - Parameters:
     ///   - id: 呼び出し側の安定ID (例: `entry.id.uuidString`)
-    ///   - maxPixelSize: 小さい行サムネイル表示なら `ThumbnailCache.smallMaxPixelSize`。
+    ///   - fillPixelSize: 正方形枠に `scaledToFill` する小さい行サムネイルなら `ThumbnailCache.smallFillPixelSize`。
+    ///     短辺がこのピクセル数を満たすようダウンサンプルする (原寸は超えない)。
     ///     nil はフルサイズデコード (アスペクト比がレイアウトを決めるグリッドセル用)
-    public func toCachedSwiftUIImage(id: String, maxPixelSize: CGFloat? = nil) -> Image? {
-        guard let uiImage = ThumbnailCache.shared.image(id: id, data: self, maxPixelSize: maxPixelSize) else {
+    public func toCachedSwiftUIImage(id: String, fillPixelSize: CGFloat? = nil) -> Image? {
+        guard let uiImage = ThumbnailCache.shared.image(id: id, data: self, fillPixelSize: fillPixelSize) else {
             return nil
         }
         return Image(uiImage: uiImage)
@@ -89,15 +101,28 @@ extension Data {
 #else
 
 /// UIKit のないプラットフォーム用のプレースホルダ (定数参照だけ揃える)。
-public enum ThumbnailCache {
-    public static let smallMaxPixelSize: CGFloat = 160
-}
+public enum ThumbnailCache {}
 
 extension Data {
     /// UIKit のないプラットフォームではキャッシュせず既存経路にフォールバック。
-    public func toCachedSwiftUIImage(id: String, maxPixelSize: CGFloat? = nil) -> Image? {
+    public func toCachedSwiftUIImage(id: String, fillPixelSize: CGFloat? = nil) -> Image? {
         toSwiftUIImage()
     }
 }
 
 #endif
+
+extension ThumbnailCache {
+    /// 表示サイズ ≤44pt の正方形行サムネイル用 (44pt @3x = 132px)。
+    public static let smallFillPixelSize: CGFloat = 132
+
+    /// `kCGImageSourceThumbnailMaxPixelSize` は長辺の上限なので、正方形枠へ `scaledToFill` すると
+    /// 横長/縦長画像の短辺が不足して拡大(ぼやけ)が起きる。短辺が `fillPixelSize` を満たす長辺値を返す。
+    /// 原寸を超える値は返さない (サイズ不明時は fillPixelSize)。
+    static func thumbnailMaxPixelSize(width: Double, height: Double, fillPixelSize: CGFloat) -> CGFloat {
+        let shortSide = min(width, height)
+        let longSide = max(width, height)
+        guard shortSide > 0 else { return fillPixelSize }
+        return CGFloat(min(longSide, (Double(fillPixelSize) * longSide / shortSide).rounded(.up)))
+    }
+}

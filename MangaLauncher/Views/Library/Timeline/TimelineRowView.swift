@@ -93,7 +93,7 @@ struct TimelineRowView: View {
         Group {
             if let entry = item.entry,
                let data = entry.imageData,
-               let image = data.toCachedSwiftUIImage(id: entry.id.uuidString, maxPixelSize: ThumbnailCache.smallMaxPixelSize) {
+               let image = data.toCachedSwiftUIImage(id: entry.id.uuidString, fillPixelSize: ThumbnailCache.smallFillPixelSize) {
                 image
                     .resizable()
                     .scaledToFill()
