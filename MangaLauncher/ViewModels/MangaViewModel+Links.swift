@@ -23,6 +23,7 @@ extension MangaViewModel {
     }
 
     func updateLink(_ link: MangaLink, linkType: LinkType, title: String, url: String) {
+        let link = live(link)
         let trimmedURL = url.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedURL.isEmpty else { return }
         link.linkType = linkType
@@ -33,7 +34,7 @@ extension MangaViewModel {
     }
 
     func deleteLink(_ link: MangaLink) {
-        modelContext.delete(link)
+        deleteModel(link)
         save()
     }
 

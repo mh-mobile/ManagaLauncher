@@ -64,6 +64,7 @@ extension MangaViewModel {
         latestEpisode: Int? = nil,
         markAsReadOnSave: Bool = false
     ) {
+        let entry = live(entry)
         // URL または曜日が変更された場合、同一URL+曜日の重複を防止
         let urlOrDayChanged = entry.url != url || entry.dayOfWeek != dayOfWeek
         if urlOrDayChanged {
@@ -114,7 +115,7 @@ extension MangaViewModel {
                     mangaEntryID: entry.id,
                     episodeLabel: label
                 )
-                (entry.modelContext ?? modelContext).insert(activity)
+                modelContext.insert(activity)
             } else if let ep = currentEpisode {
                 entry.lastReadDate = now
                 let activity = ReadingActivity(
@@ -123,27 +124,17 @@ extension MangaViewModel {
                     mangaEntryID: entry.id,
                     episodeNumber: ep
                 )
-                (entry.modelContext ?? modelContext).insert(activity)
+                modelContext.insert(activity)
             } else {
                 entry.lastReadDate = now
             }
         }
 
-        // entry が属するコンテキストで保存する（refresh() で modelContext が
-        // 差し替わっている場合、self.modelContext と異なる可能性がある）
-        if let entryCtx = entry.modelContext, entryCtx !== modelContext {
-            do {
-                try entryCtx.save()
-            } catch {
-                print("[MangaViewModel] updateEntry entryCtx save failed: \(error)")
-                lastError = .save(error)
-                return
-            }
-        }
         save()
     }
 
     func recordSpecialEpisode(_ entry: MangaEntry, label: String) {
+        let entry = live(entry)
         let trimmed = label.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         let now = Date()
@@ -160,6 +151,7 @@ extension MangaViewModel {
     }
 
     func incrementEpisode(_ entry: MangaEntry) {
+        let entry = live(entry)
         let newEpisode = (entry.currentEpisode ?? 0) + 1
         let now = Date()
         entry.currentEpisode = newEpisode
@@ -178,6 +170,7 @@ extension MangaViewModel {
     // MARK: - Delete (Queue / Commit / Undo)
 
     func deleteEntry(_ entry: MangaEntry) {
+        let entry = live(entry)
         entry.deletedAt = Date()
         deletedIDs.insert(entry.id)
         hiddenIDs.remove(entry.id)
@@ -200,7 +193,7 @@ extension MangaViewModel {
     func commitPendingDeletes() {
         deleteTimer?.invalidate()
         deleteTimer = nil
-        for entry in pendingDeleteEntries {
+        for entry in pendingDeleteEntries.map(live) {
             entry.deletedAt = Date()
             deletedIDs.insert(entry.id)
             hiddenIDs.remove(entry.id)
@@ -247,6 +240,7 @@ extension MangaViewModel {
 
     /// 別の曜日に移動。曜日のみ変更し、状態は触らない。
     func moveEntryToDay(_ entry: MangaEntry, to newDay: DayOfWeek, at targetEntry: MangaEntry? = nil) {
+        let entry = live(entry)
         entry.dayOfWeek = newDay
         entry.resetNextUpdate()
         var entries = fetchEntries(for: newDay)

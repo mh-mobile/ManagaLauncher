@@ -11,6 +11,7 @@
 		TE000021 /* MangaLauncherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TE000011 /* MangaLauncherTests.swift */; };
 		TE000022 /* NextUpdateFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TE000012 /* NextUpdateFormatterTests.swift */; };
 		TE000023 /* TimelineBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TE000013 /* TimelineBuilderTests.swift */; };
+		TE000024 /* RegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TE000015 /* RegressionTests.swift */; };
 		AB50040000112233AA000003 /* HiddenEntriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50040000112233AA000004 /* HiddenEntriesView.swift */; };
 		AB50040000112233AA000005 /* RecentlyDeletedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50040000112233AA000006 /* RecentlyDeletedView.swift */; };
 		AB50040000112233AA000001 /* BiometricAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB50040000112233AA000002 /* BiometricAuthService.swift */; };
@@ -214,6 +215,7 @@
 		TE000011 /* MangaLauncherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangaLauncherTests.swift; sourceTree = "<group>"; };
 		TE000012 /* NextUpdateFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextUpdateFormatterTests.swift; sourceTree = "<group>"; };
 		TE000013 /* TimelineBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineBuilderTests.swift; sourceTree = "<group>"; };
+		TE000015 /* RegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegressionTests.swift; sourceTree = "<group>"; };
 		TE000014 /* MangaLauncherTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MangaLauncherTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB50040000112233AA000004 /* HiddenEntriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HiddenEntriesView.swift; sourceTree = "<group>"; };
 		AB50040000112233AA000006 /* RecentlyDeletedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentlyDeletedView.swift; sourceTree = "<group>"; };
@@ -586,6 +588,7 @@
 				TE000011 /* MangaLauncherTests.swift */,
 				TE000012 /* NextUpdateFormatterTests.swift */,
 				TE000013 /* TimelineBuilderTests.swift */,
+				TE000015 /* RegressionTests.swift */,
 			);
 			path = MangaLauncherTests;
 			sourceTree = "<group>";
@@ -897,6 +900,7 @@
 				TE000021 /* MangaLauncherTests.swift in Sources */,
 				TE000022 /* NextUpdateFormatterTests.swift in Sources */,
 				TE000023 /* TimelineBuilderTests.swift in Sources */,
+				TE000024 /* RegressionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

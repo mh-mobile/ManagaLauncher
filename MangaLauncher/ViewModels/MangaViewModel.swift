@@ -201,23 +201,6 @@ final class MangaViewModel {
 
     // MARK: - Save
 
-    /// entry が属する ModelContext で先に保存してから、viewModel の modelContext も保存する。
-    /// `refresh()` で `modelContext` が差し替わった後、UI が保持する entry が
-    /// 旧コンテキストに残っている場合の不整合を防ぐ共通ヘルパー。
-    /// `updateEntry` / `setHidden` / `setPersonalRating` 等と同じパターン。
-    func saveEntryChange(for entry: MangaEntry) {
-        if let entryCtx = entry.modelContext, entryCtx !== modelContext {
-            do {
-                try entryCtx.save()
-            } catch {
-                print("[MangaViewModel] saveEntryChange entryCtx save failed: \(error)")
-                lastError = .save(error)
-                return
-            }
-        }
-        save()
-    }
-
     func save() {
         do {
             try modelContext.save()
@@ -228,6 +211,20 @@ final class MangaViewModel {
         }
         refreshCounter += 1
         scheduleSaveSideEffects()
+    }
+
+    /// View が保持するオブジェクトを現在の modelContext 上のインスタンスに引き直す。
+    /// refresh() で modelContext が差し替わると、View 側には旧コンテキストのオブジェクトが残る。
+    /// それを変更しても save() に含まれず、旧コンテキストごと保存すると古い値で上書きしてしまうため、
+    /// View から受け取ったモデルを変更・削除するメソッドは必ず先にこれを通す。
+    func live<T: PersistentModel>(_ model: T) -> T {
+        guard model.modelContext !== modelContext,
+              let current = modelContext.model(for: model.persistentModelID) as? T else { return model }
+        return current
+    }
+
+    func deleteModel<T: PersistentModel>(_ model: T) {
+        modelContext.delete(live(model))
     }
 
     // MARK: - Save Side Effects (Widget / Badge / Notifications)
