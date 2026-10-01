@@ -179,3 +179,53 @@ struct DeleteAllEntriesTests {
         #expect(try stored(MangaEntry.self, in: container).isEmpty)
     }
 }
+
+/// CatchUp のスワイプ確定が遅延実行で実行時点の位置を読むため、連打・undo・リロードで
+/// 見ていない作品が既読になっていた。
+@Suite("CatchUpSession")
+struct CatchUpSessionTests {
+    private func session(_ names: [String]) -> CatchUpSession {
+        CatchUpSession(items: names.map { MangaEntry(name: $0) })
+    }
+
+    @Test func doubleTapReadsOnlyCurrentCard() {
+        var s = session(["A", "B", "C"])
+        let first = s.beginSwipe()
+        let second = s.beginSwipe() // 確定待ち中の2回目は無視
+        let read = s.completeSwipe(.read)
+        let again = s.completeSwipe(.read)
+        #expect(first && !second)
+        #expect(read?.name == "A")
+        #expect(again == nil)
+        #expect(s.currentIndex == 1)
+        #expect(s.undoStack.count == 1)
+    }
+
+    @Test func busyWhilePending() {
+        var s = session(["A", "B"])
+        _ = s.beginSwipe()
+        #expect(s.isBusy) // View はこの間 undo / 全部既読 を無効化する
+        _ = s.completeSwipe(.skip)
+        #expect(!s.isBusy)
+    }
+
+    @Test func reloadDuringPendingStillTargetsReservedCard() {
+        var s = session(["A", "B", "C"])
+        _ = s.beginSwipe()
+        // 確定待ちの間にリロードで並びが変わった
+        s.items = [s.items[1], s.items[2], s.items[0]]
+        let read = s.completeSwipe(.read)
+        #expect(read?.name == "A")
+        #expect(s.items.map(\.name) == ["A", "B", "C"])
+        #expect(s.currentIndex == 1)
+    }
+
+    @Test func reservedCardRemovedByReloadIsNotRead() {
+        var s = session(["A", "B"])
+        _ = s.beginSwipe()
+        s.items.removeFirst() // 他端末で既読になり消えた
+        let read = s.completeSwipe(.read)
+        #expect(read == nil)
+        #expect(s.currentIndex == 0)
+    }
+}
