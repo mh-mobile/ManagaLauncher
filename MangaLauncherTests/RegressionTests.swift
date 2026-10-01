@@ -7,11 +7,13 @@ import CloudSyncKit
 @testable import MangaLauncher
 
 /// レビューで見つかった不具合の回帰テスト。
+/// cloudKitDatabase: .none — アプリが iCloud 権限を持つため既定ではインメモリでも CloudKit ミラーリングが付き、
+/// iCloud 未ログインのシミュレータではコンテナ破棄ごとに約100秒ブロックしていた。
 @MainActor
 private func makeContainer() throws -> ModelContainer {
     try ModelContainer(
         for: MangaEntry.self, ReadingActivity.self, MangaComment.self, MangaLink.self, PublisherMetadata.self,
-        configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
     )
 }
 
@@ -479,5 +481,17 @@ struct SyncSettleTests {
         #expect(MangaLauncherApp.shouldStopWaitingForSync(status: .idle, sawSyncing: false, importCompleted: false, elapsed: 3.2))
         #expect(MangaLauncherApp.shouldStopWaitingForSync(status: .syncing, sawSyncing: true, importCompleted: false, elapsed: 10))
         #expect(MangaLauncherApp.shouldStopWaitingForSync(status: .notAvailable, sawSyncing: false, importCompleted: false, elapsed: 0.2))
+    }
+}
+
+/// 編集画面の次回更新日候補が 8 回分固定で、2ヶ月ごと以上の作品は保存するだけで次回更新日が上書きされた。
+@Suite("EditEntryView 次回更新日候補")
+struct NextUpdateCandidatesTests {
+    @Test func coversDateSetByReadingLongIntervalEntry() throws {
+        let entry = MangaEntry(name: "A", dayOfWeek: .monday, updateIntervalWeeks: 8)
+        entry.recordRead()
+        let saved = try #require(entry.nextExpectedUpdate)
+        let candidates = EditEntryView.nextUpdateCandidates(for: .monday, intervalWeeks: 8)
+        #expect(candidates.contains(saved))
     }
 }

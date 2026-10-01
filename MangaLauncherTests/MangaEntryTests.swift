@@ -213,7 +213,7 @@ struct MangaViewModelFindEntriesTests {
     private func makeContainer() throws -> ModelContainer {
         try ModelContainer(
             for: MangaEntry.self, ReadingActivity.self, MangaComment.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         )
     }
 
@@ -265,7 +265,7 @@ struct MangaViewModelDedupeTests {
     private func makeContainer() throws -> ModelContainer {
         try ModelContainer(
             for: MangaEntry.self, ReadingActivity.self, MangaComment.self, MangaLink.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         )
     }
 
@@ -611,7 +611,7 @@ struct MangaViewModelAllUnreadTests {
     private func makeContainer() throws -> ModelContainer {
         try ModelContainer(
             for: MangaEntry.self, ReadingActivity.self, MangaComment.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         )
     }
 
@@ -751,7 +751,7 @@ struct MangaViewModelFocusedBacklogTests {
     private func makeContainer() throws -> ModelContainer {
         try ModelContainer(
             for: MangaEntry.self, ReadingActivity.self, MangaComment.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         )
     }
 
@@ -1002,7 +1002,7 @@ struct PublisherMetadataTests {
         try ModelContainer(
             for: MangaEntry.self, ReadingActivity.self, MangaComment.self,
                  MangaLink.self, PublisherMetadata.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         )
     }
 
@@ -1154,7 +1154,7 @@ struct PublisherMetadataBackupTests {
         try ModelContainer(
             for: MangaEntry.self, ReadingActivity.self, MangaComment.self,
                  MangaLink.self, PublisherMetadata.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         )
     }
 
@@ -1250,7 +1250,7 @@ struct MangaViewModelStartupTests {
     private func makeContainer() throws -> ModelContainer {
         try ModelContainer(
             for: MangaEntry.self, ReadingActivity.self, MangaComment.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         )
     }
 
@@ -1289,7 +1289,7 @@ struct MangaLinkTests {
     private func makeContainer() throws -> ModelContainer {
         try ModelContainer(
             for: MangaEntry.self, ReadingActivity.self, MangaComment.self, MangaLink.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         )
     }
 
@@ -1468,7 +1468,7 @@ struct MangaLinkBackupTests {
     private func makeContainer() throws -> ModelContainer {
         try ModelContainer(
             for: MangaEntry.self, ReadingActivity.self, MangaComment.self, MangaLink.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         )
     }
 
@@ -1632,7 +1632,7 @@ struct MangaViewModelMergePublisherTests {
         try ModelContainer(
             for: MangaEntry.self, ReadingActivity.self, MangaComment.self,
                  MangaLink.self, PublisherMetadata.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         )
     }
 
