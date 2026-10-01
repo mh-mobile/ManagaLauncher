@@ -1,6 +1,7 @@
 import Testing
 import Foundation
 import SwiftData
+import UIKit
 @testable import MangaLauncher
 
 /// レビューで見つかった不具合の回帰テスト。
@@ -107,5 +108,48 @@ struct RefreshAcrossContextTests {
         vm.refresh()
         vm.deleteLink(link)
         #expect(try stored(MangaLink.self, in: container).isEmpty)
+    }
+}
+
+/// 掲載誌アイコンの整形が画面スケール分大きく、EXIF 回転のある写真で歪み、透過が黒くなっていた。
+@Suite("PublisherIconService.cropAndResize")
+@MainActor
+struct PublisherIconCropTests {
+    /// 左半分が赤・右半分が青の 400x200 画像
+    private func halfRedHalfBlue(orientation: UIImage.Orientation) -> UIImage {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let base = UIGraphicsImageRenderer(size: CGSize(width: 400, height: 200), format: format).image { ctx in
+            UIColor.red.setFill(); ctx.fill(CGRect(x: 0, y: 0, width: 200, height: 200))
+            UIColor.blue.setFill(); ctx.fill(CGRect(x: 200, y: 0, width: 200, height: 200))
+        }
+        return UIImage(cgImage: base.cgImage!, scale: 1, orientation: orientation)
+    }
+
+    private func rgb(_ image: CGImage, x: Int, y: Int) -> (r: UInt8, g: UInt8, b: UInt8) {
+        var pixel = [UInt8](repeating: 0, count: 4)
+        let context = CGContext(
+            data: &pixel, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+        )!
+        context.draw(image, in: CGRect(x: -x, y: -(image.height - 1 - y), width: image.width, height: image.height))
+        return (pixel[0], pixel[1], pixel[2])
+    }
+
+    @Test func outputIsTargetPixels() throws {
+        let data = try #require(PublisherIconService.cropAndResize(halfRedHalfBlue(orientation: .up)))
+        let image = try #require(UIImage(data: data)?.cgImage)
+        #expect(image.width == 256 && image.height == 256)
+    }
+
+    @Test func respectsExifOrientation() throws {
+        // .right (時計回り 90°) で表示上は 200x400 の縦長、上半分が赤・下半分が青
+        let data = try #require(PublisherIconService.cropAndResize(halfRedHalfBlue(orientation: .right)))
+        let image = try #require(UIImage(data: data)?.cgImage)
+        #expect(image.width == image.height)
+        let top = rgb(image, x: 128, y: 20)
+        let bottom = rgb(image, x: 128, y: 235)
+        #expect(top.r > 200 && top.b < 60)
+        #expect(bottom.b > 200 && bottom.r < 60)
     }
 }

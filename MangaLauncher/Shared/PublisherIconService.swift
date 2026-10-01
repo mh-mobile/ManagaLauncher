@@ -119,21 +119,25 @@ enum PublisherIconService {
     /// internal 公開: 設定シートの PhotosPicker / プレビューでも同じ整形ロジックを使う。
     #if canImport(UIKit)
     static func cropAndResize(_ image: UIImage, target: CGFloat = 256) -> Data? {
+        // image.size は向き補正後の寸法。cgImage を直接 crop すると EXIF 回転のある写真で
+        // 縦横が食い違い歪むため、向きを反映して描画する UIImage.draw で中央正方形を描く。
         let size = image.size
         let edge = min(size.width, size.height)
-        guard edge > 0, let cg = image.cgImage else { return nil }
-        let scale = image.scale
-        let cropRect = CGRect(
-            x: (size.width  - edge) / 2 * scale,
-            y: (size.height - edge) / 2 * scale,
-            width:  edge * scale,
-            height: edge * scale
-        )
-        guard let cropped = cg.cropping(to: cropRect) else { return nil }
-        let croppedUI = UIImage(cgImage: cropped, scale: scale, orientation: image.imageOrientation)
-        let renderer = UIGraphicsImageRenderer(size: CGSize(width: target, height: target))
-        let resized = renderer.image { _ in
-            croppedUI.draw(in: CGRect(x: 0, y: 0, width: target, height: target))
+        guard edge > 0 else { return nil }
+        let factor = target / edge
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1 // 既定は画面スケールで target の 3 倍の解像度になる
+        format.opaque = true
+        let bounds = CGRect(x: 0, y: 0, width: target, height: target)
+        let resized = UIGraphicsImageRenderer(bounds: bounds, format: format).image { context in
+            UIColor.white.setFill() // 透過 PNG/favicon が JPEG 化で黒くならないように
+            context.fill(bounds)
+            image.draw(in: CGRect(
+                x: -(size.width - edge) / 2 * factor,
+                y: -(size.height - edge) / 2 * factor,
+                width: size.width * factor,
+                height: size.height * factor
+            ))
         }
         return resized.jpegData(compressionQuality: 0.85)
     }
