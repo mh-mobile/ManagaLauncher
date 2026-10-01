@@ -508,3 +508,33 @@ struct NextUpdateCandidatesTests {
         #expect(candidates.contains(saved))
     }
 }
+
+/// 起動時 dedupe でゴミ箱へ送られた作品を復元すると、同じ作品の隣に戻り次回起動で再びゴミ箱へ戻っていた。
+@Suite("重複する作品の復元")
+@MainActor
+struct DuplicateRestoreTests {
+    @Test func restoreIsRefusedWhileSameEntryExists() throws {
+        let container = try makeContainer()
+        let vm = MangaViewModel(modelContext: container.mainContext)
+        vm.addEntry(name: "A", url: "https://a.example", days: [.monday], iconColor: "blue")
+        let trashed = MangaEntry(name: "A (dup)", url: "https://a.example", dayOfWeek: .monday)
+        trashed.deletedAt = Date()
+        container.mainContext.insert(trashed)
+        vm.save()
+        vm.reloadDeletedIDs()
+
+        #expect(vm.restoreEntry(trashed) == false)
+        #expect(trashed.deletedAt != nil)
+        #expect(vm.restoreEntries([trashed]) == 1)
+    }
+
+    @Test func restoreWorksWhenNoDuplicate() throws {
+        let container = try makeContainer()
+        let vm = MangaViewModel(modelContext: container.mainContext)
+        vm.addEntry(name: "A", url: "https://a.example", days: [.monday], iconColor: "blue")
+        let entry = try #require(vm.allEntries().first)
+        vm.deleteEntry(entry)
+        #expect(vm.restoreEntry(entry))
+        #expect(entry.deletedAt == nil)
+    }
+}

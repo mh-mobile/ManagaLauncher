@@ -88,8 +88,8 @@ extension MangaViewModel {
 
         let totalToDelete = deletions.reduce(0) { $0 + $1.losers.count }
         print("[MangaViewModel] dedupe: removing \(totalToDelete) duplicate entries across \(deletions.count) groups")
-        // 情報は残す側へ統合する。別 UUID の重複 (ユーザー操作由来) は誤判定時に復元できるよう
-        // ゴミ箱へ送る。同 UUID の重複 (同期由来の同一レコード) は deletedIDs で残す側まで
+        // 情報は残す側へ統合する。別 UUID の重複 (ユーザー操作由来) は完全削除せず痕跡としてゴミ箱へ送る
+        // (同じ作品が残っている間は復元できない。残す側を削除すれば復元できる)。同 UUID の重複 (同期由来の同一レコード) は deletedIDs で残す側まで
         // 隠れてしまうため完全削除する。
         let now = Date()
         for (kept, losers) in deletions {

@@ -318,9 +318,11 @@ private struct DayActivitySheet: View {
                 dateNavigationBar
                 Divider()
                 List {
-                    let activities = viewModel.stats.fetchActivities(for: currentDate)
-                        .filter(viewModel.isActivityVisible)
-                    if activities.isEmpty {
+                    let allActivities = viewModel.stats.fetchActivities(for: currentDate)
+                    let activities = allActivities.filter(viewModel.isActivityVisible)
+                    // ヒートマップの件数は非表示作品の記録も含むため、名前は出さず件数だけ示して食い違いを説明する
+                    let privateCount = allActivities.count - activities.count
+                    if activities.isEmpty && privateCount == 0 {
                         ContentUnavailableView {
                             Label("アクティビティなし", systemImage: "calendar.badge.clock")
                                 .foregroundStyle(theme.onSurfaceVariant)
@@ -358,6 +360,11 @@ private struct DayActivitySheet: View {
                             .tint(theme.onSurface)
                             .disabled(entry == nil)
                         }
+                    }
+                    if privateCount > 0 {
+                        Label("非表示・削除済みの作品の記録 \(privateCount)件", systemImage: "eye.slash")
+                            .font(theme.captionFont)
+                            .foregroundStyle(theme.onSurfaceVariant)
                     }
                 }
             }

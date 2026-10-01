@@ -219,13 +219,18 @@ extension MangaViewModel {
         modelContext.delete(entry)
     }
 
-    func restoreEntry(_ entry: MangaEntry) {
-        restoreEntryWithoutSave(entry)
+    /// - Returns: 同じ URL・曜日の作品が既にあり復元しなかった場合 false
+    /// (起動時 dedupe でゴミ箱へ送られた側を復元しても、次回起動で再びゴミ箱へ戻ってしまうため)
+    @discardableResult
+    func restoreEntry(_ entry: MangaEntry) -> Bool {
+        let restored = restoreEntryWithoutSave(entry)
         save()
+        return restored
     }
 
-    private func restoreEntryWithoutSave(_ entry: MangaEntry) {
+    private func restoreEntryWithoutSave(_ entry: MangaEntry) -> Bool {
         let entry = live(entry)
+        guard !hasDuplicate(url: entry.url, day: entry.dayOfWeek, excluding: entry.id) else { return false }
         entry.deletedAt = nil
         deletedIDs.remove(entry.id)
         if entry.isHidden {
@@ -235,11 +240,15 @@ extension MangaViewModel {
         let descriptor = FetchDescriptor<MangaEntry>(predicate: #Predicate { $0.dayOfWeekRawValue == day && $0.deletedAt == nil })
         let maxOrder = modelContext.fetchLogged(descriptor).map(\.sortOrder).max() ?? -1
         entry.sortOrder = maxOrder + 1
+        return true
     }
 
-    func restoreEntries(_ entries: [MangaEntry]) {
-        for entry in entries { restoreEntryWithoutSave(entry) }
+    /// - Returns: 同じ作品が既にあり復元しなかった件数
+    @discardableResult
+    func restoreEntries(_ entries: [MangaEntry]) -> Int {
+        let skipped = entries.filter { !restoreEntryWithoutSave($0) }.count
         save()
+        return skipped
     }
 
     func permanentlyDeleteEntries(_ entries: [MangaEntry]) {

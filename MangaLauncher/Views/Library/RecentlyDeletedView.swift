@@ -8,6 +8,7 @@ struct RecentlyDeletedView: View {
     @State private var entries: [MangaEntry] = []
     @State private var showDeleteAllConfirmation = false
     @State private var showDeleteConfirmation: MangaEntry?
+    @State private var showDuplicateRestoreAlert = false
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
@@ -87,6 +88,11 @@ struct RecentlyDeletedView: View {
         }
         .onAppear {
             loadEntries()
+        }
+        .alert("復元できない項目があります", isPresented: $showDuplicateRestoreAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("同じURLの作品がその曜日に既に登録されています。")
         }
         .alert("完全に削除", isPresented: $showDeleteAllConfirmation) {
             Button("すべて削除", role: .destructive) {
@@ -204,7 +210,10 @@ struct RecentlyDeletedView: View {
     }
 
     private func restore(_ entry: MangaEntry) {
-        viewModel.restoreEntry(entry)
+        guard viewModel.restoreEntry(entry) else {
+            showDuplicateRestoreAlert = true
+            return
+        }
         withAnimation {
             entries.removeAll { $0.id == entry.id }
         }
@@ -218,9 +227,12 @@ struct RecentlyDeletedView: View {
     }
 
     private func restoreAll() {
-        viewModel.restoreEntries(entries)
+        let skipped = viewModel.restoreEntries(entries)
         withAnimation {
-            entries.removeAll()
+            entries = viewModel.deletedEntries()
+        }
+        if skipped > 0 {
+            showDuplicateRestoreAlert = true
         }
     }
 
