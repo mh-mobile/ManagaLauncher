@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 struct BackupData: Codable {
     /// 現在のバックアップフォーマットバージョン。エクスポート時に書き込まれる。
     /// インポート時に backup.version > currentVersion なら拒否する。
-    static let currentVersion = 17
+    static let currentVersion = 18
 
     let version: Int
     let exportDate: Date
@@ -107,12 +107,15 @@ struct BackupData: Codable {
         let personalRating: Int?
         // v17+
         let latestEpisode: Int?
+        // v18+ (フォーカス積読。以前はバックアップに含まれず復元で失われていた)
+        let isFocused: Bool?
+        let focusedAt: Date?
         // Legacy fields (kept for backward-compat with v5 backups)
         let isOnHiatus: Bool?
         let isCompleted: Bool?
         let isBacklog: Bool?
 
-        init(id: UUID, name: String, url: String, dayOfWeekRawValue: Int, sortOrder: Int, iconColor: String, publisher: String, imageData: Data?, lastReadDate: Date? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, isOneShot: Bool = false, publicationStatusRawValue: Int = 0, readingStateRawValue: Int = 0, memo: String = "", memoUpdatedAt: Date? = nil, currentEpisode: Int? = nil, episodeLabel: String? = nil, isHidden: Bool = false, deletedAt: Date? = nil, personalRating: Int? = nil, latestEpisode: Int? = nil) {
+        init(id: UUID, name: String, url: String, dayOfWeekRawValue: Int, sortOrder: Int, iconColor: String, publisher: String, imageData: Data?, lastReadDate: Date? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, isOneShot: Bool = false, publicationStatusRawValue: Int = 0, readingStateRawValue: Int = 0, memo: String = "", memoUpdatedAt: Date? = nil, currentEpisode: Int? = nil, episodeLabel: String? = nil, isHidden: Bool = false, deletedAt: Date? = nil, personalRating: Int? = nil, latestEpisode: Int? = nil, isFocused: Bool = false, focusedAt: Date? = nil) {
             self.id = id
             self.name = name
             self.url = url
@@ -135,6 +138,8 @@ struct BackupData: Codable {
             self.deletedAt = deletedAt
             self.personalRating = personalRating
             self.latestEpisode = latestEpisode
+            self.isFocused = isFocused
+            self.focusedAt = focusedAt
             self.isOnHiatus = nil
             self.isCompleted = nil
             self.isBacklog = nil
@@ -164,6 +169,8 @@ struct BackupData: Codable {
             deletedAt = try container.decodeIfPresent(Date.self, forKey: .deletedAt)
             personalRating = try container.decodeIfPresent(Int.self, forKey: .personalRating)
             latestEpisode = try container.decodeIfPresent(Int.self, forKey: .latestEpisode)
+            isFocused = try container.decodeIfPresent(Bool.self, forKey: .isFocused)
+            focusedAt = try container.decodeIfPresent(Date.self, forKey: .focusedAt)
             isOnHiatus = try container.decodeIfPresent(Bool.self, forKey: .isOnHiatus)
             isCompleted = try container.decodeIfPresent(Bool.self, forKey: .isCompleted)
             isBacklog = try container.decodeIfPresent(Bool.self, forKey: .isBacklog)
@@ -196,7 +203,9 @@ struct BackupData: Codable {
                     episodeLabel: $0.episodeLabel,
                     isHidden: $0.isHidden,
                     personalRating: $0.personalRating,
-                    latestEpisode: $0.latestEpisode
+                    latestEpisode: $0.latestEpisode,
+                    isFocused: $0.isFocused,
+                    focusedAt: $0.focusedAt
                 )
             },
             activities: activities.map {

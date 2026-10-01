@@ -57,7 +57,8 @@ extension MangaViewModel {
                 iconColor: backupEntry.iconColor,
                 publisher: backupEntry.publisher,
                 imageData: backupEntry.imageData,
-                updateIntervalWeeks: backupEntry.updateIntervalWeeks
+                // 壊れた/細工されたファイルの不正値で次回更新日計算が破綻しないよう UI と同じ範囲に収める
+                updateIntervalWeeks: min(max(backupEntry.updateIntervalWeeks, 1), 52)
             )
             entry.lastReadDate = backupEntry.lastReadDate
             entry.nextExpectedUpdate = backupEntry.nextExpectedUpdate
@@ -69,6 +70,8 @@ extension MangaViewModel {
             entry.isHidden = backupEntry.isHidden ?? false
             entry.personalRating = MangaEntry.clampedRating(backupEntry.personalRating)
             entry.latestEpisode = backupEntry.latestEpisode.map { max(1, $0) }
+            entry.isFocused = backupEntry.isFocused ?? false
+            entry.focusedAt = backupEntry.focusedAt
             if backupEntry.publicationStatusRawValue != nil || backupEntry.readingStateRawValue != nil {
                 entry.publicationStatusRawValue = backupEntry.publicationStatusRawValue
                     ?? PublicationStatus.active.rawValue

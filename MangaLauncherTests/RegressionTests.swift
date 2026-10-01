@@ -3,6 +3,7 @@ import Foundation
 import SwiftData
 import UIKit
 import LocalAuthentication
+import CloudSyncKit
 @testable import MangaLauncher
 
 /// レビューで見つかった不具合の回帰テスト。
@@ -427,5 +428,45 @@ struct LibrarySectionBuilderTests {
         let sections = LibrarySectionBuilder(allEntries: [unread]).build()
         #expect(sections.filter { $0.title == "未読" }.count == 2)
         #expect(Set(sections.map(\.id)).count == sections.count)
+    }
+}
+
+/// バックアップがフォーカス積読を含まず、更新間隔の不正値も検証していなかった。
+@Suite("Backup")
+@MainActor
+struct BackupRegressionTests {
+    @Test func roundTripKeepsFocusAndClampsInterval() throws {
+        let source = try makeContainer()
+        let vm = MangaViewModel(modelContext: source.mainContext)
+        vm.addEntry(name: "A", url: "https://a.example", days: [.monday], iconColor: "blue", readingState: .backlog)
+        let entry = try #require(vm.allEntries().first)
+        vm.focus(entry)
+        entry.updateIntervalWeeks = 0 // 壊れた値
+        vm.save()
+        let data = try #require(vm.exportBackupData())
+
+        let target = try makeContainer()
+        let restoredVM = MangaViewModel(modelContext: target.mainContext)
+        _ = restoredVM.importBackupData(data)
+        let restored = try #require(try stored(MangaEntry.self, in: target).first)
+        #expect(restored.isFocused)
+        #expect(restored.focusedAt != nil)
+        #expect(restored.updateIntervalWeeks == 1)
+    }
+}
+
+/// 起動時の同期待ちが CloudKit の setup 完了 (.idle) で抜け、import 前の古いデータに
+/// migration/dedupe が走っていた。
+@Suite("同期待ちの判定")
+struct SyncSettleTests {
+    @Test func keepsWaitingAfterSetupUntilImport() {
+        #expect(!MangaLauncherApp.shouldStopWaitingForSync(status: .idle, sawSyncing: true, importCompleted: false, elapsed: 4))
+        #expect(MangaLauncherApp.shouldStopWaitingForSync(status: .idle, sawSyncing: true, importCompleted: true, elapsed: 4))
+    }
+
+    @Test func stopsWhenSyncNeverStartsOrTimesOut() {
+        #expect(MangaLauncherApp.shouldStopWaitingForSync(status: .idle, sawSyncing: false, importCompleted: false, elapsed: 3.2))
+        #expect(MangaLauncherApp.shouldStopWaitingForSync(status: .syncing, sawSyncing: true, importCompleted: false, elapsed: 10))
+        #expect(MangaLauncherApp.shouldStopWaitingForSync(status: .notAvailable, sawSyncing: false, importCompleted: false, elapsed: 0.2))
     }
 }
