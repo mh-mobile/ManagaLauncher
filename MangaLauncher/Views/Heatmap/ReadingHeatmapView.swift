@@ -318,7 +318,7 @@ private struct DayActivitySheet: View {
                 dateNavigationBar
                 Divider()
                 List {
-                    let activities = viewModel.stats.fetchActivities(for: currentDate)
+                    let activities = viewModel.stats.fetchActivities(for: currentDate).filter(viewModel.isActivityVisible)
                     if activities.isEmpty {
                         ContentUnavailableView {
                             Label("アクティビティなし", systemImage: "calendar.badge.clock")

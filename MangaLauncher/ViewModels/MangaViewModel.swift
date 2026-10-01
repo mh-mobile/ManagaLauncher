@@ -116,6 +116,15 @@ final class MangaViewModel {
         return filterEntries(modelContext.fetchLogged(descriptor), excludeHidden: false)
     }
 
+    /// 既読記録を一覧に出してよいか。非表示・ゴミ箱・削除待ちの作品の記録は作品名ごと出さない
+    /// (コメント/メモは表示中のエントリに紐づくものだけ出しているのと揃える)。
+    /// 完全削除済みの作品の記録は、記録に残る作品名で表示する。
+    func isActivityVisible(_ activity: ReadingActivity) -> Bool {
+        let id = activity.mangaEntryID
+        return !hiddenIDs.contains(id) && !deletedIDs.contains(id)
+            && !pendingDeleteEntries.contains { $0.id == id }
+    }
+
     func findEntry(by id: UUID) -> MangaEntry? {
         let descriptor = FetchDescriptor<MangaEntry>(
             predicate: #Predicate { $0.id == id }

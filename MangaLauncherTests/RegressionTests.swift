@@ -2,6 +2,7 @@ import Testing
 import Foundation
 import SwiftData
 import UIKit
+import LocalAuthentication
 @testable import MangaLauncher
 
 /// レビューで見つかった不具合の回帰テスト。
@@ -227,5 +228,108 @@ struct CatchUpSessionTests {
         let read = s.completeSwipe(.read)
         #expect(read == nil)
         #expect(s.currentIndex == 0)
+    }
+}
+
+/// 重複チェックが非表示作品を見ておらず、生まれた重複を起動時 dedupe がゴミ箱を経由せず
+/// 完全削除して、削除側のメモ・評価などが失われていた。重複時の保存失敗も無言だった。
+@Suite("重複登録と起動時 dedupe")
+@MainActor
+struct DuplicateEntryTests {
+    @Test func addRejectsDuplicateOfHiddenEntry() throws {
+        let container = try makeContainer()
+        let vm = MangaViewModel(modelContext: container.mainContext)
+        vm.addEntry(name: "A", url: "https://a.example", days: [.monday], iconColor: "blue")
+        vm.setHidden(try #require(vm.allEntries().first), isHidden: true)
+
+        let added = vm.addEntry(name: "A2", url: "https://a.example", days: [.monday], iconColor: "blue")
+
+        #expect(added == false)
+        #expect(try stored(MangaEntry.self, in: container).count == 1)
+    }
+
+    @Test func updateReportsConflict() throws {
+        let container = try makeContainer()
+        let vm = MangaViewModel(modelContext: container.mainContext)
+        vm.addEntry(name: "A", url: "https://a.example", days: [.monday], iconColor: "blue")
+        vm.addEntry(name: "B", url: "https://b.example", days: [.monday], iconColor: "blue")
+        let b = try #require(vm.allEntries().first { $0.name == "B" })
+
+        let updated = vm.updateEntry(
+            b, name: "B", url: "https://a.example", dayOfWeek: .monday, iconColor: "blue",
+            isOneShot: false, publicationStatus: .active, readingState: .following, memo: "changed"
+        )
+
+        #expect(updated == false)
+        #expect(b.memo == "")
+    }
+
+    @Test func dedupeSoftDeletesAndMergesLoser() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let kept = MangaEntry(name: "A", url: "https://a.example", dayOfWeek: .monday)
+        kept.memo = "kept memo"
+        let loser = MangaEntry(name: "A", url: "https://a.example", dayOfWeek: .monday)
+        loser.memo = "loser memo"
+        loser.personalRating = 5
+        context.insert(kept)
+        context.insert(loser)
+        try context.save()
+
+        let vm = MangaViewModel(modelContext: context)
+        vm.runStartupMigrationsIfNeeded()
+
+        let all = try stored(MangaEntry.self, in: container)
+        #expect(all.count == 2) // 完全削除しない
+        let active = try #require(all.first { $0.deletedAt == nil })
+        #expect(all.filter { $0.deletedAt == nil }.count == 1)
+        #expect(active.personalRating == 5)
+        #expect(active.memo.contains("kept memo") && active.memo.contains("loser memo"))
+    }
+}
+
+/// パスコード未設定の端末では認証が常に失敗し、非表示の作品・最近削除した項目に二度と入れなかった。
+@Suite("BiometricAuthService")
+struct BiometricAuthServiceTests {
+    private final class NoPasscodeContext: LAContext {
+        override func canEvaluatePolicy(_ policy: LAPolicy, error: NSErrorPointer) -> Bool { false }
+    }
+
+    @Test func allowsAccessWhenDeviceHasNoPasscode() async {
+        #expect(await BiometricAuthService.authenticate(reason: "test", context: NoPasscodeContext()))
+    }
+}
+
+/// 非表示・ゴミ箱の作品の既読がタイムライン/ヒートマップ日別一覧に作品名つきで出ていた。
+/// 件数バッジも一覧から除外されるコメントまで数えていた。
+@Suite("非表示・削除済み作品の可視性")
+@MainActor
+struct VisibilityTests {
+    @Test func activitiesOfHiddenOrDeletedEntriesAreNotVisible() throws {
+        let container = try makeContainer()
+        let vm = MangaViewModel(modelContext: container.mainContext)
+        for name in ["visible", "hidden", "deleted"] {
+            vm.addEntry(name: name, url: "https://\(name).example", days: [.monday], iconColor: "blue")
+        }
+        let entries = Dictionary(uniqueKeysWithValues: vm.allEntries().map { ($0.name, $0) })
+        for entry in entries.values { vm.markAsRead(entry) }
+        vm.setHidden(try #require(entries["hidden"]), isHidden: true)
+        vm.deleteEntry(try #require(entries["deleted"]))
+
+        let visible = vm.allActivities().filter(vm.isActivityVisible).map(\.mangaName)
+        #expect(visible == ["visible"])
+
+        let purged = ReadingActivity(date: Date(), mangaName: "purged", mangaEntryID: UUID())
+        #expect(vm.isActivityVisible(purged)) // 完全削除済みは記録の名前で表示し続ける
+    }
+
+    @Test func totalCountMatchesListedComments() {
+        let entry = MangaEntry(name: "A")
+        let comments = [
+            MangaComment(mangaEntryID: entry.id, content: "shown"),
+            MangaComment(mangaEntryID: UUID(), content: "hidden entry's"),
+        ]
+        #expect(ActivityBuilder.totalCount(entries: [entry], comments: comments)
+            == ActivityBuilder.all(entries: [entry], comments: comments).count)
     }
 }

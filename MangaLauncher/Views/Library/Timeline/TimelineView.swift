@@ -27,7 +27,7 @@ struct TimelineView: View {
         let _ = viewModel.refreshCounter
         let allEntries = viewModel.allEntries()
         let allComments = viewModel.allComments()
-        let allActivities = viewModel.allActivities()
+        let allActivities = viewModel.allActivities().filter(viewModel.isActivityVisible)
         let activeDays = TimelineBuilder.activeDays(
             entries: allEntries,
             comments: allComments,
