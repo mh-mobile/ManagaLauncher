@@ -153,3 +153,29 @@ struct PublisherIconCropTests {
         #expect(bottom.b > 200 && bottom.r < 60)
     }
 }
+
+/// 全データ削除が削除待ちキュー/タイマーを残し (削除済みオブジェクトへの書き込み)、MangaLink も残していた。
+@Suite("deleteAllEntries")
+@MainActor
+struct DeleteAllEntriesTests {
+    @Test func clearsPendingDeletesAndLinks() throws {
+        let container = try makeContainer()
+        let vm = MangaViewModel(modelContext: container.mainContext)
+        vm.addEntry(name: "A", url: "https://a.example", days: [.monday], iconColor: "blue")
+        vm.addEntry(name: "B", url: "https://b.example", days: [.monday], iconColor: "blue")
+        let entries = vm.allEntries()
+        vm.addLink(entries[0], linkType: .other, title: "t", url: "https://l.example")
+        vm.addComment(entries[0], content: "c")
+        vm.queueDelete(entries[1])
+        vm.queueDeleteComment(try #require(vm.fetchComments(for: entries[0]).first))
+
+        vm.deleteAllEntries()
+
+        #expect(vm.pendingDeleteEntries.isEmpty)
+        #expect(vm.pendingDeleteComments.isEmpty)
+        #expect(vm.deleteTimer == nil)
+        #expect(vm.commentDeleteTimer == nil)
+        #expect(try stored(MangaLink.self, in: container).isEmpty)
+        #expect(try stored(MangaEntry.self, in: container).isEmpty)
+    }
+}

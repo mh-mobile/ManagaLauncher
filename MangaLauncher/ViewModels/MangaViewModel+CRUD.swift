@@ -203,6 +203,9 @@ extension MangaViewModel {
     }
 
     func deleteAllEntries() {
+        // 削除待ちが残るとタイマーが削除済みオブジェクトに書き込むため先に破棄する
+        undoPendingDeletes()
+        undoPendingCommentDeletes()
         let descriptor = FetchDescriptor<MangaEntry>()
         for entry in modelContext.fetchLogged(descriptor) {
             modelContext.delete(entry)
@@ -214,6 +217,9 @@ extension MangaViewModel {
         let commentDescriptor = FetchDescriptor<MangaComment>()
         for comment in modelContext.fetchLogged(commentDescriptor) {
             modelContext.delete(comment)
+        }
+        for link in modelContext.fetchLogged(FetchDescriptor<MangaLink>()) {
+            modelContext.delete(link)
         }
         let metaDescriptor = FetchDescriptor<PublisherMetadata>()
         for meta in modelContext.fetchLogged(metaDescriptor) {
