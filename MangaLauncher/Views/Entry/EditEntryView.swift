@@ -41,6 +41,7 @@ struct EditEntryView: View {
     @State private var latestEpisodeText: String = ""
     @State private var editingLink: MangaLink?
     @State private var showingAddLink = false
+    @State private var showingDuplicateAlert = false
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
@@ -81,13 +82,20 @@ struct EditEntryView: View {
     }
 
     private var nextUpdateCandidates: [Date] {
+        Self.nextUpdateCandidates(for: selectedDay, intervalWeeks: actualIntervalWeeks)
+    }
+
+    /// 次回更新日の候補 (週ごと)。既読処理は最大「間隔+1週」先まで進めるため、候補もそこまで含める。
+    /// 8 回分固定だと 2ヶ月ごと以上の作品の保存済み日付が候補外になり、編集画面を保存するだけで
+    /// 直近の日付に上書きされて毎週未読に戻っていた。
+    static func nextUpdateCandidates(for day: DayOfWeek, intervalWeeks: Int, today: Date = Date()) -> [Date] {
         let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
+        let today = calendar.startOfDay(for: today)
         let todayWeekday = calendar.component(.weekday, from: today) - 1
-        let target = selectedDay.rawValue
-        let daysToNext = (target - todayWeekday + 7) % 7
+        let daysToNext = (day.rawValue - todayWeekday + 7) % 7
         let firstDate = daysToNext == 0 ? today : (calendar.date(byAdding: .day, value: daysToNext, to: today) ?? today)
-        return (0..<8).compactMap { i in
+        let count = max(8, intervalWeeks + 1)
+        return (0..<count).compactMap { i in
             calendar.date(byAdding: .day, value: i * 7, to: firstDate)
         }
     }
@@ -182,8 +190,11 @@ struct EditEntryView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") {
-                        saveEntry()
-                        dismiss()
+                        if saveEntry() {
+                            dismiss()
+                        } else {
+                            showingDuplicateAlert = true
+                        }
                     }
                     .disabled(name.isEmpty || url.isEmpty || !isValidURL)
                     .if(theme.forceDarkMode) { view in
@@ -209,6 +220,11 @@ struct EditEntryView: View {
                 }
             }
             #endif
+            .alert("保存できません", isPresented: $showingDuplicateAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("同じURLの作品がこの曜日に既に登録されています（非表示の作品を含む）。")
+            }
             .sheet(isPresented: $showingAddLink) {
                 if let entry {
                     EditLinkView(viewModel: viewModel, entry: entry)
@@ -293,7 +309,7 @@ struct EditEntryView: View {
                 PasteButton(payloadType: PasteImage.self) { items in
                     guard let item = items.first,
                           UIImage(data: item.data) != nil,
-                          let jpeg = downsizedJPEGData(item.data, maxDimension: 600) else { return }
+                          let jpeg = downsizedJPEGData(item.data, maxDimension: mangaImageMaxDimension) else { return }
                     imageData = jpeg
                 }
                 #endif
@@ -317,7 +333,7 @@ struct EditEntryView: View {
                     #if canImport(UIKit)
                     guard UIImage(data: data) != nil else { return }
                     #endif
-                    if let jpeg = downsizedJPEGData(data, maxDimension: 600) {
+                    if let jpeg = downsizedJPEGData(data, maxDimension: mangaImageMaxDimension) {
                         imageData = jpeg
                     }
                 }
@@ -656,11 +672,12 @@ struct EditEntryView: View {
         }
     }
 
-    private func saveEntry() {
+    /// - Returns: 同じ URL・曜日の作品があり保存できなかった場合 false
+    private func saveEntry() -> Bool {
         let interval = actualIntervalWeeks
         let labelToSave = episodeLabel.isEmpty ? nil : episodeLabel
         if let entry {
-            viewModel.updateEntry(
+            return viewModel.updateEntry(
                 entry,
                 name: name,
                 url: url,
@@ -681,7 +698,7 @@ struct EditEntryView: View {
                 markAsReadOnSave: markAsReadOnSave
             )
         } else {
-            viewModel.addEntry(
+            return viewModel.addEntry(
                 name: name,
                 url: url,
                 days: [selectedDay],

@@ -26,6 +26,8 @@ public enum CloudSyncStatus: Equatable {
 public final class CloudSyncMonitor {
     public private(set) var syncStatus: CloudSyncStatus = .idle
     public private(set) var lastSyncDate: Date?
+    /// 直近の import (CloudKit → ローカル) 完了時刻。setup/export の完了とは区別する。
+    public private(set) var lastImportDate: Date?
 
     /// Notification name posted when CloudKit import completes.
     public static let dataDidChangeNotification = Notification.Name("mangaDataDidChange")
@@ -68,6 +70,7 @@ public final class CloudSyncMonitor {
             // import(type=1)完了時にデータ変更を通知
             let eventType = (event.value(forKey: "type") as? Int) ?? 0
             if eventType == 1 {
+                lastImportDate = endDate
                 NotificationCenter.default.post(name: Self.dataDidChangeNotification, object: nil)
             }
         } else if let error {

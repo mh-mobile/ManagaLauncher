@@ -18,52 +18,51 @@ extension Data {
 
 // MARK: - Cross-platform Image Resize
 
+/// 作品画像を保存する際の長辺ピクセル上限。最大表示は CatchUp カード 600pt @2x (iPad)。
+public let mangaImageMaxDimension: CGFloat = 1200
+
+/// 長辺を `maxDimension` ピクセル以下に縮小した JPEG を返す (拡大はしない)。
+/// - ImageIO の縮小デコードを使うので、巨大な寸法の画像でもフルサイズのビットマップを作らない
+/// - EXIF の向きを反映し、透過部分は白で塗る (JPEG は透過を持てず黒になるため)
+/// - 出力はピクセル単位。`UIGraphicsImageRenderer` の既定 format は画面スケール (3x) で描画し
+///   指定の 3 倍の解像度になっていたため使わない
 public func downsizedJPEGData(_ data: Data, maxDimension: CGFloat, compressionQuality: CGFloat = 0.7) -> Data? {
-    #if canImport(UIKit)
-    guard let uiImage = UIImage(data: data) else { return nil }
-    let width = uiImage.size.width
-    let height = uiImage.size.height
-    let scale = min(maxDimension / width, maxDimension / height, 1.0)
-    let newSize = CGSize(width: width * scale, height: height * scale)
-    let renderer = UIGraphicsImageRenderer(size: newSize)
-    let resizedImage = renderer.image { _ in
-        uiImage.draw(in: CGRect(origin: .zero, size: newSize))
-    }
-    return resizedImage.jpegData(compressionQuality: compressionQuality)
-    #else
+    let options: [CFString: Any] = [
+        kCGImageSourceCreateThumbnailFromImageAlways: true,
+        kCGImageSourceThumbnailMaxPixelSize: maxDimension,
+        kCGImageSourceCreateThumbnailWithTransform: true,
+    ]
     guard let source = CGImageSourceCreateWithData(data as CFData, nil),
-          let cgImage = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return nil }
+          let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+    return opaqueJPEGData(image, compressionQuality: compressionQuality)
+}
 
-    let width = CGFloat(cgImage.width)
-    let height = CGFloat(cgImage.height)
-    let scale = min(maxDimension / width, maxDimension / height, 1.0)
-    let newWidth = Int(width * scale)
-    let newHeight = Int(height * scale)
-
-    guard let colorSpace = cgImage.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB),
+/// CGImage を白背景に描いて JPEG 化する。
+private func opaqueJPEGData(_ image: CGImage, compressionQuality: CGFloat) -> Data? {
+    let width = image.width
+    let height = image.height
+    guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
           let context = CGContext(
-              data: nil, width: newWidth, height: newHeight,
+              data: nil, width: width, height: height,
               bitsPerComponent: 8, bytesPerRow: 0,
               space: colorSpace,
-              bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+              bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
           ) else { return nil }
-
+    let rect = CGRect(x: 0, y: 0, width: width, height: height)
+    context.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
+    context.fill(rect)
     context.interpolationQuality = .high
-    context.draw(cgImage, in: CGRect(x: 0, y: 0, width: newWidth, height: newHeight))
-
-    guard let resizedImage = context.makeImage() else { return nil }
+    context.draw(image, in: rect)
+    guard let rendered = context.makeImage() else { return nil }
 
     let mutableData = NSMutableData()
     guard let destination = CGImageDestinationCreateWithData(
         mutableData, UTType.jpeg.identifier as CFString, 1, nil
     ) else { return nil }
-
     CGImageDestinationAddImage(
-        destination, resizedImage,
+        destination, rendered,
         [kCGImageDestinationLossyCompressionQuality: compressionQuality] as CFDictionary
     )
     guard CGImageDestinationFinalize(destination) else { return nil }
-
     return mutableData as Data
-    #endif
 }

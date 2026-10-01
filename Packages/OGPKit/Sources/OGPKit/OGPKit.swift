@@ -104,7 +104,7 @@ public enum OGPFetcher {
         }
 
         guard !data.isEmpty else { return nil }
-        return downsizedJPEGData(data, maxDimension: 600)
+        return downsizedJPEGData(data, maxDimension: mangaImageMaxDimension)
     }
 
     private static func extractMetaContent(from html: String, property: String) -> String? {

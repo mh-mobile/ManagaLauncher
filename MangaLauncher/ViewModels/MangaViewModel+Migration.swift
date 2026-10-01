@@ -88,12 +88,19 @@ extension MangaViewModel {
 
         let totalToDelete = deletions.reduce(0) { $0 + $1.losers.count }
         print("[MangaViewModel] dedupe: removing \(totalToDelete) duplicate entries across \(deletions.count) groups")
+        // 情報は残す側へ統合する。別 UUID の重複 (ユーザー操作由来) は完全削除せず痕跡としてゴミ箱へ送る
+        // (同じ作品が残っている間は復元できない。残す側を削除すれば復元できる)。同 UUID の重複 (同期由来の同一レコード) は deletedIDs で残す側まで
+        // 隠れてしまうため完全削除する。
+        let now = Date()
         for (kept, losers) in deletions {
             for loser in losers {
-                if loser.id != kept.id {
+                Self.merge(loser, into: kept)
+                if loser.id == kept.id {
+                    modelContext.delete(loser)
+                } else {
                     repointRelatedReferences(from: loser.id, to: kept.id)
+                    loser.deletedAt = now
                 }
-                modelContext.delete(loser)
             }
         }
         do {
@@ -127,6 +134,22 @@ extension MangaViewModel {
         )
         if let links = try? modelContext.fetch(linkDescriptor) {
             for l in links { l.mangaEntryID = newID }
+        }
+    }
+
+    /// 削除側にしかない情報を残す側へ移す。メモは両方あれば連結する。
+    private static func merge(_ loser: MangaEntry, into kept: MangaEntry) {
+        if !loser.memo.isEmpty && !kept.memo.contains(loser.memo) {
+            kept.memo = kept.memo.isEmpty ? loser.memo : kept.memo + "\n\n" + loser.memo
+            kept.memoUpdatedAt = [kept.memoUpdatedAt, loser.memoUpdatedAt].compactMap { $0 }.max()
+        }
+        kept.personalRating = kept.personalRating ?? loser.personalRating
+        kept.currentEpisode = [kept.currentEpisode, loser.currentEpisode].compactMap { $0 }.max()
+        kept.latestEpisode = [kept.latestEpisode, loser.latestEpisode].compactMap { $0 }.max()
+        kept.episodeLabel = kept.episodeLabel ?? loser.episodeLabel
+        kept.lastReadDate = [kept.lastReadDate, loser.lastReadDate].compactMap { $0 }.max()
+        if kept.imageData == nil {
+            kept.imageData = loser.imageData
         }
     }
 

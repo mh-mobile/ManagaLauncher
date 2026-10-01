@@ -10,5 +10,6 @@ let package = Package(
     ],
     targets: [
         .target(name: "PlatformKit"),
+        .testTarget(name: "PlatformKitTests", dependencies: ["PlatformKit"]),
     ]
 )

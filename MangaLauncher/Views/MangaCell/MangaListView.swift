@@ -30,7 +30,7 @@ struct MangaListView: View {
             }
             .if(listEditMode == .active) { view in
                 view.onMove { source, destination in
-                    viewModel.moveEntries(for: day, from: source, to: destination)
+                    viewModel.moveEntries(for: day, visible: entries, from: source, to: destination)
                 }
             }
             .listRowSeparator(.hidden)

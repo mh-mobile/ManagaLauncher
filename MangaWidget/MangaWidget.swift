@@ -20,6 +20,13 @@ struct MangaWidgetItem: Identifiable {
     let publisher: String
     let imageData: Data?
     let isRead: Bool
+
+    func withImageData(_ data: Data?) -> MangaWidgetItem {
+        MangaWidgetItem(
+            id: id, name: name, url: url, iconColor: iconColor,
+            publisher: publisher, imageData: data, isRead: isRead
+        )
+    }
 }
 
 // MARK: - Timeline Provider
@@ -81,7 +88,16 @@ struct MangaTimelineProvider: TimelineProvider {
                 )
             }
         }
-        let items = orderedURLs.compactMap { itemsByURL[$0] }
+        // 画像を表示するのは先頭 16 件の小さなセルだけ。旧バージョンが保存した 1800px 級の画像を
+        // 全件フルデコードすると Widget のメモリ上限を超えうるため、表示分だけ縮小して持つ。
+        let maxDisplayed = 16
+        let items = orderedURLs.enumerated().compactMap { index, url -> MangaWidgetItem? in
+            guard let item = itemsByURL[url] else { return nil }
+            let thumbnail = index < maxDisplayed
+                ? item.imageData.flatMap { downsizedJPEGData($0, maxDimension: 320) }
+                : nil
+            return item.withImageData(thumbnail)
+        }
         return MangaTimelineEntry(
             date: date, items: items, dayOfWeek: selectedDay,
             isToday: selectedDay == DayOfWeek.today

@@ -5,7 +5,7 @@ import PlatformKit
 
 struct ImageCropView: UIViewControllerRepresentable {
     let imageData: Data
-    var maxDimension: CGFloat = 600
+    var maxDimension: CGFloat = mangaImageMaxDimension
     let onCropped: (Data) -> Void
     let onCancel: () -> Void
 

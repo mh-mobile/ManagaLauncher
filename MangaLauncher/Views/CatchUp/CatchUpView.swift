@@ -11,10 +11,8 @@ struct CatchUpView: View {
     let day: DayOfWeek?
     var publisher: String? = nil
 
-    @State private var unreadItems: [MangaEntry] = []
-    @State private var currentIndex: Int = 0
+    @State private var session = CatchUpSession()
     @State private var offset: CGSize = .zero
-    @State private var undoStack: [(entry: MangaEntry, action: SwipeAction)] = []
     @State private var completionAnimated = false
     @State private var safariURL: URL?
     @State private var quickViewContext: BrowserContext?
@@ -32,18 +30,16 @@ struct CatchUpView: View {
     private var theme: ThemeStyle { ThemeManager.shared.style }
     private var hasGradient: Bool { backgroundGradient != nil }
 
-    private enum SwipeAction {
-        case read, skip
-    }
+    private typealias SwipeAction = CatchUpSession.Action
 
-    private var totalCount: Int { unreadItems.count }
-    private var remainingCount: Int { max(totalCount - currentIndex, 0) }
-    private var isCompleted: Bool { currentIndex >= totalCount }
+    private var totalCount: Int { session.items.count }
+    private var remainingCount: Int { max(totalCount - session.currentIndex, 0) }
+    private var isCompleted: Bool { session.currentIndex >= totalCount }
 
     var body: some View {
         NavigationStack {
             VStack {
-                if unreadItems.isEmpty {
+                if session.items.isEmpty {
                     completedView(message: "未読のマンガはありません")
                 } else if isCompleted {
                     completedView(message: "すべてチェックしました！")
@@ -87,7 +83,7 @@ struct CatchUpView: View {
                     Button("閉じる") { dismiss() }
                         .foregroundStyle(hasGradient ? .white : (theme.forceDarkMode ? theme.primary : Color.accentColor))
                 }
-                if !undoStack.isEmpty {
+                if !session.undoStack.isEmpty {
                     ToolbarItem(placement: .automatic) {
                         Button {
                             undoAction()
@@ -95,9 +91,10 @@ struct CatchUpView: View {
                             Image(systemName: "arrow.uturn.backward")
                         }
                         .accessibilityLabel("元に戻す")
+                        .disabled(session.isBusy)
                     }
                 }
-                if !isCompleted && !unreadItems.isEmpty && remainingCount >= 2 {
+                if !isCompleted && !session.items.isEmpty && remainingCount >= 2 {
                     ToolbarItem(placement: .automatic) {
                         Button {
                             showMarkAllReadAlert = true
@@ -105,21 +102,22 @@ struct CatchUpView: View {
                             Image(systemName: "checkmark.circle")
                         }
                         .accessibilityLabel("残りを全部既読にする")
+                        .disabled(session.isBusy)
                     }
                 }
             }
         }
         .onAppear {
-            if unreadItems.isEmpty {
-                unreadItems = filteredUnreadEntries()
+            if session.items.isEmpty {
+                session.items = filteredUnreadEntries()
             }
-            if !hasSeenTutorial && !unreadItems.isEmpty {
+            if !hasSeenTutorial && !session.items.isEmpty {
                 showTutorial = true
             }
             updateBackgroundGradient()
         }
-        .onChange(of: currentIndex) { _, newIndex in
-            if newIndex < unreadItems.count {
+        .onChange(of: session.currentIndex) { _, newIndex in
+            if newIndex < session.items.count {
                 updateBackgroundGradient()
             }
         }
@@ -159,7 +157,7 @@ struct CatchUpView: View {
         } message: {
             Text("残り \(remainingCount) 件を既読にします。この操作は「元に戻す」で取り消せます。")
         }
-        .gesture(dismissDragGesture, including: isCompleted || unreadItems.isEmpty ? .all : .subviews)
+        .gesture(dismissDragGesture, including: isCompleted || session.items.isEmpty ? .all : .subviews)
         .preferredColorScheme(hasGradient ? .dark : theme.resolvedColorScheme(system: systemColorScheme))
     }
 
@@ -169,7 +167,7 @@ struct CatchUpView: View {
         VStack(spacing: 20) {
             Spacer(minLength: 0)
             HStack {
-                Text("\(currentIndex + 1) / \(totalCount)")
+                Text("\(session.currentIndex + 1) / \(totalCount)")
                     .font(theme.subheadlineFont)
                     .foregroundStyle(hasGradient ? .white : theme.onSurfaceVariant)
                 Spacer()
@@ -180,23 +178,23 @@ struct CatchUpView: View {
             .shadow(color: hasGradient ? .black.opacity(0.5) : .clear, radius: 2, y: 1)
             .padding(.horizontal)
 
-            ProgressView(value: Double(currentIndex), total: Double(totalCount))
+            ProgressView(value: Double(session.currentIndex), total: Double(totalCount))
                 .if(theme.forceDarkMode) { view in
                     view.tint(theme.primary)
                 }
                 .padding(.horizontal)
 
             ZStack {
-                if currentIndex + 1 < totalCount {
-                    CatchUpCardView(entry: unreadItems[currentIndex + 1], viewModel: viewModel, editingEntry: $editingEntry, onOpenURL: openMangaURL, hasGradientBackground: hasGradient)
-                        .id("\(unreadItems[currentIndex + 1].id)-\(reloadCount)")
+                if session.currentIndex + 1 < totalCount {
+                    CatchUpCardView(entry: session.items[session.currentIndex + 1], viewModel: viewModel, editingEntry: $editingEntry, onOpenURL: openMangaURL, hasGradientBackground: hasGradient)
+                        .id("\(session.items[session.currentIndex + 1].id)-\(reloadCount)")
                         .scaleEffect(0.95)
                         .opacity(0.5)
                         .allowsHitTesting(false)
                 }
 
-                CatchUpCardView(entry: unreadItems[currentIndex], viewModel: viewModel, editingEntry: $editingEntry, onOpenURL: openMangaURL, hasGradientBackground: hasGradient)
-                    .id("\(unreadItems[currentIndex].id)-\(reloadCount)")
+                CatchUpCardView(entry: session.items[session.currentIndex], viewModel: viewModel, editingEntry: $editingEntry, onOpenURL: openMangaURL, hasGradientBackground: hasGradient)
+                    .id("\(session.items[session.currentIndex].id)-\(reloadCount)")
                     .offset(offset)
                     .rotationEffect(.degrees(Double(offset.width) / 20))
                     .overlay {
@@ -208,12 +206,7 @@ struct CatchUpView: View {
 
             HStack(spacing: 60) {
                 Button {
-                    withAnimation(.spring(duration: 0.3)) {
-                        offset = CGSize(width: -500, height: 0)
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + AnimationTiming.swipeCompletion) {
-                        performAction(.skip)
-                    }
+                    swipe(.skip, to: CGSize(width: -500, height: 0))
                 } label: {
                     VStack(spacing: 4) {
                         Image(systemName: "clock.arrow.circlepath")
@@ -225,12 +218,7 @@ struct CatchUpView: View {
                 }
 
                 Button {
-                    withAnimation(.spring(duration: 0.3)) {
-                        offset = CGSize(width: 500, height: 0)
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + AnimationTiming.swipeCompletion) {
-                        performAction(.read)
-                    }
+                    swipe(.read, to: CGSize(width: 500, height: 0))
                 } label: {
                     VStack(spacing: 4) {
                         Image(systemName: "checkmark.circle.fill")
@@ -264,24 +252,15 @@ struct CatchUpView: View {
     private var dragGesture: some Gesture {
         DragGesture()
             .onChanged { value in
+                guard !session.isBusy else { return }
                 offset = value.translation
             }
             .onEnded { value in
                 let threshold: CGFloat = 120
                 if value.translation.width > threshold {
-                    withAnimation(.spring(duration: 0.3)) {
-                        offset = CGSize(width: 500, height: value.translation.height)
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + AnimationTiming.swipeCompletion) {
-                        performAction(.read)
-                    }
+                    swipe(.read, to: CGSize(width: 500, height: value.translation.height))
                 } else if value.translation.width < -threshold {
-                    withAnimation(.spring(duration: 0.3)) {
-                        offset = CGSize(width: -500, height: value.translation.height)
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + AnimationTiming.swipeCompletion) {
-                        performAction(.skip)
-                    }
+                    swipe(.skip, to: CGSize(width: -500, height: value.translation.height))
                 } else {
                     withAnimation(.spring(duration: 0.3)) {
                         offset = .zero
@@ -292,17 +271,19 @@ struct CatchUpView: View {
 
     // MARK: - Actions
 
-    private func performAction(_ action: SwipeAction) {
-        guard currentIndex < unreadItems.count else { return }
-        let entry = unreadItems[currentIndex]
-        undoStack.append((entry: entry, action: action))
-
-        if action == .read {
-            viewModel.markAsRead(entry)
+    /// スワイプ/ボタンの確定。カードを飛ばすアニメーション後に遅延して確定するので、対象は
+    /// 操作時点で予約し、確定待ちの間は次の操作を受け付けない (連打や undo で別の作品が既読になるのを防ぐ)。
+    private func swipe(_ action: SwipeAction, to target: CGSize) {
+        guard session.beginSwipe() else { return }
+        withAnimation(.spring(duration: 0.3)) {
+            offset = target
         }
-
-        offset = .zero
-        currentIndex += 1
+        DispatchQueue.main.asyncAfter(deadline: .now() + AnimationTiming.swipeCompletion) {
+            if let entry = session.completeSwipe(action) {
+                viewModel.markAsRead(entry)
+            }
+            offset = .zero
+        }
     }
 
     private func filteredUnreadEntries() -> [MangaEntry] {
@@ -314,17 +295,17 @@ struct CatchUpView: View {
     }
 
     private func reloadEntries() {
-        let processedIDs = Set(undoStack.filter { $0.action == .read }.map { $0.entry.id })
+        let processedIDs = Set(session.undoStack.filter { $0.action == .read }.map { $0.entry.id })
         let allUnread = filteredUnreadEntries()
 
-        var neededIDs = Set(unreadItems.prefix(currentIndex).map(\.id))
-        neededIDs.formUnion(undoStack.map(\.entry.id))
+        var neededIDs = Set(session.items.prefix(session.currentIndex).map(\.id))
+        neededIDs.formUnion(session.undoStack.map(\.entry.id))
         let freshEntries = viewModel.findEntries(by: neededIDs)
 
         var newItems: [MangaEntry] = []
 
-        for i in 0..<currentIndex where i < unreadItems.count {
-            let oldEntry = unreadItems[i]
+        for i in 0..<session.currentIndex where i < session.items.count {
+            let oldEntry = session.items[i]
             if let fresh = freshEntries[oldEntry.id] {
                 newItems.append(fresh)
             }
@@ -334,40 +315,40 @@ struct CatchUpView: View {
             newItems.append(entry)
         }
 
-        unreadItems = newItems
-        // リロード後に currentIndex が範囲外にならないよう検証
-        if currentIndex > newItems.count {
-            currentIndex = newItems.count
+        session.items = newItems
+        // リロード後に session.currentIndex が範囲外にならないよう検証
+        if session.currentIndex > newItems.count {
+            session.currentIndex = newItems.count
         }
-        undoStack = undoStack.compactMap { item in
+        session.undoStack = session.undoStack.compactMap { item in
             guard let fresh = freshEntries[item.entry.id] else { return nil }
             return (entry: fresh, action: item.action)
         }
     }
 
     private func undoAction() {
-        guard let last = undoStack.popLast() else { return }
+        guard !session.isBusy, let last = session.undoStack.popLast() else { return }
 
         if last.action == .read {
             viewModel.markAsUnread(last.entry)
         }
 
-        currentIndex -= 1
+        session.currentIndex -= 1
         offset = .zero
     }
 
     /// 残りの未読エントリをすべて既読にする。
-    /// 各エントリを undoStack に積むので、完了後に undo で個別に戻せる。
+    /// 各エントリを session.undoStack に積むので、完了後に undo で個別に戻せる。
     /// バッチ版 `markEntriesAsRead` を使い、save() を1回にまとめる。
     private func markAllRemainingAsRead() {
-        guard currentIndex < unreadItems.count else { return }
-        let remaining = Array(unreadItems[currentIndex...])
+        guard !session.isBusy, session.currentIndex < session.items.count else { return }
+        let remaining = Array(session.items[session.currentIndex...])
         for entry in remaining {
-            undoStack.append((entry: entry, action: .read))
+            session.undoStack.append((entry: entry, action: .read))
         }
         viewModel.markEntriesAsRead(remaining)
         offset = .zero
-        currentIndex = unreadItems.count
+        session.currentIndex = session.items.count
     }
 
     // MARK: - Completed View
@@ -375,7 +356,7 @@ struct CatchUpView: View {
     private static let milestones = [10, 30, 50, 100, 200, 300, 500, 750, 1000, 2000, 3000, 5000, 10000]
 
     private var sessionReadCount: Int {
-        undoStack.filter { $0.action == .read }.count
+        session.undoStack.filter { $0.action == .read }.count
     }
 
     private func checkStreakAchievement() -> Int? {
@@ -421,9 +402,9 @@ struct CatchUpView: View {
             achievementAnimated = false
             streakAchievement = nil
             milestoneAchievement = nil
-            unreadItems = filteredUnreadEntries()
-            currentIndex = 0
-            undoStack = []
+            session.items = filteredUnreadEntries()
+            session.currentIndex = 0
+            session.undoStack = []
         }
     }
 
@@ -431,8 +412,8 @@ struct CatchUpView: View {
         // 前回のタスクをキャンセルして多重実行を防ぐ
         gradientTask?.cancel()
 
-        guard currentIndex < unreadItems.count else { return }
-        let entry = unreadItems[currentIndex]
+        guard session.currentIndex < session.items.count else { return }
+        let entry = session.items[session.currentIndex]
         guard let imageData = entry.imageData else {
             let gradient = ImageColorExtractor.gradientFromColor(Color.fromName(entry.iconColor))
             withAnimation(.easeInOut(duration: 0.5)) {
@@ -463,5 +444,39 @@ struct CatchUpView: View {
                 return (e.name, e.publisher, e.imageData)
             }
         ).open(urlString)
+    }
+}
+
+/// CatchUp のカード送り状態。View から切り出してテスト可能にしている。
+struct CatchUpSession {
+    enum Action { case read, skip }
+
+    var items: [MangaEntry] = []
+    var currentIndex = 0
+    var undoStack: [(entry: MangaEntry, action: Action)] = []
+    /// スワイプ確定待ちの作品。アニメーション後の確定までの間に入るリロードや連打に備える
+    private(set) var pendingEntryID: UUID?
+
+    var isBusy: Bool { pendingEntryID != nil }
+
+    /// 現在のカードを確定対象として予約する。確定待ち中・範囲外なら false。
+    mutating func beginSwipe() -> Bool {
+        guard !isBusy, currentIndex < items.count else { return false }
+        pendingEntryID = items[currentIndex].id
+        return true
+    }
+
+    /// 予約した作品を確定して次へ進める。既読にすべき作品 (.read のとき) を返す。
+    /// 確定待ちの間にリロードで並びが変わっても、予約した作品に作用させる。
+    mutating func completeSwipe(_ action: Action) -> MangaEntry? {
+        guard let id = pendingEntryID else { return nil }
+        pendingEntryID = nil
+        guard currentIndex <= items.count,
+              let index = items[currentIndex...].firstIndex(where: { $0.id == id }) else { return nil }
+        let entry = items.remove(at: index)
+        items.insert(entry, at: currentIndex)
+        undoStack.append((entry: entry, action: action))
+        currentIndex += 1
+        return action == .read ? entry : nil
     }
 }

@@ -39,6 +39,10 @@ final class MangaViewModel {
     private(set) var modelContext: ModelContext
     @ObservationIgnored var didRunStartupMigrations = false
 
+    /// save() 後の外部反映 (Widget/バッジ/通知) のデバウンス用。
+    @ObservationIgnored private var saveSideEffectsTask: Task<Void, Never>?
+    @ObservationIgnored private var hasPendingSaveSideEffects = false
+
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
         reloadHiddenIDs()
@@ -112,6 +116,15 @@ final class MangaViewModel {
         return filterEntries(modelContext.fetchLogged(descriptor), excludeHidden: false)
     }
 
+    /// 既読記録を一覧に出してよいか。非表示・ゴミ箱・削除待ちの作品の記録は作品名ごと出さない
+    /// (コメント/メモは表示中のエントリに紐づくものだけ出しているのと揃える)。
+    /// 完全削除済みの作品の記録は、記録に残る作品名で表示する。
+    func isActivityVisible(_ activity: ReadingActivity) -> Bool {
+        let id = activity.mangaEntryID
+        return !hiddenIDs.contains(id) && !deletedIDs.contains(id)
+            && !pendingDeleteEntries.contains { $0.id == id }
+    }
+
     func findEntry(by id: UUID) -> MangaEntry? {
         let descriptor = FetchDescriptor<MangaEntry>(
             predicate: #Predicate { $0.id == id }
@@ -150,7 +163,7 @@ final class MangaViewModel {
         let descriptor = FetchDescriptor<MangaEntry>(
             predicate: #Predicate { $0.isHidden == true && $0.deletedAt == nil }
         )
-        let entries = (try? modelContext.fetch(descriptor)) ?? []
+        let entries = modelContext.fetchLogged(descriptor)
         hiddenIDs = Set(entries.map(\.id))
     }
 
@@ -158,7 +171,7 @@ final class MangaViewModel {
         let descriptor = FetchDescriptor<MangaEntry>(
             predicate: #Predicate { $0.deletedAt != nil }
         )
-        let entries = (try? modelContext.fetch(descriptor)) ?? []
+        let entries = modelContext.fetchLogged(descriptor)
         deletedIDs = Set(entries.map(\.id))
     }
 
@@ -197,23 +210,6 @@ final class MangaViewModel {
 
     // MARK: - Save
 
-    /// entry が属する ModelContext で先に保存してから、viewModel の modelContext も保存する。
-    /// `refresh()` で `modelContext` が差し替わった後、UI が保持する entry が
-    /// 旧コンテキストに残っている場合の不整合を防ぐ共通ヘルパー。
-    /// `updateEntry` / `setHidden` / `setPersonalRating` 等と同じパターン。
-    func saveEntryChange(for entry: MangaEntry) {
-        if let entryCtx = entry.modelContext, entryCtx !== modelContext {
-            do {
-                try entryCtx.save()
-            } catch {
-                print("[MangaViewModel] saveEntryChange entryCtx save failed: \(error)")
-                lastError = .save(error)
-                return
-            }
-        }
-        save()
-    }
-
     func save() {
         do {
             try modelContext.save()
@@ -223,6 +219,55 @@ final class MangaViewModel {
             return
         }
         refreshCounter += 1
+        scheduleSaveSideEffects()
+    }
+
+    /// View が保持するオブジェクトを現在の modelContext 上のインスタンスに引き直す。
+    /// refresh() で modelContext が差し替わると、View 側には旧コンテキストのオブジェクトが残る。
+    /// それを変更しても save() に含まれず、旧コンテキストごと保存すると古い値で上書きしてしまうため、
+    /// View から受け取ったモデルを変更・削除するメソッドは必ず先にこれを通す。
+    /// `model(for:)` は行が他端末などで削除済みでも存在しないフォルトを返し、触るとクラッシュするため
+    /// ID で fetch して実在を確かめる (無ければ元のオブジェクトのまま扱う)。
+    func live<T: PersistentModel>(_ model: T) -> T {
+        guard model.modelContext !== modelContext else { return model }
+        let id = model.persistentModelID
+        var descriptor = FetchDescriptor<T>(predicate: #Predicate { $0.persistentModelID == id })
+        descriptor.fetchLimit = 1
+        return modelContext.fetchLogged(descriptor).first ?? model
+    }
+
+    func deleteModel<T: PersistentModel>(_ model: T) {
+        modelContext.delete(live(model))
+    }
+
+    // MARK: - Save Side Effects (Widget / Badge / Notifications)
+
+    /// Widget リロード・バッジ更新・通知再スケジュールはいずれも外部プロセス向けの
+    /// 反映で即時性が不要な一方、通知再スケジュールは全7曜日分のフェッチを伴い重い。
+    /// CatchUp のスワイプ既読のように save() が連打される場面で毎回実行しないよう
+    /// 500ms デバウンスでまとめて実行する (DB 保存と UI 更新は save() で同期のまま)。
+    /// アプリ外 (共有拡張・iCloud 同期) での変更後にも App から呼び、Widget/バッジ/通知を最新化する。
+    func scheduleSaveSideEffects() {
+        hasPendingSaveSideEffects = true
+        saveSideEffectsTask?.cancel()
+        saveSideEffectsTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(500))
+            guard !Task.isCancelled else { return }
+            self?.performSaveSideEffectsNow()
+        }
+    }
+
+    /// scenePhase が .active 以外へ遷移するタイミングで App から呼ぶ。
+    /// アプリがすぐバックグラウンドへ行っても Widget/バッジ/通知が
+    /// 必ず最終状態に更新されることを保証する。pending が無ければ no-op。
+    func flushSaveSideEffects() {
+        guard hasPendingSaveSideEffects else { return }
+        saveSideEffectsTask?.cancel()
+        performSaveSideEffectsNow()
+    }
+
+    private func performSaveSideEffectsNow() {
+        hasPendingSaveSideEffects = false
         #if canImport(WidgetKit)
         WidgetCenter.shared.reloadAllTimelines()
         #endif

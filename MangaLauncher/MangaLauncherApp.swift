@@ -123,6 +123,11 @@ struct MangaLauncherApp: App {
                 .onOpenURL { url in
                     handleDeepLink(url)
                 }
+                .onReceive(NotificationCenter.default.publisher(for: .mangaDataDidChange)) { _ in
+                    // 復帰時・iCloud 取り込み完了時。共有拡張や他端末の変更は save() を経由しないため、
+                    // ここで Widget/バッジ/通知 を反映する (デバウンスにより各画面の refresh 後に実行される)
+                    viewModel.scheduleSaveSideEffects()
+                }
                 .sheet(item: $intentPrefill, onDismiss: {
                     // Force refresh ContentView after intent registration
                     NotificationCenter.default.post(name: .mangaDataDidChange, object: nil)
@@ -145,6 +150,10 @@ struct MangaLauncherApp: App {
                     checkPendingOpenCatchUp()
                 }
                 .onChange(of: scenePhase) { _, newPhase in
+                    if newPhase != .active {
+                        // suspend 前にデバウンス中の Widget/バッジ/通知更新を確実に反映する
+                        viewModel.flushSaveSideEffects()
+                    }
                     if newPhase == .active {
                         startMigrationWaitIfNeeded()
                         checkPendingIntent()
@@ -183,31 +192,46 @@ struct MangaLauncherApp: App {
         }
     }
 
-    /// CloudKit sync が落ち着くのを待ってから return。
-    /// - 初期 .idle で 3 秒待っても sync が始まらなければそのまま return (cold start で
-    ///   syncing event が来ないケース、初回データ無しのケース)。3 秒は CloudKit が
-    ///   wake up するのに必要な余裕を見たもの
-    /// - .syncing になったら .idle / .failed / .notAvailable に変わるまで待つ
-    /// - 最大タイムアウト 10 秒
+    /// CloudKit sync が落ち着くのを待ってから return。最大 10 秒。
     @MainActor
     private func waitForCloudSyncSettle() async {
-        let timeout: TimeInterval = 10
-        let initialIdleGrace: TimeInterval = 3
         let pollNanoseconds: UInt64 = 200_000_000 // 0.2s
         let start = Date()
         var sawSyncing = false
-
-        while Date().timeIntervalSince(start) < timeout {
-            switch syncMonitor.syncStatus {
-            case .syncing:
-                sawSyncing = true
-            case .failed, .notAvailable:
-                return
-            case .idle:
-                if sawSyncing { return }
-                if Date().timeIntervalSince(start) > initialIdleGrace { return }
-            }
+        while true {
+            if case .syncing = syncMonitor.syncStatus { sawSyncing = true }
+            let importCompleted = (syncMonitor.lastImportDate ?? .distantPast) >= start
+            if Self.shouldStopWaitingForSync(
+                status: syncMonitor.syncStatus,
+                sawSyncing: sawSyncing,
+                importCompleted: importCompleted,
+                elapsed: Date().timeIntervalSince(start)
+            ) { return }
             try? await Task.sleep(nanoseconds: pollNanoseconds)
+        }
+    }
+
+    /// - 初期 .idle で 3 秒待っても sync が始まらなければ止める (cold start で syncing event が
+    ///   来ないケース、初回データ無しのケース)。3 秒は CloudKit が wake up する余裕
+    /// - sync が始まったら import 完了まで待つ。setup イベントの完了でも .idle になるため、
+    ///   .idle だけで止めると import 前の古いローカルデータに migration/dedupe が走っていた
+    /// - .failed / .notAvailable、または 10 秒経過で止める
+    static func shouldStopWaitingForSync(
+        status: CloudSyncStatus,
+        sawSyncing: Bool,
+        importCompleted: Bool,
+        elapsed: TimeInterval,
+        timeout: TimeInterval = 10,
+        initialIdleGrace: TimeInterval = 3
+    ) -> Bool {
+        if elapsed >= timeout || importCompleted { return true }
+        switch status {
+        case .failed, .notAvailable:
+            return true
+        case .syncing:
+            return false
+        case .idle:
+            return !sawSyncing && elapsed > initialIdleGrace
         }
     }
 

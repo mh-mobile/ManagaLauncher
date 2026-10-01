@@ -9,12 +9,14 @@ extension MangaViewModel {
 
     /// 掲載状況の付け替え
     func setPublicationStatus(_ entry: MangaEntry, to status: PublicationStatus) {
+        let entry = live(entry)
         entry.publicationStatus = status
-        saveEntryChange(for: entry)
+        save()
     }
 
     /// 読書状況の付け替え
     func setReadingState(_ entry: MangaEntry, to state: ReadingState) {
+        let entry = live(entry)
         entry.readingState = state
         // フォーカス積読は readingState == .backlog 前提なので、
         // 積読から外れた瞬間に自動でフォーカス解除する
@@ -22,33 +24,33 @@ extension MangaViewModel {
             entry.isFocused = false
             entry.focusedAt = nil
         }
-        saveEntryChange(for: entry)
+        save()
     }
 
     /// パーソナル評価を設定する。nil で評価解除。
     func setPersonalRating(_ entry: MangaEntry, to rating: Int?) {
+        let entry = live(entry)
         entry.personalRating = MangaEntry.clampedRating(rating)
-        saveEntryChange(for: entry)
+        save()
     }
 
     /// 非表示フラグの切り替え
     func setHidden(_ entry: MangaEntry, isHidden: Bool) {
+        let entry = live(entry)
         entry.isHidden = isHidden
         if isHidden {
             hiddenIDs.insert(entry.id)
         } else {
             hiddenIDs.remove(entry.id)
         }
-        saveEntryChange(for: entry)
+        save()
     }
 
     // MARK: Mark Read / Unread
 
     func markAsRead(_ entry: MangaEntry) {
-        entry.lastReadDate = Date()
-        if !entry.isOneShot {
-            entry.advanceToNextUpdate()
-        }
+        let entry = live(entry)
+        entry.recordRead()
         // 同日・同エントリのアクティビティが既に存在する場合は再 insert しない。
         let today = Calendar.current.startOfDay(for: Date())
         let entryID = entry.id
@@ -62,19 +64,16 @@ extension MangaViewModel {
                 mangaName: entry.name,
                 mangaEntryID: entry.id
             )
-            // entry と同じコンテキストに挿入（refresh() 後の不整合を防ぐ）
-            (entry.modelContext ?? modelContext).insert(activity)
+            modelContext.insert(activity)
         }
-        if entry.isOneShot {
-            entry.readingState = .archived
-        }
-        saveEntryChange(for: entry)
+        save()
     }
 
     /// 複数エントリを一括既読にする。save() を1回にまとめてパフォーマンスを最適化。
     /// CatchUp の「全部既読」で使用。
     func markEntriesAsRead(_ entries: [MangaEntry]) {
         guard !entries.isEmpty else { return }
+        let entries = entries.map(live)
         let today = Calendar.current.startOfDay(for: Date())
 
         // 今日の既存アクティビティを一括取得（N回 fetch → 1回に最適化）
@@ -89,42 +88,21 @@ extension MangaViewModel {
         )
 
         for entry in entries {
-            let ctx = entry.modelContext ?? modelContext
-            entry.lastReadDate = Date()
-            if !entry.isOneShot {
-                entry.advanceToNextUpdate()
-            }
-            // 存在チェックと挿入を同じコンテキストで行う
+            entry.recordRead()
             if !existingActivityEntryIDs.contains(entry.id) {
                 let activity = ReadingActivity(
                     date: Date(),
                     mangaName: entry.name,
                     mangaEntryID: entry.id
                 )
-                ctx.insert(activity)
-            }
-            if entry.isOneShot {
-                entry.readingState = .archived
-            }
-        }
-        // entry が複数コンテキストに跨る可能性に備え、全ユニークコンテキストを保存
-        var savedContexts = Set<ObjectIdentifier>()
-        for entry in entries {
-            guard let entryCtx = entry.modelContext, entryCtx !== modelContext else { continue }
-            let ctxID = ObjectIdentifier(entryCtx)
-            guard savedContexts.insert(ctxID).inserted else { continue }
-            do {
-                try entryCtx.save()
-            } catch {
-                print("[MangaViewModel] markEntriesAsRead entryCtx save failed: \(error)")
-                lastError = .save(error)
-                return
+                modelContext.insert(activity)
             }
         }
         save()
     }
 
     func markAsUnread(_ entry: MangaEntry) {
+        let entry = live(entry)
         entry.lastReadDate = nil
         if entry.isOneShot {
             entry.readingState = .following
@@ -138,7 +116,7 @@ extension MangaViewModel {
         if let activity = modelContext.fetchLogged(descriptor).first {
             modelContext.delete(activity)
         }
-        saveEntryChange(for: entry)
+        save()
     }
 
     // MARK: Unread Queries
@@ -199,6 +177,7 @@ extension MangaViewModel {
     }
 
     func focus(_ entry: MangaEntry) {
+        let entry = live(entry)
         guard entry.readingState == .backlog else { return }
         guard !entry.isFocused else { return }
         guard canFocus() else { return }
@@ -208,6 +187,7 @@ extension MangaViewModel {
     }
 
     func unfocus(_ entry: MangaEntry) {
+        let entry = live(entry)
         guard entry.isFocused else { return }
         entry.isFocused = false
         entry.focusedAt = nil
@@ -215,7 +195,7 @@ extension MangaViewModel {
     }
 
     private func saveFocusChange(for entry: MangaEntry) {
-        saveEntryChange(for: entry)
+        save()
     }
 
     // MARK: Soft Delete
@@ -226,30 +206,31 @@ extension MangaViewModel {
     }
 
     private func permanentlyDeleteWithoutSave(_ entry: MangaEntry) {
+        let entry = live(entry)
         deletedIDs.remove(entry.id)
         hiddenIDs.remove(entry.id)
         let entryID = entry.id
         let activityDescriptor = FetchDescriptor<ReadingActivity>(predicate: #Predicate { $0.mangaEntryID == entryID })
-        if let activities = try? modelContext.fetch(activityDescriptor) {
-            for activity in activities { modelContext.delete(activity) }
-        }
+        for activity in modelContext.fetchLogged(activityDescriptor) { modelContext.delete(activity) }
         let commentDescriptor = FetchDescriptor<MangaComment>(predicate: #Predicate { $0.mangaEntryID == entryID })
-        if let comments = try? modelContext.fetch(commentDescriptor) {
-            for comment in comments { modelContext.delete(comment) }
-        }
+        for comment in modelContext.fetchLogged(commentDescriptor) { modelContext.delete(comment) }
         let linkDescriptor = FetchDescriptor<MangaLink>(predicate: #Predicate { $0.mangaEntryID == entryID })
-        if let links = try? modelContext.fetch(linkDescriptor) {
-            for link in links { modelContext.delete(link) }
-        }
+        for link in modelContext.fetchLogged(linkDescriptor) { modelContext.delete(link) }
         modelContext.delete(entry)
     }
 
-    func restoreEntry(_ entry: MangaEntry) {
-        restoreEntryWithoutSave(entry)
+    /// - Returns: 同じ URL・曜日の作品が既にあり復元しなかった場合 false
+    /// (起動時 dedupe でゴミ箱へ送られた側を復元しても、次回起動で再びゴミ箱へ戻ってしまうため)
+    @discardableResult
+    func restoreEntry(_ entry: MangaEntry) -> Bool {
+        let restored = restoreEntryWithoutSave(entry)
         save()
+        return restored
     }
 
-    private func restoreEntryWithoutSave(_ entry: MangaEntry) {
+    private func restoreEntryWithoutSave(_ entry: MangaEntry) -> Bool {
+        let entry = live(entry)
+        guard !hasDuplicate(url: entry.url, day: entry.dayOfWeek, excluding: entry.id) else { return false }
         entry.deletedAt = nil
         deletedIDs.remove(entry.id)
         if entry.isHidden {
@@ -257,13 +238,17 @@ extension MangaViewModel {
         }
         let day = entry.dayOfWeekRawValue
         let descriptor = FetchDescriptor<MangaEntry>(predicate: #Predicate { $0.dayOfWeekRawValue == day && $0.deletedAt == nil })
-        let maxOrder = (try? modelContext.fetch(descriptor))?.map(\.sortOrder).max() ?? -1
+        let maxOrder = modelContext.fetchLogged(descriptor).map(\.sortOrder).max() ?? -1
         entry.sortOrder = maxOrder + 1
+        return true
     }
 
-    func restoreEntries(_ entries: [MangaEntry]) {
-        for entry in entries { restoreEntryWithoutSave(entry) }
+    /// - Returns: 同じ作品が既にあり復元しなかった件数
+    @discardableResult
+    func restoreEntries(_ entries: [MangaEntry]) -> Int {
+        let skipped = entries.filter { !restoreEntryWithoutSave($0) }.count
         save()
+        return skipped
     }
 
     func permanentlyDeleteEntries(_ entries: [MangaEntry]) {
@@ -293,7 +278,7 @@ extension MangaViewModel {
     func purgeExpiredSoftDeletes() {
         guard let cutoff = Calendar.current.date(byAdding: .day, value: -30, to: Date()) else { return }
         let descriptor = FetchDescriptor<MangaEntry>(predicate: #Predicate { $0.deletedAt != nil })
-        guard let softDeleted = try? modelContext.fetch(descriptor) else { return }
+        let softDeleted = modelContext.fetchLogged(descriptor)
         let expired = softDeleted.filter { ($0.deletedAt ?? .distantFuture) < cutoff }
         guard !expired.isEmpty else { return }
         for entry in expired {

@@ -17,6 +17,8 @@ struct ReadingHeatmapView: View {
     @State private var totalReadCount: Int = 0
     @State private var thisWeekReadCount: Int = 0
     @State private var selectedDate: Date?
+    @State private var gridMemo = VersionedMemo<[[Date?]]>()
+    @State private var lifetimeMemo = VersionedMemo<[MangaLifetime]>()
 
     var body: some View {
         ScrollView {
@@ -99,7 +101,8 @@ struct ReadingHeatmapView: View {
     // MARK: - Heatmap
 
     private var heatmapSection: some View {
-        let grid = buildGrid()
+        // グリッドは「今日の日付」にのみ依存する純関数なので日付単位でメモ化
+        let grid = gridMemo(version: Calendar.current.startOfDay(for: Date())) { buildGrid() }
         let maxCount = activityCounts.values.max() ?? 1
 
         return HStack(alignment: .top, spacing: 4) {
@@ -195,11 +198,24 @@ struct ReadingHeatmapView: View {
     // MARK: - Lifetime
 
     private var lifetimeSection: some View {
-        let lifetimes = LifetimeBuilder.build(
-            entries: viewModel.allEntries(),
-            activities: viewModel.allActivities(),
-            comments: viewModel.allComments()
-        )
+        // LifetimeBuilder.build は全 entries/activities/comments の突き合わせで重い。
+        // body でデータ変更に効く観測対象 (refreshCounter / pendingDelete / hidden / deleted)
+        // をバージョンとして読み続けることで、Observation によるライブ更新は維持しつつ、
+        // selectedDate 変化などデータと無関係な再レンダーでは再計算をスキップする。
+        let dataVersion: [AnyHashable] = [
+            viewModel.refreshCounter,
+            viewModel.pendingDeleteEntries.map(\.id),
+            viewModel.pendingDeleteComments.map(\.id),
+            viewModel.hiddenIDs,
+            viewModel.deletedIDs,
+        ]
+        let lifetimes = lifetimeMemo(version: dataVersion) {
+            LifetimeBuilder.build(
+                entries: viewModel.allEntries(),
+                activities: viewModel.allActivities(),
+                comments: viewModel.allComments()
+            )
+        }
         return MangaLifetimeView(lifetimes: lifetimes, viewModel: viewModel)
     }
 
@@ -269,11 +285,15 @@ struct ReadingHeatmapView: View {
         return calendar.component(.month, from: prevDate) != month
     }
 
-    private func monthLabel(for date: Date) -> String {
+    private static let monthLabelFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ja_JP")
         formatter.dateFormat = "M月"
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private func monthLabel(for date: Date) -> String {
+        Self.monthLabelFormatter.string(from: date)
     }
 }
 
@@ -298,8 +318,11 @@ private struct DayActivitySheet: View {
                 dateNavigationBar
                 Divider()
                 List {
-                    let activities = viewModel.stats.fetchActivities(for: currentDate)
-                    if activities.isEmpty {
+                    let allActivities = viewModel.stats.fetchActivities(for: currentDate)
+                    let activities = allActivities.filter(viewModel.isActivityVisible)
+                    // ヒートマップの件数は非表示作品の記録も含むため、名前は出さず件数だけ示して食い違いを説明する
+                    let privateCount = allActivities.count - activities.count
+                    if activities.isEmpty && privateCount == 0 {
                         ContentUnavailableView {
                             Label("アクティビティなし", systemImage: "calendar.badge.clock")
                                 .foregroundStyle(theme.onSurfaceVariant)
@@ -317,7 +340,10 @@ private struct DayActivitySheet: View {
                             } label: {
                                 HStack(spacing: 12) {
                                     if let entry, let imageData = entry.imageData,
-                                       let image = imageData.toSwiftUIImage() {
+                                       let image = imageData.toCachedSwiftUIImage(
+                                           id: entry.id.uuidString,
+                                           fillPixelSize: ThumbnailCache.smallFillPixelSize
+                                       ) {
                                         image
                                             .resizable()
                                             .aspectRatio(contentMode: .fill)
@@ -334,6 +360,11 @@ private struct DayActivitySheet: View {
                             .tint(theme.onSurface)
                             .disabled(entry == nil)
                         }
+                    }
+                    if privateCount > 0 {
+                        Label("非表示・削除済みの作品の記録 \(privateCount)件", systemImage: "eye.slash")
+                            .font(theme.captionFont)
+                            .foregroundStyle(theme.onSurfaceVariant)
                     }
                 }
             }
@@ -411,15 +442,11 @@ private struct DayActivitySheet: View {
     }
 
     private func openMangaURL(_ urlString: String) {
-        MangaURLOpener(
+        MangaURLOpener.make(
             browserMode: browserMode,
             openURL: openURL,
-            onSafariURL: { safariURL = $0 },
-            onQuickView: { viewModel.browserContext = $0 },
-            entryLookup: { url in
-                guard let e = viewModel.allEntries().first(where: { $0.url == url }) else { return nil }
-                return (e.name, e.publisher, e.imageData)
-            }
+            safariURL: $safariURL,
+            viewModel: viewModel
         ).open(urlString)
     }
 

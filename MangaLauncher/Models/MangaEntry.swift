@@ -209,9 +209,34 @@ final class MangaEntry {
         return calendar.startOfDay(for: adjustedDate)
     }
 
+    /// 既読にしたときの共通処理。markAsRead / +1話 / 特別回で揃える
+    /// (以前は markAsRead だけが次回更新日を進め、+1話では隔週作品が休み週に未読化していた)。
+    func recordRead(at date: Date = Date()) {
+        lastReadDate = date
+        if isOneShot {
+            readingState = .archived
+        } else {
+            advanceToNextUpdate()
+        }
+    }
+
+    /// 次回更新日を今日より後の更新日へ進める。
+    /// 保存済みの次回更新日があればその位相 (隔週なら何週目か) を保つ。直近の同曜日から
+    /// 数え直すと、遅れて既読にした隔週作品の周期がずれて新話が未読に出なくなっていた。
     func advanceToNextUpdate() {
+        let calendar = Calendar.current
+        // 不正値 (0 や巨大値) での無限ループ・オーバーフローを防ぐ。UI の上限は 52 週
+        let step = min(max(updateIntervalWeeks, 1), 52) * 7
+        if var next = nextExpectedUpdate {
+            let today = calendar.startOfDay(for: Date())
+            while next <= today, let advanced = calendar.date(byAdding: .day, value: step, to: next) {
+                next = advanced
+            }
+            nextExpectedUpdate = next
+            return
+        }
         let mostRecent = Self.mostRecentOccurrence(of: dayOfWeek)
-        nextExpectedUpdate = Calendar.current.date(byAdding: .day, value: updateIntervalWeeks * 7, to: mostRecent)
+        nextExpectedUpdate = calendar.date(byAdding: .day, value: step, to: mostRecent)
     }
 
     func resetNextUpdate() {

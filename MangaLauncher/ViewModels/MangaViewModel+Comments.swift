@@ -14,6 +14,7 @@ extension MangaViewModel {
     }
 
     func updateComment(_ comment: MangaComment, content: String) {
+        let comment = live(comment)
         let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         comment.content = trimmed
@@ -22,7 +23,7 @@ extension MangaViewModel {
     }
 
     func deleteComment(_ comment: MangaComment) {
-        modelContext.delete(comment)
+        deleteModel(comment)
         save()
     }
 
@@ -45,7 +46,7 @@ extension MangaViewModel {
         commentDeleteTimer?.invalidate()
         commentDeleteTimer = nil
         for comment in pendingDeleteComments {
-            modelContext.delete(comment)
+            deleteModel(comment)
         }
         pendingDeleteComments.removeAll()
         save()

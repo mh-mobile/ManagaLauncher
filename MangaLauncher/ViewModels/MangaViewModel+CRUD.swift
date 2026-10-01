@@ -10,10 +10,30 @@ import WidgetKit
 
 extension MangaViewModel {
 
-    func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, publicationStatus: PublicationStatus = .active, readingState: ReadingState = .following, isOneShot: Bool = false, memo: String = "", currentEpisode: Int? = nil, episodeLabel: String? = nil, personalRating: Int? = nil, latestEpisode: Int? = nil) {
+    /// 同一 URL × 同一曜日のエントリがあるか。非表示も含む (起動時 dedupe の対象と揃える)。
+    /// ゴミ箱と削除待ちは除く。
+    func hasDuplicate(url: String, day: DayOfWeek, excluding id: UUID? = nil) -> Bool {
+        let dayRaw = day.rawValue
+        let target = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.dayOfWeekRawValue == dayRaw && $0.deletedAt == nil }
+        )
+        let pendingIDs = Set(pendingDeleteEntries.map(\.id))
+        return modelContext.fetchLogged(descriptor).contains {
+            $0.id != id && !pendingIDs.contains($0.id)
+                && $0.url.trimmingCharacters(in: .whitespacesAndNewlines) == target
+        }
+    }
+
+    /// - Returns: 重複のため登録できなかった曜日があれば false
+    @discardableResult
+    func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, publicationStatus: PublicationStatus = .active, readingState: ReadingState = .following, isOneShot: Bool = false, memo: String = "", currentEpisode: Int? = nil, episodeLabel: String? = nil, personalRating: Int? = nil, latestEpisode: Int? = nil) -> Bool {
+        var allAdded = true
         for day in days {
-            // 同一URL + 同一曜日の重複登録を防止（状態問わず全エントリ対象）
-            if allEntries().contains(where: { $0.dayOfWeek == day && $0.url == url }) { continue }
+            if hasDuplicate(url: url, day: day) {
+                allAdded = false
+                continue
+            }
             let existingEntries = fetchEntries(for: day)
             let maxOrder = existingEntries.map(\.sortOrder).max() ?? -1
             let entry = MangaEntry(
@@ -42,8 +62,11 @@ extension MangaViewModel {
             modelContext.insert(entry)
         }
         save()
+        return allAdded
     }
 
+    /// - Returns: URL/曜日の変更先に同じ作品があり保存しなかった場合 false
+    @discardableResult
     func updateEntry(
         _ entry: MangaEntry,
         name: String,
@@ -63,14 +86,12 @@ extension MangaViewModel {
         personalRating: Int? = nil,
         latestEpisode: Int? = nil,
         markAsReadOnSave: Bool = false
-    ) {
+    ) -> Bool {
+        let entry = live(entry)
         // URL または曜日が変更された場合、同一URL+曜日の重複を防止
         let urlOrDayChanged = entry.url != url || entry.dayOfWeek != dayOfWeek
-        if urlOrDayChanged {
-            let conflict = allEntries().contains { existing in
-                existing.id != entry.id && existing.dayOfWeek == dayOfWeek && existing.url == url
-            }
-            if conflict { return }
+        if urlOrDayChanged && hasDuplicate(url: url, day: dayOfWeek, excluding: entry.id) {
+            return false
         }
 
         let memoChanged = entry.memo != memo
@@ -114,7 +135,7 @@ extension MangaViewModel {
                     mangaEntryID: entry.id,
                     episodeLabel: label
                 )
-                (entry.modelContext ?? modelContext).insert(activity)
+                modelContext.insert(activity)
             } else if let ep = currentEpisode {
                 entry.lastReadDate = now
                 let activity = ReadingActivity(
@@ -123,32 +144,23 @@ extension MangaViewModel {
                     mangaEntryID: entry.id,
                     episodeNumber: ep
                 )
-                (entry.modelContext ?? modelContext).insert(activity)
+                modelContext.insert(activity)
             } else {
                 entry.lastReadDate = now
             }
         }
 
-        // entry が属するコンテキストで保存する（refresh() で modelContext が
-        // 差し替わっている場合、self.modelContext と異なる可能性がある）
-        if let entryCtx = entry.modelContext, entryCtx !== modelContext {
-            do {
-                try entryCtx.save()
-            } catch {
-                print("[MangaViewModel] updateEntry entryCtx save failed: \(error)")
-                lastError = .save(error)
-                return
-            }
-        }
         save()
+        return true
     }
 
     func recordSpecialEpisode(_ entry: MangaEntry, label: String) {
+        let entry = live(entry)
         let trimmed = label.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         let now = Date()
         entry.episodeLabel = trimmed
-        entry.lastReadDate = now
+        entry.recordRead(at: now)
         let activity = ReadingActivity(
             date: now,
             mangaName: entry.name,
@@ -160,11 +172,12 @@ extension MangaViewModel {
     }
 
     func incrementEpisode(_ entry: MangaEntry) {
+        let entry = live(entry)
         let newEpisode = (entry.currentEpisode ?? 0) + 1
         let now = Date()
         entry.currentEpisode = newEpisode
         entry.episodeLabel = nil
-        entry.lastReadDate = now
+        entry.recordRead(at: now)
         let activity = ReadingActivity(
             date: now,
             mangaName: entry.name,
@@ -178,6 +191,7 @@ extension MangaViewModel {
     // MARK: - Delete (Queue / Commit / Undo)
 
     func deleteEntry(_ entry: MangaEntry) {
+        let entry = live(entry)
         entry.deletedAt = Date()
         deletedIDs.insert(entry.id)
         hiddenIDs.remove(entry.id)
@@ -200,7 +214,7 @@ extension MangaViewModel {
     func commitPendingDeletes() {
         deleteTimer?.invalidate()
         deleteTimer = nil
-        for entry in pendingDeleteEntries {
+        for entry in pendingDeleteEntries.map(live) {
             entry.deletedAt = Date()
             deletedIDs.insert(entry.id)
             hiddenIDs.remove(entry.id)
@@ -210,6 +224,9 @@ extension MangaViewModel {
     }
 
     func deleteAllEntries() {
+        // 削除待ちが残るとタイマーが削除済みオブジェクトに書き込むため先に破棄する
+        undoPendingDeletes()
+        undoPendingCommentDeletes()
         let descriptor = FetchDescriptor<MangaEntry>()
         for entry in modelContext.fetchLogged(descriptor) {
             modelContext.delete(entry)
@@ -221,6 +238,9 @@ extension MangaViewModel {
         let commentDescriptor = FetchDescriptor<MangaComment>()
         for comment in modelContext.fetchLogged(commentDescriptor) {
             modelContext.delete(comment)
+        }
+        for link in modelContext.fetchLogged(FetchDescriptor<MangaLink>()) {
+            modelContext.delete(link)
         }
         let metaDescriptor = FetchDescriptor<PublisherMetadata>()
         for meta in modelContext.fetchLogged(metaDescriptor) {
@@ -247,6 +267,9 @@ extension MangaViewModel {
 
     /// 別の曜日に移動。曜日のみ変更し、状態は触らない。
     func moveEntryToDay(_ entry: MangaEntry, to newDay: DayOfWeek, at targetEntry: MangaEntry? = nil) {
+        let entry = live(entry)
+        // 同じ曜日のタブへのドロップで次回更新日がリセットされないように
+        guard entry.dayOfWeek != newDay else { return }
         entry.dayOfWeek = newDay
         entry.resetNextUpdate()
         var entries = fetchEntries(for: newDay)
@@ -263,9 +286,16 @@ extension MangaViewModel {
         save()
     }
 
-    func moveEntries(for day: DayOfWeek, from source: IndexSet, to destination: Int) {
-        var entries = fetchEntries(for: day)
-        entries.move(fromOffsets: source, toOffset: destination)
+    /// - Parameter visible: `source`/`destination` の基準となる、画面に表示中の並び (掲載誌フィルタ後)。
+    ///   フィルタで隠れている作品の位置は保ったまま、表示中の作品だけを並べ替える。
+    func moveEntries(for day: DayOfWeek, visible: [MangaEntry], from source: IndexSet, to destination: Int) {
+        var reorderedIDs = visible.map(\.id)
+        reorderedIDs.move(fromOffsets: source, toOffset: destination)
+        let all = fetchEntries(for: day)
+        let byID = Dictionary(all.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let visibleIDs = Set(reorderedIDs)
+        var reordered = reorderedIDs.compactMap { byID[$0] }.makeIterator()
+        let entries = all.map { visibleIDs.contains($0.id) ? (reordered.next() ?? $0) : $0 }
         for (index, entry) in entries.enumerated() {
             entry.sortOrder = index
         }

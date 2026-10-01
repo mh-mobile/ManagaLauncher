@@ -42,9 +42,10 @@ enum ActivityBuilder {
         merged(entries: entries, comments: comments)
     }
 
-    /// メモ持ちエントリ + コメントの総数
+    /// メモ持ちエントリ + コメントの総数。一覧 (merged) と同じく、表示中のエントリに紐づくコメントだけ数える
     static func totalCount(entries: [MangaEntry], comments: [MangaComment]) -> Int {
-        entries.filter { !$0.memo.isEmpty }.count + comments.count
+        let entryIDs = Set(entries.map(\.id))
+        return entries.filter { !$0.memo.isEmpty }.count + comments.filter { entryIDs.contains($0.mangaEntryID) }.count
     }
 
     private static func merged(entries: [MangaEntry], comments: [MangaComment]) -> [ActivityItem] {

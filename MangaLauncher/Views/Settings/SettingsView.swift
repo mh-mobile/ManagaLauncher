@@ -11,6 +11,8 @@ struct SettingsView: View {
     @State private var showingResetConfirmation = false
     @State private var achievementResetDone = false
     @State private var showingExporter = false
+    /// 書き出しボタン押下時にだけ生成する (body で生成すると再描画のたびに全件 JSON 化が走る)
+    @State private var exportDocument: BackupDocument?
     @State private var showingImporter = false
     @State private var importResult: ImportResult?
     @AppStorage(UserDefaultsKeys.browserMode) private var browserMode: String = "external"
@@ -136,6 +138,7 @@ struct SettingsView: View {
 
                 Section {
                     Button {
+                        exportDocument = BackupDocument(data: viewModel.exportBackupData() ?? Data())
                         showingExporter = true
                     } label: {
                         HStack {
@@ -310,10 +313,12 @@ struct SettingsView: View {
             }
             .fileExporter(
                 isPresented: $showingExporter,
-                document: exportDocument(),
+                document: exportDocument,
                 contentType: .json,
                 defaultFilename: "MangaLauncher_backup"
-            ) { _ in }
+            ) { _ in
+                exportDocument = nil
+            }
             .fileImporter(
                 isPresented: $showingImporter,
                 allowedContentTypes: [.json]
@@ -401,11 +406,6 @@ struct SettingsView: View {
                 updateStatus = .error
             }
         }
-    }
-
-    private func exportDocument() -> BackupDocument {
-        let data = viewModel.exportBackupData() ?? Data()
-        return BackupDocument(data: data)
     }
 
     private func handleImport(_ result: Result<URL, Error>) {
