@@ -226,10 +226,14 @@ final class MangaViewModel {
     /// refresh() で modelContext が差し替わると、View 側には旧コンテキストのオブジェクトが残る。
     /// それを変更しても save() に含まれず、旧コンテキストごと保存すると古い値で上書きしてしまうため、
     /// View から受け取ったモデルを変更・削除するメソッドは必ず先にこれを通す。
+    /// `model(for:)` は行が他端末などで削除済みでも存在しないフォルトを返し、触るとクラッシュするため
+    /// ID で fetch して実在を確かめる (無ければ元のオブジェクトのまま扱う)。
     func live<T: PersistentModel>(_ model: T) -> T {
-        guard model.modelContext !== modelContext,
-              let current = modelContext.model(for: model.persistentModelID) as? T else { return model }
-        return current
+        guard model.modelContext !== modelContext else { return model }
+        let id = model.persistentModelID
+        var descriptor = FetchDescriptor<T>(predicate: #Predicate { $0.persistentModelID == id })
+        descriptor.fetchLimit = 1
+        return modelContext.fetchLogged(descriptor).first ?? model
     }
 
     func deleteModel<T: PersistentModel>(_ model: T) {

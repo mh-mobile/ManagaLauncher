@@ -78,6 +78,17 @@ struct RefreshAcrossContextTests {
         #expect(saved.personalRating == 4)
     }
 
+    @Test func mutatingEntryDeletedElsewhereDoesNotCrash() throws {
+        let (container, vm, staleEntry) = try setUp()
+        // 他端末 (CloudKit) などで完全削除された
+        let other = ModelContext(container)
+        try other.delete(model: MangaEntry.self)
+        try other.save()
+        vm.refresh()
+        vm.setPersonalRating(staleEntry, to: 3)
+        #expect(try stored(MangaEntry.self, in: container).isEmpty)
+    }
+
     @Test func incrementEpisodePersists() throws {
         let (container, vm, entry) = try setUp()
         vm.incrementEpisode(entry)

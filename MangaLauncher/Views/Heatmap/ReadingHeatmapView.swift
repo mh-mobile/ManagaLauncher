@@ -318,7 +318,8 @@ private struct DayActivitySheet: View {
                 dateNavigationBar
                 Divider()
                 List {
-                    let activities = viewModel.stats.fetchActivities(for: currentDate).filter(viewModel.isActivityVisible)
+                    let activities = viewModel.stats.fetchActivities(for: currentDate)
+                        .filter(viewModel.isActivityVisible)
                     if activities.isEmpty {
                         ContentUnavailableView {
                             Label("アクティビティなし", systemImage: "calendar.badge.clock")
@@ -337,7 +338,10 @@ private struct DayActivitySheet: View {
                             } label: {
                                 HStack(spacing: 12) {
                                     if let entry, let imageData = entry.imageData,
-                                       let image = imageData.toCachedSwiftUIImage(id: entry.id.uuidString, fillPixelSize: ThumbnailCache.smallFillPixelSize) {
+                                       let image = imageData.toCachedSwiftUIImage(
+                                           id: entry.id.uuidString,
+                                           fillPixelSize: ThumbnailCache.smallFillPixelSize
+                                       ) {
                                         image
                                             .resizable()
                                             .aspectRatio(contentMode: .fill)

@@ -22,7 +22,10 @@ struct MangaWidgetItem: Identifiable {
     let isRead: Bool
 
     func withImageData(_ data: Data?) -> MangaWidgetItem {
-        MangaWidgetItem(id: id, name: name, url: url, iconColor: iconColor, publisher: publisher, imageData: data, isRead: isRead)
+        MangaWidgetItem(
+            id: id, name: name, url: url, iconColor: iconColor,
+            publisher: publisher, imageData: data, isRead: isRead
+        )
     }
 }
 
