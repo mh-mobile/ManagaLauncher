@@ -305,12 +305,25 @@ struct DuplicateEntryTests {
 /// パスコード未設定の端末では認証が常に失敗し、非表示の作品・最近削除した項目に二度と入れなかった。
 @Suite("BiometricAuthService")
 struct BiometricAuthServiceTests {
-    private final class NoPasscodeContext: LAContext {
-        override func canEvaluatePolicy(_ policy: LAPolicy, error: NSErrorPointer) -> Bool { false }
+    /// canEvaluatePolicy が常に指定コードで失敗するコンテキスト
+    private final class FailingContext: LAContext {
+        let code: LAError.Code
+        init(_ code: LAError.Code) {
+            self.code = code
+            super.init()
+        }
+        override func canEvaluatePolicy(_ policy: LAPolicy, error: NSErrorPointer) -> Bool {
+            error?.pointee = NSError(domain: LAErrorDomain, code: code.rawValue)
+            return false
+        }
     }
 
     @Test func allowsAccessWhenDeviceHasNoPasscode() async {
-        #expect(await BiometricAuthService.authenticate(reason: "test", context: NoPasscodeContext()))
+        #expect(await BiometricAuthService.authenticate(reason: "test", context: FailingContext(.passcodeNotSet)))
+    }
+
+    @Test func keepsProtectionOnOtherFailures() async {
+        #expect(await !BiometricAuthService.authenticate(reason: "test", context: FailingContext(.biometryLockout)))
     }
 }
 

@@ -11,7 +11,8 @@ enum BiometricAuthService {
         } else if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) {
             policy = .deviceOwnerAuthentication
         } else {
-            return true
+            // パスコード未設定の端末だけを素通しする。それ以外の失敗で保護を外さない
+            return error?.code == LAError.passcodeNotSet.rawValue
         }
         do {
             return try await context.evaluatePolicy(policy, localizedReason: reason)
