@@ -10,10 +10,30 @@ import WidgetKit
 
 extension MangaViewModel {
 
-    func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, publicationStatus: PublicationStatus = .active, readingState: ReadingState = .following, isOneShot: Bool = false, memo: String = "", currentEpisode: Int? = nil, episodeLabel: String? = nil, personalRating: Int? = nil, latestEpisode: Int? = nil) {
+    /// 同一 URL × 同一曜日のエントリがあるか。非表示も含む (起動時 dedupe の対象と揃える)。
+    /// ゴミ箱と削除待ちは除く。
+    func hasDuplicate(url: String, day: DayOfWeek, excluding id: UUID? = nil) -> Bool {
+        let dayRaw = day.rawValue
+        let target = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        let descriptor = FetchDescriptor<MangaEntry>(
+            predicate: #Predicate { $0.dayOfWeekRawValue == dayRaw && $0.deletedAt == nil }
+        )
+        let pendingIDs = Set(pendingDeleteEntries.map(\.id))
+        return modelContext.fetchLogged(descriptor).contains {
+            $0.id != id && !pendingIDs.contains($0.id)
+                && $0.url.trimmingCharacters(in: .whitespacesAndNewlines) == target
+        }
+    }
+
+    /// - Returns: 重複のため登録できなかった曜日があれば false
+    @discardableResult
+    func addEntry(name: String, url: String, days: Set<DayOfWeek>, iconColor: String, publisher: String = "", imageData: Data? = nil, updateIntervalWeeks: Int = 1, nextExpectedUpdate: Date? = nil, publicationStatus: PublicationStatus = .active, readingState: ReadingState = .following, isOneShot: Bool = false, memo: String = "", currentEpisode: Int? = nil, episodeLabel: String? = nil, personalRating: Int? = nil, latestEpisode: Int? = nil) -> Bool {
+        var allAdded = true
         for day in days {
-            // 同一URL + 同一曜日の重複登録を防止（状態問わず全エントリ対象）
-            if allEntries().contains(where: { $0.dayOfWeek == day && $0.url == url }) { continue }
+            if hasDuplicate(url: url, day: day) {
+                allAdded = false
+                continue
+            }
             let existingEntries = fetchEntries(for: day)
             let maxOrder = existingEntries.map(\.sortOrder).max() ?? -1
             let entry = MangaEntry(
@@ -42,8 +62,11 @@ extension MangaViewModel {
             modelContext.insert(entry)
         }
         save()
+        return allAdded
     }
 
+    /// - Returns: URL/曜日の変更先に同じ作品があり保存しなかった場合 false
+    @discardableResult
     func updateEntry(
         _ entry: MangaEntry,
         name: String,
@@ -63,15 +86,12 @@ extension MangaViewModel {
         personalRating: Int? = nil,
         latestEpisode: Int? = nil,
         markAsReadOnSave: Bool = false
-    ) {
+    ) -> Bool {
         let entry = live(entry)
         // URL または曜日が変更された場合、同一URL+曜日の重複を防止
         let urlOrDayChanged = entry.url != url || entry.dayOfWeek != dayOfWeek
-        if urlOrDayChanged {
-            let conflict = allEntries().contains { existing in
-                existing.id != entry.id && existing.dayOfWeek == dayOfWeek && existing.url == url
-            }
-            if conflict { return }
+        if urlOrDayChanged && hasDuplicate(url: url, day: dayOfWeek, excluding: entry.id) {
+            return false
         }
 
         let memoChanged = entry.memo != memo
@@ -131,6 +151,7 @@ extension MangaViewModel {
         }
 
         save()
+        return true
     }
 
     func recordSpecialEpisode(_ entry: MangaEntry, label: String) {

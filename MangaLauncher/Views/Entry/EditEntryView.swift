@@ -41,6 +41,7 @@ struct EditEntryView: View {
     @State private var latestEpisodeText: String = ""
     @State private var editingLink: MangaLink?
     @State private var showingAddLink = false
+    @State private var showingDuplicateAlert = false
 
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
@@ -182,8 +183,11 @@ struct EditEntryView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") {
-                        saveEntry()
-                        dismiss()
+                        if saveEntry() {
+                            dismiss()
+                        } else {
+                            showingDuplicateAlert = true
+                        }
                     }
                     .disabled(name.isEmpty || url.isEmpty || !isValidURL)
                     .if(theme.forceDarkMode) { view in
@@ -209,6 +213,11 @@ struct EditEntryView: View {
                 }
             }
             #endif
+            .alert("保存できません", isPresented: $showingDuplicateAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("同じURLの作品がこの曜日に既に登録されています（非表示の作品を含む）。")
+            }
             .sheet(isPresented: $showingAddLink) {
                 if let entry {
                     EditLinkView(viewModel: viewModel, entry: entry)
@@ -656,11 +665,12 @@ struct EditEntryView: View {
         }
     }
 
-    private func saveEntry() {
+    /// - Returns: 同じ URL・曜日の作品があり保存できなかった場合 false
+    private func saveEntry() -> Bool {
         let interval = actualIntervalWeeks
         let labelToSave = episodeLabel.isEmpty ? nil : episodeLabel
         if let entry {
-            viewModel.updateEntry(
+            return viewModel.updateEntry(
                 entry,
                 name: name,
                 url: url,
@@ -681,7 +691,7 @@ struct EditEntryView: View {
                 markAsReadOnSave: markAsReadOnSave
             )
         } else {
-            viewModel.addEntry(
+            return viewModel.addEntry(
                 name: name,
                 url: url,
                 days: [selectedDay],
