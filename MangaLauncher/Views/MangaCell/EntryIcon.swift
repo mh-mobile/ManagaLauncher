@@ -8,7 +8,8 @@ struct EntryIcon: View {
     private var theme: ThemeStyle { ThemeManager.shared.style }
 
     var body: some View {
-        if let imageData = entry.imageData,
+        // 完全削除直後の再描画で detached な entry の imageData (externalStorage) に触れるとクラッシュする
+        if entry.modelContext != nil, let imageData = entry.imageData,
            let image = imageData.toCachedSwiftUIImage(id: entry.id.uuidString, fillPixelSize: ThumbnailCache.smallFillPixelSize) {
             image
                 .resizable()
