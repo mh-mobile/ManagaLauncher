@@ -82,13 +82,20 @@ struct EditEntryView: View {
     }
 
     private var nextUpdateCandidates: [Date] {
+        Self.nextUpdateCandidates(for: selectedDay, intervalWeeks: actualIntervalWeeks)
+    }
+
+    /// 次回更新日の候補 (週ごと)。既読処理は最大「間隔+1週」先まで進めるため、候補もそこまで含める。
+    /// 8 回分固定だと 2ヶ月ごと以上の作品の保存済み日付が候補外になり、編集画面を保存するだけで
+    /// 直近の日付に上書きされて毎週未読に戻っていた。
+    static func nextUpdateCandidates(for day: DayOfWeek, intervalWeeks: Int, today: Date = Date()) -> [Date] {
         let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
+        let today = calendar.startOfDay(for: today)
         let todayWeekday = calendar.component(.weekday, from: today) - 1
-        let target = selectedDay.rawValue
-        let daysToNext = (target - todayWeekday + 7) % 7
+        let daysToNext = (day.rawValue - todayWeekday + 7) % 7
         let firstDate = daysToNext == 0 ? today : (calendar.date(byAdding: .day, value: daysToNext, to: today) ?? today)
-        return (0..<8).compactMap { i in
+        let count = max(8, intervalWeeks + 1)
+        return (0..<count).compactMap { i in
             calendar.date(byAdding: .day, value: i * 7, to: firstDate)
         }
     }
