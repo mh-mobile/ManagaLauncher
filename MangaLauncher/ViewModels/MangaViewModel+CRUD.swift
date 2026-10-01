@@ -160,7 +160,7 @@ extension MangaViewModel {
         guard !trimmed.isEmpty else { return }
         let now = Date()
         entry.episodeLabel = trimmed
-        entry.lastReadDate = now
+        entry.recordRead(at: now)
         let activity = ReadingActivity(
             date: now,
             mangaName: entry.name,
@@ -177,7 +177,7 @@ extension MangaViewModel {
         let now = Date()
         entry.currentEpisode = newEpisode
         entry.episodeLabel = nil
-        entry.lastReadDate = now
+        entry.recordRead(at: now)
         let activity = ReadingActivity(
             date: now,
             mangaName: entry.name,
@@ -268,6 +268,8 @@ extension MangaViewModel {
     /// 別の曜日に移動。曜日のみ変更し、状態は触らない。
     func moveEntryToDay(_ entry: MangaEntry, to newDay: DayOfWeek, at targetEntry: MangaEntry? = nil) {
         let entry = live(entry)
+        // 同じ曜日のタブへのドロップで次回更新日がリセットされないように
+        guard entry.dayOfWeek != newDay else { return }
         entry.dayOfWeek = newDay
         entry.resetNextUpdate()
         var entries = fetchEntries(for: newDay)
@@ -284,9 +286,16 @@ extension MangaViewModel {
         save()
     }
 
-    func moveEntries(for day: DayOfWeek, from source: IndexSet, to destination: Int) {
-        var entries = fetchEntries(for: day)
-        entries.move(fromOffsets: source, toOffset: destination)
+    /// - Parameter visible: `source`/`destination` の基準となる、画面に表示中の並び (掲載誌フィルタ後)。
+    ///   フィルタで隠れている作品の位置は保ったまま、表示中の作品だけを並べ替える。
+    func moveEntries(for day: DayOfWeek, visible: [MangaEntry], from source: IndexSet, to destination: Int) {
+        var reorderedIDs = visible.map(\.id)
+        reorderedIDs.move(fromOffsets: source, toOffset: destination)
+        let all = fetchEntries(for: day)
+        let byID = Dictionary(all.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let visibleIDs = Set(reorderedIDs)
+        var reordered = reorderedIDs.compactMap { byID[$0] }.makeIterator()
+        let entries = all.map { visibleIDs.contains($0.id) ? (reordered.next() ?? $0) : $0 }
         for (index, entry) in entries.enumerated() {
             entry.sortOrder = index
         }

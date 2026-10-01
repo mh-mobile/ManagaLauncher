@@ -50,10 +50,7 @@ extension MangaViewModel {
 
     func markAsRead(_ entry: MangaEntry) {
         let entry = live(entry)
-        entry.lastReadDate = Date()
-        if !entry.isOneShot {
-            entry.advanceToNextUpdate()
-        }
+        entry.recordRead()
         // 同日・同エントリのアクティビティが既に存在する場合は再 insert しない。
         let today = Calendar.current.startOfDay(for: Date())
         let entryID = entry.id
@@ -68,9 +65,6 @@ extension MangaViewModel {
                 mangaEntryID: entry.id
             )
             modelContext.insert(activity)
-        }
-        if entry.isOneShot {
-            entry.readingState = .archived
         }
         save()
     }
@@ -94,10 +88,7 @@ extension MangaViewModel {
         )
 
         for entry in entries {
-            entry.lastReadDate = Date()
-            if !entry.isOneShot {
-                entry.advanceToNextUpdate()
-            }
+            entry.recordRead()
             if !existingActivityEntryIDs.contains(entry.id) {
                 let activity = ReadingActivity(
                     date: Date(),
@@ -105,9 +96,6 @@ extension MangaViewModel {
                     mangaEntryID: entry.id
                 )
                 modelContext.insert(activity)
-            }
-            if entry.isOneShot {
-                entry.readingState = .archived
             }
         }
         save()

@@ -52,6 +52,7 @@ struct GridDropDelegate: DropDelegate {
         withAnimation(.easeInOut(duration: 0.2)) {
             viewModel.moveEntries(
                 for: day,
+                visible: entries,
                 from: IndexSet(integer: fromIndex),
                 to: toIndex > fromIndex ? toIndex + 1 : toIndex
             )
