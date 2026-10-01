@@ -58,21 +58,25 @@ public final class ThumbnailCache: @unchecked Sendable {
         return hash
     }
 
-    /// fillPixelSize 指定時は ImageIO でダウンサンプルしつつ即時デコード。
-    /// nil はフルサイズデコード (保存時に 600px へ縮小済みのデータをそのまま使う)。
+    /// ImageIO でダウンサンプルしつつ即時デコード。
+    /// fillPixelSize 指定時は短辺がそのピクセル数を満たすサイズ、nil は長辺 `fullMaxPixelSize` に収める。
+    /// (旧バージョンは画面スケールの不具合で 1800px 級の画像を保存していたため、nil でも原寸デコードしない)
     private func decode(_ data: Data, fillPixelSize: CGFloat?) -> UIImage? {
-        guard let fillPixelSize else { return UIImage(data: data) }
         guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
             return UIImage(data: data)
         }
-        let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
-        let width = (properties?[kCGImagePropertyPixelWidth] as? NSNumber)?.doubleValue ?? 0
-        let height = (properties?[kCGImagePropertyPixelHeight] as? NSNumber)?.doubleValue ?? 0
+        let maxPixelSize: CGFloat
+        if let fillPixelSize {
+            let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
+            let width = (properties?[kCGImagePropertyPixelWidth] as? NSNumber)?.doubleValue ?? 0
+            let height = (properties?[kCGImagePropertyPixelHeight] as? NSNumber)?.doubleValue ?? 0
+            maxPixelSize = Self.thumbnailMaxPixelSize(width: width, height: height, fillPixelSize: fillPixelSize)
+        } else {
+            maxPixelSize = Self.fullMaxPixelSize
+        }
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceThumbnailMaxPixelSize: Self.thumbnailMaxPixelSize(
-                width: width, height: height, fillPixelSize: fillPixelSize
-            ),
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
             kCGImageSourceShouldCacheImmediately: true,
             kCGImageSourceCreateThumbnailWithTransform: true,
         ]
@@ -89,7 +93,7 @@ extension Data {
     ///   - id: 呼び出し側の安定ID (例: `entry.id.uuidString`)
     ///   - fillPixelSize: 正方形枠に `scaledToFill` する小さい行サムネイルなら `ThumbnailCache.smallFillPixelSize`。
     ///     短辺がこのピクセル数を満たすようダウンサンプルする (原寸は超えない)。
-    ///     nil はフルサイズデコード (アスペクト比がレイアウトを決めるグリッドセル用)
+    ///     nil は長辺 `fullMaxPixelSize` に収めてデコード (アスペクト比がレイアウトを決めるグリッドセル用)
     public func toCachedSwiftUIImage(id: String, fillPixelSize: CGFloat? = nil) -> Image? {
         guard let uiImage = ThumbnailCache.shared.image(id: id, data: self, fillPixelSize: fillPixelSize) else {
             return nil
@@ -115,6 +119,9 @@ extension Data {
 extension ThumbnailCache {
     /// 表示サイズ ≤44pt の正方形行サムネイル用 (44pt @3x = 132px)。
     public static let smallFillPixelSize: CGFloat = 132
+
+    /// fillPixelSize 未指定 (グリッド/カード) 時の長辺上限。最大の表示は CatchUp カード 600pt @2x (iPad)。
+    public static let fullMaxPixelSize: CGFloat = 1200
 
     /// `kCGImageSourceThumbnailMaxPixelSize` は長辺の上限なので、正方形枠へ `scaledToFill` すると
     /// 横長/縦長画像の短辺が不足して拡大(ぼやけ)が起きる。短辺が `fillPixelSize` を満たす長辺値を返す。

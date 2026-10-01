@@ -50,6 +50,13 @@ struct ThumbnailCacheTests {
         #expect(max(pixelWidth, pixelHeight) < max(width, height))
     }
 
+    @Test func fullPathCapsLegacyOversizedImages() throws {
+        // 旧バージョンが画面スケールの不具合で保存した 1800px 級の画像
+        let data = jpeg(width: 1800, height: 2550, color: .red)
+        let image = try #require(ThumbnailCache().image(id: "big", data: data, fillPixelSize: nil))
+        #expect(max(image.size.width, image.size.height) * image.scale == ThumbnailCache.fullMaxPixelSize)
+    }
+
     @Test func cacheHitContentChangeAndMemoryWarning() throws {
         let cache = ThumbnailCache()
         let red = jpeg(width: 200, height: 300, color: .red)
